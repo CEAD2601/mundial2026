@@ -522,24 +522,87 @@ export default function Home() {
             <h2 className="text-3xl font-extrabold text-slate-900">
               Sistema de <span className="text-green-600">Puntuación</span>
             </h2>
-            <p className="text-slate-500 mt-2 text-sm">Cada acierto vale 1 punto · Máximo 72 puntos</p>
+            <p className="text-slate-500 mt-2 text-sm max-w-md mx-auto">
+              Predice el marcador exacto de cada partido y suma puntos según tu precisión.
+              <br />
+              <span className="font-semibold text-slate-700">No eliges solo ganador — debes colocar los goles de cada equipo.</span>
+            </p>
           </div>
-          <div className="grid grid-cols-3 gap-4">
+
+          {/* 3 cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
             {[
-              { pick: 'G1', label: 'Gana el\nEquipo 1', bg: 'bg-green-600', light: 'bg-green-50 border-green-200', ex: '2-0 · 3-1 · 1-0' },
-              { pick: 'E',  label: 'Empate',             bg: 'bg-amber-500', light: 'bg-amber-50 border-amber-200',  ex: '1-1 · 0-0 · 2-2' },
-              { pick: 'G2', label: 'Gana el\nEquipo 2', bg: 'bg-blue-600',  light: 'bg-blue-50 border-blue-200',    ex: '0-1 · 1-3 · 0-2' },
-            ].map((item) => (
-              <div key={item.pick} className={`rounded-2xl p-4 sm:p-5 text-center border-2 ${item.light} hover:shadow-md transition-shadow`}>
-                <div className={`${item.bg} text-white font-extrabold text-2xl rounded-xl py-3 mb-4 shadow-sm`}>{item.pick}</div>
-                <div className="font-bold text-slate-700 text-sm whitespace-pre-line mb-2">{item.label}</div>
-                <div className="text-slate-400 text-xs">{item.ex}</div>
-                <div className="mt-3 inline-flex items-center gap-1 bg-white rounded-full px-3 py-1 border border-slate-200">
-                  <Zap size={12} className="text-green-500" />
-                  <span className="text-green-600 font-extrabold text-sm">1 punto</span>
+              {
+                icon: '🏆',
+                pts: '3',
+                title: 'Marcador exacto',
+                desc: 'Aciertas exactamente los goles de ambos equipos.',
+                bg: 'bg-yellow-50',
+                border: 'border-yellow-300',
+                ptsBg: 'bg-yellow-400',
+                ptsText: 'text-slate-900',
+              },
+              {
+                icon: '✅',
+                pts: '1',
+                title: 'Ganador o empate correcto',
+                desc: 'Aciertas quién gana o si empatan, aunque el marcador sea diferente.',
+                bg: 'bg-green-50',
+                border: 'border-green-300',
+                ptsBg: 'bg-green-500',
+                ptsText: 'text-white',
+              },
+              {
+                icon: '❌',
+                pts: '0',
+                title: 'Resultado incorrecto',
+                desc: 'No aciertas el ganador ni si hubo empate.',
+                bg: 'bg-slate-50',
+                border: 'border-slate-200',
+                ptsBg: 'bg-slate-300',
+                ptsText: 'text-slate-700',
+              },
+            ].map((card) => (
+              <div
+                key={card.pts}
+                className={`${card.bg} border-2 ${card.border} rounded-2xl p-5 text-center hover:shadow-md transition-shadow`}
+              >
+                <div className="text-4xl mb-3">{card.icon}</div>
+                <div className={`inline-block ${card.ptsBg} ${card.ptsText} font-extrabold text-3xl rounded-xl px-5 py-2 mb-3 shadow-sm`}>
+                  {card.pts} <span className="text-lg font-semibold">pts</span>
                 </div>
+                <div className="font-bold text-slate-800 text-sm mb-2">{card.title}</div>
+                <div className="text-xs text-slate-500 leading-relaxed">{card.desc}</div>
               </div>
             ))}
+          </div>
+
+          {/* Example */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-slate-800 text-white px-5 py-3 text-sm font-semibold">
+              ⚽ Ejemplo — Resultado real: <span className="text-yellow-300">Argentina 2 – 1 México</span>
+            </div>
+            <div className="divide-y divide-slate-100">
+              {[
+                { pred: 'Argentina 2 – 1 México', note: 'Marcador exacto', pts: 3, cls: 'text-yellow-600', bg: 'bg-yellow-50' },
+                { pred: 'Argentina 3 – 1 México', note: 'Ganador correcto (Argentina gana)', pts: 1, cls: 'text-green-600', bg: '' },
+                { pred: 'Argentina 1 – 1 México', note: 'Incorrecto (predijiste empate)', pts: 0, cls: 'text-slate-400', bg: '' },
+              ].map((row) => (
+                <div key={row.pred} className={`flex items-center justify-between px-5 py-3.5 ${row.bg}`}>
+                  <div>
+                    <span className="font-mono font-bold text-slate-800 text-sm">{row.pred}</span>
+                    <span className="text-xs text-slate-400 ml-3">{row.note}</span>
+                  </div>
+                  <div className={`font-extrabold text-lg ${row.cls} flex items-center gap-1`}>
+                    {row.pts > 0 && <Zap size={14} className="shrink-0" />}
+                    {row.pts} pts
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="px-5 py-3 bg-slate-50 text-xs text-slate-500 text-center">
+              Máximo posible: <strong>3 pts × 72 partidos = 216 puntos</strong>
+            </div>
           </div>
         </section>
 
