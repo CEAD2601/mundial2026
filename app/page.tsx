@@ -156,10 +156,13 @@ export default function Home() {
     <div className="min-h-screen flex flex-col bg-slate-50">
 
       {/* ── HERO ─────────────────────────────────────────────────── */}
-      {/* Mobile min-height is shorter so the image isn't stretched; desktop stays tall */}
-      <header className="relative overflow-hidden text-white" style={{ minHeight: 'clamp(520px, 80vw, 700px)' }}>
+      {/* Mobile: fill full viewport height so the portrait image shows completely
+          Desktop: fixed minimum height that suits the landscape image          */}
+      {/* min-h-screen on mobile → portrait fills entire viewport
+          sm:min-h-[600px] on desktop → landscape gets fixed height     */}
+      <header className="relative overflow-hidden text-white flex flex-col min-h-screen sm:min-h-[600px]">
 
-        {/* Hero image — desktop (horizontal, full bleed) */}
+        {/* ── DESKTOP IMAGE (sm and up) ──────────────────────────── */}
         <div className="absolute inset-0 hidden sm:block">
           <Image
             src="/assets/hero/hero-desktop.webp"
@@ -171,32 +174,38 @@ export default function Home() {
           />
         </div>
 
-        {/* Hero image — mobile
-            object-position: center 20% keeps faces/players in the upper-center zone
-            and avoids torso/feet cropping at the bottom.
-            Adjust the % if the image focal point is different. */}
+        {/* ── MOBILE IMAGE (below sm) ────────────────────────────── */}
+        {/* Portrait 768×1376 — fills the full-screen-height container.
+            object-position: center top → shows Ronaldo (top-left) + Messi (top-right)
+            + flags first, then Mbappe/Haaland/Vinicius in the middle zone. */}
         <div className="absolute inset-0 block sm:hidden">
           <Image
             src="/assets/hero/hero-mobile.webp"
-            alt="Quiniela Mundial 2026"
+            alt="Quiniela Mundial 2026 — jugadores internacionales"
             fill
             className="object-cover"
-            style={{ objectPosition: 'center 20%' }}
+            style={{ objectPosition: 'center top' }}
             priority
             sizes="100vw"
           />
         </div>
 
-        {/* Multi-layer overlay for text legibility without killing the image */}
-        {/* Radial dark center for text area */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_80%_at_50%_40%,rgba(0,0,0,0.55)_0%,transparent_100%)]" />
-        {/* Edge vignette */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30" />
-        {/* Subtle color tint for brand coherence */}
+        {/* ── OVERLAYS ───────────────────────────────────────────── */}
+        {/* Mobile: gradient from top + strong bottom so text sits in readable zone */}
+        <div className="absolute inset-0 sm:hidden bg-gradient-to-b from-black/55 via-transparent to-black/80" />
+        {/* Desktop: original radial + vignette */}
+        <div className="absolute inset-0 hidden sm:block bg-[radial-gradient(ellipse_60%_80%_at_50%_40%,rgba(0,0,0,0.55)_0%,transparent_100%)]" />
+        <div className="absolute inset-0 hidden sm:block bg-gradient-to-t from-black/70 via-transparent to-black/30" />
+        {/* Shared: color tint */}
         <div className="absolute inset-0 bg-gradient-to-r from-green-900/20 via-transparent to-blue-900/20" />
 
-        {/* Content — centered in the dark middle zone of the image */}
-        <div className="relative max-w-3xl mx-auto px-4 pt-14 pb-20 text-center flex flex-col items-center">
+        {/* ── CONTENT ────────────────────────────────────────────── */}
+        {/* Mobile: flex-grow + justify-end pushes content toward the bottom,
+            sitting in the dark gradient zone above the wave, away from faces.
+            Desktop: top-aligned with standard padding.                       */}
+        <div className="relative flex-1 flex flex-col max-w-3xl mx-auto px-4 w-full
+                        sm:pt-14 sm:pb-20 sm:justify-start
+                        pt-8 pb-16 justify-end text-center items-center">
 
           {/* Host badge */}
           <div className="inline-flex items-center gap-2 bg-black/30 backdrop-blur-md border border-white/20 rounded-full px-4 py-1.5 text-xs sm:text-sm font-semibold mb-6 shadow-lg">
