@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Trophy, Users, Clock, Star, ChevronDown, ChevronUp, Zap, Shield, BarChart2, MessageCircle } from 'lucide-react'
 import { getWhatsAppShareUrl, getInviteMessage } from '@/lib/share'
+import { getPublicAppUrl } from '@/lib/app-url'
 
 const TOURNAMENT_START = new Date('2026-06-11T19:00:00Z') // June 11 3PM VET = 7PM UTC
 
@@ -148,17 +149,8 @@ function AnimatedNumber({ target, suffix = '' }: { target: number; suffix?: stri
 
 /* ── Main ───────────────────────────────────────────────────────── */
 export default function Home() {
-  const [appUrl, setAppUrl] = useState(process.env.NEXT_PUBLIC_APP_URL ?? '')
-  useEffect(() => {
-    const envUrl = process.env.NEXT_PUBLIC_APP_URL
-    if (envUrl && !envUrl.includes('localhost')) {
-      setAppUrl(envUrl)
-    } else {
-      setAppUrl(window.location.origin)
-    }
-  }, [])
-
-  const whatsappUrl = getWhatsAppShareUrl(getInviteMessage(appUrl))
+  // Use NEXT_PUBLIC_APP_URL — never window.location.origin (returns Vercel preview URLs)
+  const whatsappUrl = getWhatsAppShareUrl(getInviteMessage())
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
