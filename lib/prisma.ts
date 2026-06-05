@@ -1,6 +1,6 @@
 import { PrismaClient } from './generated/prisma'
 import { PrismaNeon } from '@prisma/adapter-neon'
-import { neonConfig, Pool as NeonPool } from '@neondatabase/serverless'
+import { neonConfig } from '@neondatabase/serverless'
 import ws from 'ws'
 
 // Use WebSocket for Node.js environments (local dev / Vercel functions)
@@ -15,8 +15,8 @@ function createPrismaClient() {
   if (!connectionString) {
     throw new Error('DATABASE_URL environment variable is not set')
   }
-  const pool = new NeonPool({ connectionString })
-  const adapter = new PrismaNeon(pool)
+  // PrismaNeon is a factory — pass the PoolConfig (connection string), not a Pool instance
+  const adapter = new PrismaNeon({ connectionString })
   return new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
