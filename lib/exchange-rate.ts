@@ -14,7 +14,7 @@ export interface ExchangeRateResult {
   source: string
 }
 
-const DEFAULT_FIXED_RATE = 700
+const DEFAULT_FIXED_RATE = 730
 
 /**
  * Returns the fixed exchange rate from admin settings.

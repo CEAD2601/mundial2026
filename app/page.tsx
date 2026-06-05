@@ -63,9 +63,9 @@ function Countdown() {
 /* ── FAQ ────────────────────────────────────────────────────────── */
 const faqs = [
   { q: '¿Cómo funciona la quiniela?',
-    a: 'Predices el resultado (gana equipo 1, empate, o gana equipo 2) para cada uno de los 72 partidos de la fase de grupos. Cada acierto vale 1 punto. Gana quien acumule más puntos al final de la fase de grupos.' },
+    a: 'Predices el marcador exacto (número de goles de cada equipo) para cada uno de los 72 partidos de la fase de grupos. Marcador exacto = 3 puntos, ganador/empate correcto = 1 punto. Gana quien acumule más puntos.' },
   { q: '¿Cuánto cuesta participar?',
-    a: 'La inscripción es de 20 USD, pagados en bolívares según la tasa del Euro BCV del día del pago, por Pago Móvil Banesco.' },
+    a: 'La inscripción es de 20 USD. Para facilitar el pago se usa una tasa fija de 730 Bs/USD, lo que equivale a 14.600 Bs por Pago Móvil Banesco.' },
   { q: '¿Hasta cuándo puedo inscribirme?',
     a: 'Puedes registrarte hasta el inicio del primer partido: 11 de junio de 2026 a las 3:00 PM hora Venezuela. Después no se aceptan más inscripciones.' },
   { q: '¿Cómo se distribuyen los premios?',
@@ -118,26 +118,32 @@ const steps = [
 
 /* ── AnimatedNumber ─────────────────────────────────────────────── */
 function AnimatedNumber({ target, suffix = '' }: { target: number; suffix?: string }) {
-  const [val, setVal] = useState(0)
+  // Start at target to prevent "stuck at zero" on fast/cached loads
+  const [val, setVal] = useState(target)
   const ref = useRef<HTMLSpanElement>(null)
+  const animated = useRef(false)
 
   useEffect(() => {
+    if (animated.current) return
+    // Reset to 0 then animate up once the element is visible
+    setVal(0)
     const obs = new IntersectionObserver(([entry]) => {
       if (!entry.isIntersecting) return
       obs.disconnect()
+      animated.current = true
       let start = 0
-      const step = target / 40
+      const step = Math.max(target / 40, 1)
       const id = setInterval(() => {
         start = Math.min(start + step, target)
         setVal(Math.round(start))
         if (start >= target) clearInterval(id)
-      }, 30)
-    }, { threshold: 0.5 })
+      }, 20)
+    }, { threshold: 0.1 })
     if (ref.current) obs.observe(ref.current)
     return () => obs.disconnect()
   }, [target])
 
-  return <span ref={ref}>{val}{suffix}</span>
+  return <span ref={ref}>{val.toLocaleString('es-VE')}{suffix}</span>
 }
 
 /* ── Main ───────────────────────────────────────────────────────── */
@@ -264,7 +270,7 @@ export default function Home() {
           <div className="mt-6 flex items-center gap-4 text-white/50 text-xs">
             <span className="flex items-center gap-1"><span className="text-green-400">✓</span> Pago Móvil Banesco</span>
             <span className="w-px h-3 bg-white/20" />
-            <span className="flex items-center gap-1"><span className="text-green-400">✓</span> Bolívares tasa Euro BCV</span>
+            <span className="flex items-center gap-1"><span className="text-green-400">✓</span> 20 USD / 14.600 Bs · Tasa fija</span>
             <span className="w-px h-3 bg-white/20" />
             <span className="flex items-center gap-1"><span className="text-green-400">✓</span> Ranking en tiempo real</span>
           </div>
@@ -285,7 +291,7 @@ export default function Home() {
             { value: 72,   suffix: '',     label: 'Partidos',           color: 'text-green-600' },
             { value: 48,   suffix: '',     label: 'Equipos',            color: 'text-blue-600' },
             { value: 20,   suffix: ' USD', label: 'Entrada',            color: 'text-yellow-600' },
-            { value: 14000, suffix: ' Bs', label: 'Monto fijo',         color: 'text-amber-600' },
+            { value: 14600, suffix: ' Bs', label: 'Monto fijo',         color: 'text-amber-600' },
             { value: 65,   suffix: '%',    label: 'Premio 1er lugar',   color: 'text-purple-600' },
           ].map(({ value, suffix, label, color }, i) => (
             <div key={i} className={i >= 3 ? 'hidden sm:block' : ''}>
@@ -440,16 +446,16 @@ export default function Home() {
               <div className="relative">
                 <p className="text-green-200 text-sm mb-2">Pozo estimado · 20 participantes</p>
                 <p className="text-5xl font-extrabold text-white drop-shadow">$400 <span className="text-2xl font-bold text-green-200">USD</span></p>
-                <p className="text-green-300 text-sm mt-1">280.000 Bs <span className="text-xs">(a tasa fija 700 Bs/USD)</span></p>
+                <p className="text-green-300 text-sm mt-1">292.000 Bs <span className="text-xs">(tasa fija 730 Bs/USD)</span></p>
                 <p className="text-green-400 text-xs mt-1">20 participantes × $20 USD = $400 USD</p>
               </div>
             </div>
             {/* Prize rows */}
             <div className="divide-y divide-slate-100">
               {[
-                { medal: '🥇', pos: '1er Lugar', pct: 65, usd: 260, ves: 182000, color: 'from-yellow-50 to-amber-50', badge: 'bg-yellow-100 text-yellow-800' },
-                { medal: '🥈', pos: '2do Lugar', pct: 20, usd: 80,  ves: 56000,  color: 'from-slate-50 to-slate-50',  badge: 'bg-slate-100 text-slate-600' },
-                { medal: '🏛️', pos: 'Organización', pct: 15, usd: 60, ves: 42000, color: '', badge: 'bg-blue-50 text-blue-600' },
+                { medal: '🥇', pos: '1er Lugar', pct: 65, usd: 260, ves: 189800, color: 'from-yellow-50 to-amber-50', badge: 'bg-yellow-100 text-yellow-800' },
+                { medal: '🥈', pos: '2do Lugar', pct: 20, usd: 80,  ves: 58400,  color: 'from-slate-50 to-slate-50',  badge: 'bg-slate-100 text-slate-600' },
+                { medal: '🏛️', pos: 'Organización', pct: 15, usd: 60, ves: 43800, color: '', badge: 'bg-blue-50 text-blue-600' },
               ].map((row) => (
                 <div key={row.pos} className={`flex items-center justify-between px-6 py-5 bg-gradient-to-r ${row.color} hover:bg-opacity-80 transition-colors`}>
                   <div className="flex items-center gap-3">
@@ -467,7 +473,7 @@ export default function Home() {
               ))}
             </div>
             <p className="text-center text-xs text-slate-400 p-4">
-              El pozo real depende del total de participantes con pago verificado.
+              El pozo real depende del total de participantes con pago verificado. · Tasa fija usada: 730 Bs/USD
             </p>
           </div>
         </section>
@@ -484,11 +490,11 @@ export default function Home() {
             {/* Amount highlight */}
             <div className="bg-white/10 rounded-2xl p-4 text-center mb-6">
               <div className="text-blue-200 text-xs mb-1 uppercase tracking-wider">Monto a pagar</div>
-              <div className="text-4xl font-extrabold">14.000 <span className="text-xl font-semibold">Bs</span></div>
+              <div className="text-4xl font-extrabold">14.600 <span className="text-xl font-semibold">Bs</span></div>
               <div className="flex items-center justify-center gap-3 mt-2 text-sm">
                 <span className="bg-white/15 rounded-full px-3 py-0.5">20 USD</span>
                 <span className="text-blue-200">·</span>
-                <span className="bg-white/15 rounded-full px-3 py-0.5">Tasa fija: 700 Bs/USD</span>
+                <span className="bg-white/15 rounded-full px-3 py-0.5">Tasa fija: 730 Bs/USD</span>
               </div>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
@@ -496,9 +502,9 @@ export default function Home() {
                 { label: 'Banco',     value: 'Banesco',        icon: '🏦' },
                 { label: 'Teléfono',  value: '04143043337',    icon: '📞' },
                 { label: 'Cédula',    value: 'V-4.561.947',    icon: '🪪' },
-                { label: 'Monto',     value: '14.000 Bs',      icon: '💵' },
+                { label: 'Monto',     value: '14.600 Bs',      icon: '💵' },
                 { label: 'Equiv. USD', value: '20 USD',        icon: '💲' },
-                { label: 'Tasa fija', value: '700 Bs/USD',     icon: '📌' },
+                { label: 'Tasa fija', value: '730 Bs/USD',     icon: '📌' },
               ].map(({ label, value, icon }) => (
                 <div key={label} className="bg-white/10 rounded-xl px-4 py-3 flex items-center gap-3">
                   <span className="text-xl">{icon}</span>
@@ -510,7 +516,7 @@ export default function Home() {
               ))}
             </div>
             <div className="mt-5 bg-yellow-400/20 border border-yellow-300/30 rounded-xl p-3 text-sm text-yellow-100 text-center">
-              📌 Tasa fija de la quiniela: 700 Bs/USD · 20 USD = <strong>14.000 Bs exactos</strong>
+              📌 La entrada cuesta 20 USD · Tasa fija de la quiniela: 730 Bs/USD = <strong>14.600 Bs exactos</strong>
             </div>
           </div>
         </section>
@@ -680,7 +686,7 @@ export default function Home() {
             >
               ⚽ Crear mi quiniela — 20 USD
             </Link>
-            <p className="text-green-200 text-xs mt-4">Pago Móvil Banesco · Bolívares a tasa Euro BCV</p>
+            <p className="text-green-200 text-xs mt-4">Pago Móvil Banesco · 20 USD / 14.600 Bs · Tasa fija 730 Bs/USD</p>
           </div>
         </section>
 
@@ -690,7 +696,7 @@ export default function Home() {
       <footer className="bg-slate-900 text-slate-400 py-8 text-center text-sm">
         <div className="max-w-4xl mx-auto px-4">
           <p className="font-semibold text-white mb-1">Quiniela Mundial 2026 🏆</p>
-          <p className="text-xs mb-4">Pago Móvil Banesco · 04143043337 · CI 4561947 · Tasa Euro BCV</p>
+          <p className="text-xs mb-4">Pago Móvil Banesco · 04143043337 · CI 4561947 · 20 USD / 14.600 Bs · Tasa fija 730 Bs/USD</p>
           <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs">
             {[
               { href: '/registro',    label: 'Participar' },

@@ -178,12 +178,20 @@ export default function RegistroPage() {
             </button>
           </form>
 
-          <p className="text-center text-xs text-slate-400 mt-4">
-            ¿Ya tienes código?{' '}
-            <Link href="/mi-quiniela" className="text-green-600 hover:underline">
-              Ingresa aquí
+          <div className="flex items-center justify-between mt-4">
+            <p className="text-xs text-slate-400">
+              ¿Ya registrado?{' '}
+              <Link href="/mi-quiniela" className="text-green-600 hover:underline">
+                Ver mi quiniela
+              </Link>
+            </p>
+            <Link
+              href="/admin"
+              className="text-xs text-slate-300 hover:text-slate-500 transition-colors"
+            >
+              Administrador
             </Link>
-          </p>
+          </div>
         </div>
 
         <div className="mt-6 bg-blue-50 rounded-xl p-4 text-sm text-blue-800 border border-blue-100">

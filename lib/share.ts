@@ -32,8 +32,9 @@ export function getInviteMessage(appUrl: string): string {
 
 Predice los marcadores de los 72 partidos, compite con tus amigos y participa por el premio.
 
-🏆 Entrada: 20 USD
-📱 Pago Móvil disponible en Bs.
+🏆 Entrada: 20 USD / 14.600 Bs
+📱 Pago Móvil Banesco disponible.
+📌 Tasa fija: 730 Bs/USD
 
 👉 ${appUrl}
 

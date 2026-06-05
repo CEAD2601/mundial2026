@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
-const DEFAULT_FIXED_RATE = 700
+const DEFAULT_FIXED_RATE = 730
 const DEFAULT_ENTRY_USD = 20
 
 const reportPaymentSchema = z.object({

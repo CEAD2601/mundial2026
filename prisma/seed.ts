@@ -29,7 +29,7 @@ async function main() {
   await prisma.setting.upsert({
     where: { id: 'default' },
     update: {
-      fixedExchangeRate: 700,
+      fixedExchangeRate: 730,
       useFixedExchangeRate: true,
       exchangeRateCurrency: 'USD',
     },
@@ -37,7 +37,7 @@ async function main() {
       id: 'default',
       appName: 'Quiniela Mundial 2026',
       entryPriceUsd: 20,
-      fixedExchangeRate: 700,
+      fixedExchangeRate: 730,
       useFixedExchangeRate: true,
       paymentPhone: '04143043337',
       paymentNationalId: '4561947',
