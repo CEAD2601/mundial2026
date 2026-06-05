@@ -3,12 +3,19 @@
 import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { getPaymentProofWhatsAppUrl } from '@/lib/whatsapp'
 
 interface PaymentData {
   payment: { paymentStatus: string; paymentReference: string | null } | null
   fixedRate: number
   entryUsd: number
   amountVes: number
+  participant?: {
+    fullName: string
+    nationalId: string
+    phone: string
+    participationCode: string
+  }
 }
 
 export default function PagoPage({ params }: { params: Promise<{ code: string }> }) {
@@ -49,11 +56,12 @@ export default function PagoPage({ params }: { params: Promise<{ code: string }>
   }
 
   const entryUsd = settings?.entryPriceUsd ?? data?.entryUsd ?? 20
-  const fixedRate = settings?.fixedExchangeRate ?? data?.fixedRate ?? 700
+  const fixedRate = settings?.fixedExchangeRate ?? data?.fixedRate ?? 730
   const amountVes = Math.round(entryUsd * fixedRate)
   const phone = settings?.paymentPhone ?? '04143043337'
   const ci = settings?.paymentNationalId ?? '4561947'
   const bank = settings?.paymentBank ?? 'Banesco'
+  const participant = data?.participant
 
   const copyToClipboard = async (text: string, label: string) => {
     await navigator.clipboard.writeText(text)
@@ -69,6 +77,22 @@ Equivalente: ${entryUsd} USD
 Tasa fija: ${fixedRate} Bs/USD
 Concepto: QUINIELA 2026 - ${code}`
 
+  // WhatsApp URL for sending payment proof — uses form data if filled, placeholders if not
+  const proofWhatsAppUrl = getPaymentProofWhatsAppUrl({
+    adminPhone: phone,
+    name: participant?.fullName ?? '[Tu nombre]',
+    nationalId: participant?.nationalId ?? '[Tu cédula]',
+    phone: participant?.phone ?? '[Tu WhatsApp]',
+    participationCode: code,
+    amountVes,
+    amountUsd: entryUsd,
+    fixedExchangeRate: fixedRate,
+    senderBank: form.senderBank || undefined,
+    paymentReference: form.paymentReference || undefined,
+    paymentDate: form.paymentDate || undefined,
+  })
+
+  // Legacy: simple contact WhatsApp (kept for the contact button)
   const whatsappMsg = encodeURIComponent(
     `Hola! Quiero reportar mi pago para la Quiniela Mundial 2026.\n\nCódigo: ${code}\nMonto: ${amountVes.toLocaleString('es-VE')} Bs (${entryUsd} USD)\nTasa fija: ${fixedRate} Bs/USD`
   )
@@ -213,15 +237,19 @@ Concepto: QUINIELA 2026 - ${code}`
             📋 {copied === 'todos' ? '¡Datos copiados!' : 'Copiar todos los datos'}
           </button>
 
-          {/* WhatsApp contact */}
+          {/* Send proof via WhatsApp — primary action */}
           <a
-            href={`https://wa.me/58${phone.replace(/^0/, '')}?text=${whatsappMsg}`}
+            href={proofWhatsAppUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-3 w-full bg-[#25D366] hover:bg-[#1fb856] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
+            className="mt-3 w-full bg-[#25D366] hover:bg-[#1fb856] text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2.5 transition-colors shadow-md text-base"
           >
-            <span className="text-xl">📲</span> Contactar por WhatsApp
+            <span className="text-2xl leading-none">📲</span>
+            Enviar comprobante por WhatsApp
           </a>
+          <p className="text-center text-xs text-slate-400 mt-2">
+            También puedes enviar tu comprobante directamente por WhatsApp para acelerar la verificación.
+          </p>
         </div>
 
         {/* Note about manual verification */}
@@ -236,9 +264,17 @@ Concepto: QUINIELA 2026 - ${code}`
             <h2 className="font-bold text-slate-700 mb-4">📋 Reportar mi pago</h2>
             {success ? (
               <div className="text-center py-4">
-                <div className="text-4xl mb-2">✅</div>
-                <p className="text-green-600 font-bold">¡Pago reportado!</p>
-                <p className="text-slate-500 text-sm">Redirigiendo al comprobante...</p>
+                <div className="text-4xl mb-3">✅</div>
+                <p className="text-green-600 font-bold text-lg">¡Pago reportado!</p>
+                <p className="text-slate-500 text-sm mb-4">Redirigiendo al comprobante...</p>
+                <a
+                  href={proofWhatsAppUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1fb856] text-white font-bold px-6 py-3 rounded-xl transition-colors"
+                >
+                  📲 Enviar comprobante por WhatsApp
+                </a>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -284,6 +320,20 @@ Concepto: QUINIELA 2026 - ${code}`
                 >
                   {submitting ? 'Enviando...' : 'Reportar pago'}
                 </button>
+
+                <div className="border-t border-slate-100 pt-4 mt-2">
+                  <a
+                    href={proofWhatsAppUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full bg-[#25D366] hover:bg-[#1fb856] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <span className="text-xl">📲</span> Enviar comprobante por WhatsApp
+                  </a>
+                  <p className="text-center text-xs text-slate-400 mt-2">
+                    También puedes enviar tu comprobante directamente por WhatsApp para acelerar la verificación.
+                  </p>
+                </div>
               </form>
             )}
           </div>

@@ -82,5 +82,12 @@ export async function GET(req: NextRequest) {
     fixedRate,
     entryUsd,
     amountVes: Math.round(entryUsd * fixedRate),
+    // Participant own data — safe to return since accessed via their unique code
+    participant: {
+      fullName: participant.fullName,
+      nationalId: participant.nationalId,
+      phone: participant.phone,
+      participationCode: participant.participationCode,
+    },
   })
 }
