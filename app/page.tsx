@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Trophy, Users, Clock, Star, CheckCircle, HelpCircle, ChevronDown, ChevronUp, Share2, Zap, Shield, BarChart2 } from 'lucide-react'
+import { Trophy, Users, Clock, Star, ChevronDown, ChevronUp, Zap, Shield, BarChart2, MessageCircle } from 'lucide-react'
+import { getWhatsAppShareUrl, getInviteMessage } from '@/lib/share'
 
 const TOURNAMENT_START = new Date('2026-06-11T19:00:00Z') // June 11 3PM VET = 7PM UTC
 
@@ -141,17 +142,26 @@ function AnimatedNumber({ target, suffix = '' }: { target: number; suffix?: stri
 
 /* ── Main ───────────────────────────────────────────────────────── */
 export default function Home() {
-  const [shareUrl, setShareUrl] = useState("https://quiniela2026.ve")
-  useEffect(() => { setShareUrl(window.location.origin) }, [])
-  const shareMsg = `🏆⚽ ¡Participa en la Quiniela del Mundial 2026!\nPredice los 72 partidos y compite por el premio.\n👉 ${shareUrl}`
+  const [appUrl, setAppUrl] = useState(process.env.NEXT_PUBLIC_APP_URL ?? '')
+  useEffect(() => {
+    const envUrl = process.env.NEXT_PUBLIC_APP_URL
+    if (envUrl && !envUrl.includes('localhost')) {
+      setAppUrl(envUrl)
+    } else {
+      setAppUrl(window.location.origin)
+    }
+  }, [])
+
+  const whatsappUrl = getWhatsAppShareUrl(getInviteMessage(appUrl))
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
 
       {/* ── HERO ─────────────────────────────────────────────────── */}
-      <header className="relative overflow-hidden text-white" style={{ minHeight: '600px' }}>
+      {/* Mobile min-height is shorter so the image isn't stretched; desktop stays tall */}
+      <header className="relative overflow-hidden text-white" style={{ minHeight: 'clamp(520px, 80vw, 700px)' }}>
 
-        {/* Hero image — desktop */}
+        {/* Hero image — desktop (horizontal, full bleed) */}
         <div className="absolute inset-0 hidden sm:block">
           <Image
             src="/assets/hero/hero-desktop.webp"
@@ -163,13 +173,17 @@ export default function Home() {
           />
         </div>
 
-        {/* Hero image — mobile */}
+        {/* Hero image — mobile
+            object-position: center 20% keeps faces/players in the upper-center zone
+            and avoids torso/feet cropping at the bottom.
+            Adjust the % if the image focal point is different. */}
         <div className="absolute inset-0 block sm:hidden">
           <Image
             src="/assets/hero/hero-mobile.webp"
             alt="Quiniela Mundial 2026"
             fill
-            className="object-cover object-center"
+            className="object-cover"
+            style={{ objectPosition: 'center 20%' }}
             priority
             sizes="100vw"
           />
@@ -235,6 +249,15 @@ export default function Home() {
             >
               🏆 Ver ranking
             </Link>
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-[#25D366]/80 hover:bg-[#25D366] backdrop-blur-md border border-[#25D366]/50 text-white font-semibold px-7 py-4 rounded-2xl text-base transition-all inline-flex items-center gap-2 hover:-translate-y-0.5 w-full sm:w-auto justify-center"
+            >
+              <MessageCircle size={18} className="shrink-0" />
+              Invitar amigos
+            </a>
           </div>
 
           {/* Trust indicator */}
@@ -345,12 +368,8 @@ export default function Home() {
               },
               {
                 num: 5,
-                icon: (
-                  <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M8 21h8M12 21v-4M5 3h14l-2 9H7L5 3zM7 12a5 5 0 0 0 10 0"/>
-                  </svg>
-                ),
-                title: 'Gana',
+                icon: <Trophy className="w-8 h-8" />,
+                title: '¡Gana!',
                 desc: 'El mejor puntaje gana el premio.',
                 color: 'text-yellow-600',
                 bg: 'bg-yellow-50',

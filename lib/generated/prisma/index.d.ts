@@ -49,6 +49,11 @@ export type Payment = $Result.DefaultSelection<Prisma.$PaymentPayload>
  */
 export type RankingSnapshot = $Result.DefaultSelection<Prisma.$RankingSnapshotPayload>
 /**
+ * Model LiveResultsLog
+ * 
+ */
+export type LiveResultsLog = $Result.DefaultSelection<Prisma.$LiveResultsLogPayload>
+/**
  * Model AuditLog
  * 
  */
@@ -290,6 +295,16 @@ export class PrismaClient<
     * ```
     */
   get rankingSnapshot(): Prisma.RankingSnapshotDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.liveResultsLog`: Exposes CRUD operations for the **LiveResultsLog** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more LiveResultsLogs
+    * const liveResultsLogs = await prisma.liveResultsLog.findMany()
+    * ```
+    */
+  get liveResultsLog(): Prisma.LiveResultsLogDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.auditLog`: Exposes CRUD operations for the **AuditLog** model.
@@ -741,6 +756,7 @@ export namespace Prisma {
     Prediction: 'Prediction',
     Payment: 'Payment',
     RankingSnapshot: 'RankingSnapshot',
+    LiveResultsLog: 'LiveResultsLog',
     AuditLog: 'AuditLog'
   };
 
@@ -757,7 +773,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "setting" | "team" | "match" | "participant" | "prediction" | "payment" | "rankingSnapshot" | "auditLog"
+      modelProps: "setting" | "team" | "match" | "participant" | "prediction" | "payment" | "rankingSnapshot" | "liveResultsLog" | "auditLog"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1279,6 +1295,80 @@ export namespace Prisma {
           }
         }
       }
+      LiveResultsLog: {
+        payload: Prisma.$LiveResultsLogPayload<ExtArgs>
+        fields: Prisma.LiveResultsLogFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.LiveResultsLogFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LiveResultsLogPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.LiveResultsLogFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LiveResultsLogPayload>
+          }
+          findFirst: {
+            args: Prisma.LiveResultsLogFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LiveResultsLogPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.LiveResultsLogFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LiveResultsLogPayload>
+          }
+          findMany: {
+            args: Prisma.LiveResultsLogFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LiveResultsLogPayload>[]
+          }
+          create: {
+            args: Prisma.LiveResultsLogCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LiveResultsLogPayload>
+          }
+          createMany: {
+            args: Prisma.LiveResultsLogCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.LiveResultsLogCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LiveResultsLogPayload>[]
+          }
+          delete: {
+            args: Prisma.LiveResultsLogDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LiveResultsLogPayload>
+          }
+          update: {
+            args: Prisma.LiveResultsLogUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LiveResultsLogPayload>
+          }
+          deleteMany: {
+            args: Prisma.LiveResultsLogDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.LiveResultsLogUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.LiveResultsLogUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LiveResultsLogPayload>[]
+          }
+          upsert: {
+            args: Prisma.LiveResultsLogUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LiveResultsLogPayload>
+          }
+          aggregate: {
+            args: Prisma.LiveResultsLogAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateLiveResultsLog>
+          }
+          groupBy: {
+            args: Prisma.LiveResultsLogGroupByArgs<ExtArgs>
+            result: $Utils.Optional<LiveResultsLogGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.LiveResultsLogCountArgs<ExtArgs>
+            result: $Utils.Optional<LiveResultsLogCountAggregateOutputType> | number
+          }
+        }
+      }
       AuditLog: {
         payload: Prisma.$AuditLogPayload<ExtArgs>
         fields: Prisma.AuditLogFieldRefs
@@ -1468,6 +1558,7 @@ export namespace Prisma {
     prediction?: PredictionOmit
     payment?: PaymentOmit
     rankingSnapshot?: RankingSnapshotOmit
+    liveResultsLog?: LiveResultsLogOmit
     auditLog?: AuditLogOmit
   }
 
@@ -4066,12 +4157,16 @@ export namespace Prisma {
     matchNumber: number | null
     team1Goals: number | null
     team2Goals: number | null
+    autoDetectedTeam1Goals: number | null
+    autoDetectedTeam2Goals: number | null
   }
 
   export type MatchSumAggregateOutputType = {
     matchNumber: number | null
     team1Goals: number | null
     team2Goals: number | null
+    autoDetectedTeam1Goals: number | null
+    autoDetectedTeam2Goals: number | null
   }
 
   export type MatchMinAggregateOutputType = {
@@ -4089,6 +4184,14 @@ export namespace Prisma {
     team2Goals: number | null
     result: $Enums.MatchResult | null
     resultUpdatedAt: Date | null
+    resultSource: string | null
+    autoDetectedTeam1Goals: number | null
+    autoDetectedTeam2Goals: number | null
+    autoDetectedResult: $Enums.MatchResult | null
+    autoDetectedSource: string | null
+    autoDetectionConfidence: string | null
+    autoDetectedAt: Date | null
+    autoResultStatus: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -4108,6 +4211,14 @@ export namespace Prisma {
     team2Goals: number | null
     result: $Enums.MatchResult | null
     resultUpdatedAt: Date | null
+    resultSource: string | null
+    autoDetectedTeam1Goals: number | null
+    autoDetectedTeam2Goals: number | null
+    autoDetectedResult: $Enums.MatchResult | null
+    autoDetectedSource: string | null
+    autoDetectionConfidence: string | null
+    autoDetectedAt: Date | null
+    autoResultStatus: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -4127,6 +4238,14 @@ export namespace Prisma {
     team2Goals: number
     result: number
     resultUpdatedAt: number
+    resultSource: number
+    autoDetectedTeam1Goals: number
+    autoDetectedTeam2Goals: number
+    autoDetectedResult: number
+    autoDetectedSource: number
+    autoDetectionConfidence: number
+    autoDetectedAt: number
+    autoResultStatus: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -4137,12 +4256,16 @@ export namespace Prisma {
     matchNumber?: true
     team1Goals?: true
     team2Goals?: true
+    autoDetectedTeam1Goals?: true
+    autoDetectedTeam2Goals?: true
   }
 
   export type MatchSumAggregateInputType = {
     matchNumber?: true
     team1Goals?: true
     team2Goals?: true
+    autoDetectedTeam1Goals?: true
+    autoDetectedTeam2Goals?: true
   }
 
   export type MatchMinAggregateInputType = {
@@ -4160,6 +4283,14 @@ export namespace Prisma {
     team2Goals?: true
     result?: true
     resultUpdatedAt?: true
+    resultSource?: true
+    autoDetectedTeam1Goals?: true
+    autoDetectedTeam2Goals?: true
+    autoDetectedResult?: true
+    autoDetectedSource?: true
+    autoDetectionConfidence?: true
+    autoDetectedAt?: true
+    autoResultStatus?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -4179,6 +4310,14 @@ export namespace Prisma {
     team2Goals?: true
     result?: true
     resultUpdatedAt?: true
+    resultSource?: true
+    autoDetectedTeam1Goals?: true
+    autoDetectedTeam2Goals?: true
+    autoDetectedResult?: true
+    autoDetectedSource?: true
+    autoDetectionConfidence?: true
+    autoDetectedAt?: true
+    autoResultStatus?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -4198,6 +4337,14 @@ export namespace Prisma {
     team2Goals?: true
     result?: true
     resultUpdatedAt?: true
+    resultSource?: true
+    autoDetectedTeam1Goals?: true
+    autoDetectedTeam2Goals?: true
+    autoDetectedResult?: true
+    autoDetectedSource?: true
+    autoDetectionConfidence?: true
+    autoDetectedAt?: true
+    autoResultStatus?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -4304,6 +4451,14 @@ export namespace Prisma {
     team2Goals: number | null
     result: $Enums.MatchResult | null
     resultUpdatedAt: Date | null
+    resultSource: string | null
+    autoDetectedTeam1Goals: number | null
+    autoDetectedTeam2Goals: number | null
+    autoDetectedResult: $Enums.MatchResult | null
+    autoDetectedSource: string | null
+    autoDetectionConfidence: string | null
+    autoDetectedAt: Date | null
+    autoResultStatus: string | null
     createdAt: Date
     updatedAt: Date
     _count: MatchCountAggregateOutputType | null
@@ -4342,6 +4497,14 @@ export namespace Prisma {
     team2Goals?: boolean
     result?: boolean
     resultUpdatedAt?: boolean
+    resultSource?: boolean
+    autoDetectedTeam1Goals?: boolean
+    autoDetectedTeam2Goals?: boolean
+    autoDetectedResult?: boolean
+    autoDetectedSource?: boolean
+    autoDetectionConfidence?: boolean
+    autoDetectedAt?: boolean
+    autoResultStatus?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     team1?: boolean | TeamDefaultArgs<ExtArgs>
@@ -4365,6 +4528,14 @@ export namespace Prisma {
     team2Goals?: boolean
     result?: boolean
     resultUpdatedAt?: boolean
+    resultSource?: boolean
+    autoDetectedTeam1Goals?: boolean
+    autoDetectedTeam2Goals?: boolean
+    autoDetectedResult?: boolean
+    autoDetectedSource?: boolean
+    autoDetectionConfidence?: boolean
+    autoDetectedAt?: boolean
+    autoResultStatus?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     team1?: boolean | TeamDefaultArgs<ExtArgs>
@@ -4386,6 +4557,14 @@ export namespace Prisma {
     team2Goals?: boolean
     result?: boolean
     resultUpdatedAt?: boolean
+    resultSource?: boolean
+    autoDetectedTeam1Goals?: boolean
+    autoDetectedTeam2Goals?: boolean
+    autoDetectedResult?: boolean
+    autoDetectedSource?: boolean
+    autoDetectionConfidence?: boolean
+    autoDetectedAt?: boolean
+    autoResultStatus?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     team1?: boolean | TeamDefaultArgs<ExtArgs>
@@ -4407,11 +4586,19 @@ export namespace Prisma {
     team2Goals?: boolean
     result?: boolean
     resultUpdatedAt?: boolean
+    resultSource?: boolean
+    autoDetectedTeam1Goals?: boolean
+    autoDetectedTeam2Goals?: boolean
+    autoDetectedResult?: boolean
+    autoDetectedSource?: boolean
+    autoDetectionConfidence?: boolean
+    autoDetectedAt?: boolean
+    autoResultStatus?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type MatchOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "matchNumber" | "group" | "team1Id" | "team2Id" | "kickoffUtc" | "venue" | "city" | "source" | "status" | "team1Goals" | "team2Goals" | "result" | "resultUpdatedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["match"]>
+  export type MatchOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "matchNumber" | "group" | "team1Id" | "team2Id" | "kickoffUtc" | "venue" | "city" | "source" | "status" | "team1Goals" | "team2Goals" | "result" | "resultUpdatedAt" | "resultSource" | "autoDetectedTeam1Goals" | "autoDetectedTeam2Goals" | "autoDetectedResult" | "autoDetectedSource" | "autoDetectionConfidence" | "autoDetectedAt" | "autoResultStatus" | "createdAt" | "updatedAt", ExtArgs["result"]["match"]>
   export type MatchInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     team1?: boolean | TeamDefaultArgs<ExtArgs>
     team2?: boolean | TeamDefaultArgs<ExtArgs>
@@ -4449,6 +4636,14 @@ export namespace Prisma {
       team2Goals: number | null
       result: $Enums.MatchResult | null
       resultUpdatedAt: Date | null
+      resultSource: string | null
+      autoDetectedTeam1Goals: number | null
+      autoDetectedTeam2Goals: number | null
+      autoDetectedResult: $Enums.MatchResult | null
+      autoDetectedSource: string | null
+      autoDetectionConfidence: string | null
+      autoDetectedAt: Date | null
+      autoResultStatus: string | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["match"]>
@@ -4891,6 +5086,14 @@ export namespace Prisma {
     readonly team2Goals: FieldRef<"Match", 'Int'>
     readonly result: FieldRef<"Match", 'MatchResult'>
     readonly resultUpdatedAt: FieldRef<"Match", 'DateTime'>
+    readonly resultSource: FieldRef<"Match", 'String'>
+    readonly autoDetectedTeam1Goals: FieldRef<"Match", 'Int'>
+    readonly autoDetectedTeam2Goals: FieldRef<"Match", 'Int'>
+    readonly autoDetectedResult: FieldRef<"Match", 'MatchResult'>
+    readonly autoDetectedSource: FieldRef<"Match", 'String'>
+    readonly autoDetectionConfidence: FieldRef<"Match", 'String'>
+    readonly autoDetectedAt: FieldRef<"Match", 'DateTime'>
+    readonly autoResultStatus: FieldRef<"Match", 'String'>
     readonly createdAt: FieldRef<"Match", 'DateTime'>
     readonly updatedAt: FieldRef<"Match", 'DateTime'>
   }
@@ -10229,6 +10432,1122 @@ export namespace Prisma {
 
 
   /**
+   * Model LiveResultsLog
+   */
+
+  export type AggregateLiveResultsLog = {
+    _count: LiveResultsLogCountAggregateOutputType | null
+    _avg: LiveResultsLogAvgAggregateOutputType | null
+    _sum: LiveResultsLogSumAggregateOutputType | null
+    _min: LiveResultsLogMinAggregateOutputType | null
+    _max: LiveResultsLogMaxAggregateOutputType | null
+  }
+
+  export type LiveResultsLogAvgAggregateOutputType = {
+    detectedGoals1: number | null
+    detectedGoals2: number | null
+  }
+
+  export type LiveResultsLogSumAggregateOutputType = {
+    detectedGoals1: number | null
+    detectedGoals2: number | null
+  }
+
+  export type LiveResultsLogMinAggregateOutputType = {
+    id: string | null
+    type: string | null
+    message: string | null
+    matchId: string | null
+    source: string | null
+    confidence: string | null
+    detectedGoals1: number | null
+    detectedGoals2: number | null
+    adminAction: string | null
+    rawData: string | null
+    createdAt: Date | null
+  }
+
+  export type LiveResultsLogMaxAggregateOutputType = {
+    id: string | null
+    type: string | null
+    message: string | null
+    matchId: string | null
+    source: string | null
+    confidence: string | null
+    detectedGoals1: number | null
+    detectedGoals2: number | null
+    adminAction: string | null
+    rawData: string | null
+    createdAt: Date | null
+  }
+
+  export type LiveResultsLogCountAggregateOutputType = {
+    id: number
+    type: number
+    message: number
+    matchId: number
+    source: number
+    confidence: number
+    detectedGoals1: number
+    detectedGoals2: number
+    adminAction: number
+    rawData: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type LiveResultsLogAvgAggregateInputType = {
+    detectedGoals1?: true
+    detectedGoals2?: true
+  }
+
+  export type LiveResultsLogSumAggregateInputType = {
+    detectedGoals1?: true
+    detectedGoals2?: true
+  }
+
+  export type LiveResultsLogMinAggregateInputType = {
+    id?: true
+    type?: true
+    message?: true
+    matchId?: true
+    source?: true
+    confidence?: true
+    detectedGoals1?: true
+    detectedGoals2?: true
+    adminAction?: true
+    rawData?: true
+    createdAt?: true
+  }
+
+  export type LiveResultsLogMaxAggregateInputType = {
+    id?: true
+    type?: true
+    message?: true
+    matchId?: true
+    source?: true
+    confidence?: true
+    detectedGoals1?: true
+    detectedGoals2?: true
+    adminAction?: true
+    rawData?: true
+    createdAt?: true
+  }
+
+  export type LiveResultsLogCountAggregateInputType = {
+    id?: true
+    type?: true
+    message?: true
+    matchId?: true
+    source?: true
+    confidence?: true
+    detectedGoals1?: true
+    detectedGoals2?: true
+    adminAction?: true
+    rawData?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type LiveResultsLogAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which LiveResultsLog to aggregate.
+     */
+    where?: LiveResultsLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LiveResultsLogs to fetch.
+     */
+    orderBy?: LiveResultsLogOrderByWithRelationInput | LiveResultsLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: LiveResultsLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LiveResultsLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LiveResultsLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned LiveResultsLogs
+    **/
+    _count?: true | LiveResultsLogCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: LiveResultsLogAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: LiveResultsLogSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: LiveResultsLogMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: LiveResultsLogMaxAggregateInputType
+  }
+
+  export type GetLiveResultsLogAggregateType<T extends LiveResultsLogAggregateArgs> = {
+        [P in keyof T & keyof AggregateLiveResultsLog]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateLiveResultsLog[P]>
+      : GetScalarType<T[P], AggregateLiveResultsLog[P]>
+  }
+
+
+
+
+  export type LiveResultsLogGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: LiveResultsLogWhereInput
+    orderBy?: LiveResultsLogOrderByWithAggregationInput | LiveResultsLogOrderByWithAggregationInput[]
+    by: LiveResultsLogScalarFieldEnum[] | LiveResultsLogScalarFieldEnum
+    having?: LiveResultsLogScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: LiveResultsLogCountAggregateInputType | true
+    _avg?: LiveResultsLogAvgAggregateInputType
+    _sum?: LiveResultsLogSumAggregateInputType
+    _min?: LiveResultsLogMinAggregateInputType
+    _max?: LiveResultsLogMaxAggregateInputType
+  }
+
+  export type LiveResultsLogGroupByOutputType = {
+    id: string
+    type: string
+    message: string
+    matchId: string | null
+    source: string | null
+    confidence: string | null
+    detectedGoals1: number | null
+    detectedGoals2: number | null
+    adminAction: string | null
+    rawData: string | null
+    createdAt: Date
+    _count: LiveResultsLogCountAggregateOutputType | null
+    _avg: LiveResultsLogAvgAggregateOutputType | null
+    _sum: LiveResultsLogSumAggregateOutputType | null
+    _min: LiveResultsLogMinAggregateOutputType | null
+    _max: LiveResultsLogMaxAggregateOutputType | null
+  }
+
+  type GetLiveResultsLogGroupByPayload<T extends LiveResultsLogGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<LiveResultsLogGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof LiveResultsLogGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], LiveResultsLogGroupByOutputType[P]>
+            : GetScalarType<T[P], LiveResultsLogGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type LiveResultsLogSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    type?: boolean
+    message?: boolean
+    matchId?: boolean
+    source?: boolean
+    confidence?: boolean
+    detectedGoals1?: boolean
+    detectedGoals2?: boolean
+    adminAction?: boolean
+    rawData?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["liveResultsLog"]>
+
+  export type LiveResultsLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    type?: boolean
+    message?: boolean
+    matchId?: boolean
+    source?: boolean
+    confidence?: boolean
+    detectedGoals1?: boolean
+    detectedGoals2?: boolean
+    adminAction?: boolean
+    rawData?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["liveResultsLog"]>
+
+  export type LiveResultsLogSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    type?: boolean
+    message?: boolean
+    matchId?: boolean
+    source?: boolean
+    confidence?: boolean
+    detectedGoals1?: boolean
+    detectedGoals2?: boolean
+    adminAction?: boolean
+    rawData?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["liveResultsLog"]>
+
+  export type LiveResultsLogSelectScalar = {
+    id?: boolean
+    type?: boolean
+    message?: boolean
+    matchId?: boolean
+    source?: boolean
+    confidence?: boolean
+    detectedGoals1?: boolean
+    detectedGoals2?: boolean
+    adminAction?: boolean
+    rawData?: boolean
+    createdAt?: boolean
+  }
+
+  export type LiveResultsLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "type" | "message" | "matchId" | "source" | "confidence" | "detectedGoals1" | "detectedGoals2" | "adminAction" | "rawData" | "createdAt", ExtArgs["result"]["liveResultsLog"]>
+
+  export type $LiveResultsLogPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "LiveResultsLog"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      type: string
+      message: string
+      matchId: string | null
+      source: string | null
+      confidence: string | null
+      detectedGoals1: number | null
+      detectedGoals2: number | null
+      adminAction: string | null
+      rawData: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["liveResultsLog"]>
+    composites: {}
+  }
+
+  type LiveResultsLogGetPayload<S extends boolean | null | undefined | LiveResultsLogDefaultArgs> = $Result.GetResult<Prisma.$LiveResultsLogPayload, S>
+
+  type LiveResultsLogCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<LiveResultsLogFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: LiveResultsLogCountAggregateInputType | true
+    }
+
+  export interface LiveResultsLogDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['LiveResultsLog'], meta: { name: 'LiveResultsLog' } }
+    /**
+     * Find zero or one LiveResultsLog that matches the filter.
+     * @param {LiveResultsLogFindUniqueArgs} args - Arguments to find a LiveResultsLog
+     * @example
+     * // Get one LiveResultsLog
+     * const liveResultsLog = await prisma.liveResultsLog.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends LiveResultsLogFindUniqueArgs>(args: SelectSubset<T, LiveResultsLogFindUniqueArgs<ExtArgs>>): Prisma__LiveResultsLogClient<$Result.GetResult<Prisma.$LiveResultsLogPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one LiveResultsLog that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {LiveResultsLogFindUniqueOrThrowArgs} args - Arguments to find a LiveResultsLog
+     * @example
+     * // Get one LiveResultsLog
+     * const liveResultsLog = await prisma.liveResultsLog.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends LiveResultsLogFindUniqueOrThrowArgs>(args: SelectSubset<T, LiveResultsLogFindUniqueOrThrowArgs<ExtArgs>>): Prisma__LiveResultsLogClient<$Result.GetResult<Prisma.$LiveResultsLogPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first LiveResultsLog that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LiveResultsLogFindFirstArgs} args - Arguments to find a LiveResultsLog
+     * @example
+     * // Get one LiveResultsLog
+     * const liveResultsLog = await prisma.liveResultsLog.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends LiveResultsLogFindFirstArgs>(args?: SelectSubset<T, LiveResultsLogFindFirstArgs<ExtArgs>>): Prisma__LiveResultsLogClient<$Result.GetResult<Prisma.$LiveResultsLogPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first LiveResultsLog that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LiveResultsLogFindFirstOrThrowArgs} args - Arguments to find a LiveResultsLog
+     * @example
+     * // Get one LiveResultsLog
+     * const liveResultsLog = await prisma.liveResultsLog.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends LiveResultsLogFindFirstOrThrowArgs>(args?: SelectSubset<T, LiveResultsLogFindFirstOrThrowArgs<ExtArgs>>): Prisma__LiveResultsLogClient<$Result.GetResult<Prisma.$LiveResultsLogPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more LiveResultsLogs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LiveResultsLogFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all LiveResultsLogs
+     * const liveResultsLogs = await prisma.liveResultsLog.findMany()
+     * 
+     * // Get first 10 LiveResultsLogs
+     * const liveResultsLogs = await prisma.liveResultsLog.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const liveResultsLogWithIdOnly = await prisma.liveResultsLog.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends LiveResultsLogFindManyArgs>(args?: SelectSubset<T, LiveResultsLogFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LiveResultsLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a LiveResultsLog.
+     * @param {LiveResultsLogCreateArgs} args - Arguments to create a LiveResultsLog.
+     * @example
+     * // Create one LiveResultsLog
+     * const LiveResultsLog = await prisma.liveResultsLog.create({
+     *   data: {
+     *     // ... data to create a LiveResultsLog
+     *   }
+     * })
+     * 
+     */
+    create<T extends LiveResultsLogCreateArgs>(args: SelectSubset<T, LiveResultsLogCreateArgs<ExtArgs>>): Prisma__LiveResultsLogClient<$Result.GetResult<Prisma.$LiveResultsLogPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many LiveResultsLogs.
+     * @param {LiveResultsLogCreateManyArgs} args - Arguments to create many LiveResultsLogs.
+     * @example
+     * // Create many LiveResultsLogs
+     * const liveResultsLog = await prisma.liveResultsLog.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends LiveResultsLogCreateManyArgs>(args?: SelectSubset<T, LiveResultsLogCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many LiveResultsLogs and returns the data saved in the database.
+     * @param {LiveResultsLogCreateManyAndReturnArgs} args - Arguments to create many LiveResultsLogs.
+     * @example
+     * // Create many LiveResultsLogs
+     * const liveResultsLog = await prisma.liveResultsLog.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many LiveResultsLogs and only return the `id`
+     * const liveResultsLogWithIdOnly = await prisma.liveResultsLog.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends LiveResultsLogCreateManyAndReturnArgs>(args?: SelectSubset<T, LiveResultsLogCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LiveResultsLogPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a LiveResultsLog.
+     * @param {LiveResultsLogDeleteArgs} args - Arguments to delete one LiveResultsLog.
+     * @example
+     * // Delete one LiveResultsLog
+     * const LiveResultsLog = await prisma.liveResultsLog.delete({
+     *   where: {
+     *     // ... filter to delete one LiveResultsLog
+     *   }
+     * })
+     * 
+     */
+    delete<T extends LiveResultsLogDeleteArgs>(args: SelectSubset<T, LiveResultsLogDeleteArgs<ExtArgs>>): Prisma__LiveResultsLogClient<$Result.GetResult<Prisma.$LiveResultsLogPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one LiveResultsLog.
+     * @param {LiveResultsLogUpdateArgs} args - Arguments to update one LiveResultsLog.
+     * @example
+     * // Update one LiveResultsLog
+     * const liveResultsLog = await prisma.liveResultsLog.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends LiveResultsLogUpdateArgs>(args: SelectSubset<T, LiveResultsLogUpdateArgs<ExtArgs>>): Prisma__LiveResultsLogClient<$Result.GetResult<Prisma.$LiveResultsLogPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more LiveResultsLogs.
+     * @param {LiveResultsLogDeleteManyArgs} args - Arguments to filter LiveResultsLogs to delete.
+     * @example
+     * // Delete a few LiveResultsLogs
+     * const { count } = await prisma.liveResultsLog.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends LiveResultsLogDeleteManyArgs>(args?: SelectSubset<T, LiveResultsLogDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more LiveResultsLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LiveResultsLogUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many LiveResultsLogs
+     * const liveResultsLog = await prisma.liveResultsLog.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends LiveResultsLogUpdateManyArgs>(args: SelectSubset<T, LiveResultsLogUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more LiveResultsLogs and returns the data updated in the database.
+     * @param {LiveResultsLogUpdateManyAndReturnArgs} args - Arguments to update many LiveResultsLogs.
+     * @example
+     * // Update many LiveResultsLogs
+     * const liveResultsLog = await prisma.liveResultsLog.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more LiveResultsLogs and only return the `id`
+     * const liveResultsLogWithIdOnly = await prisma.liveResultsLog.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends LiveResultsLogUpdateManyAndReturnArgs>(args: SelectSubset<T, LiveResultsLogUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LiveResultsLogPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one LiveResultsLog.
+     * @param {LiveResultsLogUpsertArgs} args - Arguments to update or create a LiveResultsLog.
+     * @example
+     * // Update or create a LiveResultsLog
+     * const liveResultsLog = await prisma.liveResultsLog.upsert({
+     *   create: {
+     *     // ... data to create a LiveResultsLog
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the LiveResultsLog we want to update
+     *   }
+     * })
+     */
+    upsert<T extends LiveResultsLogUpsertArgs>(args: SelectSubset<T, LiveResultsLogUpsertArgs<ExtArgs>>): Prisma__LiveResultsLogClient<$Result.GetResult<Prisma.$LiveResultsLogPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of LiveResultsLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LiveResultsLogCountArgs} args - Arguments to filter LiveResultsLogs to count.
+     * @example
+     * // Count the number of LiveResultsLogs
+     * const count = await prisma.liveResultsLog.count({
+     *   where: {
+     *     // ... the filter for the LiveResultsLogs we want to count
+     *   }
+     * })
+    **/
+    count<T extends LiveResultsLogCountArgs>(
+      args?: Subset<T, LiveResultsLogCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], LiveResultsLogCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a LiveResultsLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LiveResultsLogAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends LiveResultsLogAggregateArgs>(args: Subset<T, LiveResultsLogAggregateArgs>): Prisma.PrismaPromise<GetLiveResultsLogAggregateType<T>>
+
+    /**
+     * Group by LiveResultsLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LiveResultsLogGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends LiveResultsLogGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: LiveResultsLogGroupByArgs['orderBy'] }
+        : { orderBy?: LiveResultsLogGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, LiveResultsLogGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetLiveResultsLogGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the LiveResultsLog model
+   */
+  readonly fields: LiveResultsLogFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for LiveResultsLog.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__LiveResultsLogClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the LiveResultsLog model
+   */
+  interface LiveResultsLogFieldRefs {
+    readonly id: FieldRef<"LiveResultsLog", 'String'>
+    readonly type: FieldRef<"LiveResultsLog", 'String'>
+    readonly message: FieldRef<"LiveResultsLog", 'String'>
+    readonly matchId: FieldRef<"LiveResultsLog", 'String'>
+    readonly source: FieldRef<"LiveResultsLog", 'String'>
+    readonly confidence: FieldRef<"LiveResultsLog", 'String'>
+    readonly detectedGoals1: FieldRef<"LiveResultsLog", 'Int'>
+    readonly detectedGoals2: FieldRef<"LiveResultsLog", 'Int'>
+    readonly adminAction: FieldRef<"LiveResultsLog", 'String'>
+    readonly rawData: FieldRef<"LiveResultsLog", 'String'>
+    readonly createdAt: FieldRef<"LiveResultsLog", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * LiveResultsLog findUnique
+   */
+  export type LiveResultsLogFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LiveResultsLog
+     */
+    select?: LiveResultsLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LiveResultsLog
+     */
+    omit?: LiveResultsLogOmit<ExtArgs> | null
+    /**
+     * Filter, which LiveResultsLog to fetch.
+     */
+    where: LiveResultsLogWhereUniqueInput
+  }
+
+  /**
+   * LiveResultsLog findUniqueOrThrow
+   */
+  export type LiveResultsLogFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LiveResultsLog
+     */
+    select?: LiveResultsLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LiveResultsLog
+     */
+    omit?: LiveResultsLogOmit<ExtArgs> | null
+    /**
+     * Filter, which LiveResultsLog to fetch.
+     */
+    where: LiveResultsLogWhereUniqueInput
+  }
+
+  /**
+   * LiveResultsLog findFirst
+   */
+  export type LiveResultsLogFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LiveResultsLog
+     */
+    select?: LiveResultsLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LiveResultsLog
+     */
+    omit?: LiveResultsLogOmit<ExtArgs> | null
+    /**
+     * Filter, which LiveResultsLog to fetch.
+     */
+    where?: LiveResultsLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LiveResultsLogs to fetch.
+     */
+    orderBy?: LiveResultsLogOrderByWithRelationInput | LiveResultsLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for LiveResultsLogs.
+     */
+    cursor?: LiveResultsLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LiveResultsLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LiveResultsLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LiveResultsLogs.
+     */
+    distinct?: LiveResultsLogScalarFieldEnum | LiveResultsLogScalarFieldEnum[]
+  }
+
+  /**
+   * LiveResultsLog findFirstOrThrow
+   */
+  export type LiveResultsLogFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LiveResultsLog
+     */
+    select?: LiveResultsLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LiveResultsLog
+     */
+    omit?: LiveResultsLogOmit<ExtArgs> | null
+    /**
+     * Filter, which LiveResultsLog to fetch.
+     */
+    where?: LiveResultsLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LiveResultsLogs to fetch.
+     */
+    orderBy?: LiveResultsLogOrderByWithRelationInput | LiveResultsLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for LiveResultsLogs.
+     */
+    cursor?: LiveResultsLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LiveResultsLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LiveResultsLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LiveResultsLogs.
+     */
+    distinct?: LiveResultsLogScalarFieldEnum | LiveResultsLogScalarFieldEnum[]
+  }
+
+  /**
+   * LiveResultsLog findMany
+   */
+  export type LiveResultsLogFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LiveResultsLog
+     */
+    select?: LiveResultsLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LiveResultsLog
+     */
+    omit?: LiveResultsLogOmit<ExtArgs> | null
+    /**
+     * Filter, which LiveResultsLogs to fetch.
+     */
+    where?: LiveResultsLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LiveResultsLogs to fetch.
+     */
+    orderBy?: LiveResultsLogOrderByWithRelationInput | LiveResultsLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing LiveResultsLogs.
+     */
+    cursor?: LiveResultsLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LiveResultsLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LiveResultsLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LiveResultsLogs.
+     */
+    distinct?: LiveResultsLogScalarFieldEnum | LiveResultsLogScalarFieldEnum[]
+  }
+
+  /**
+   * LiveResultsLog create
+   */
+  export type LiveResultsLogCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LiveResultsLog
+     */
+    select?: LiveResultsLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LiveResultsLog
+     */
+    omit?: LiveResultsLogOmit<ExtArgs> | null
+    /**
+     * The data needed to create a LiveResultsLog.
+     */
+    data: XOR<LiveResultsLogCreateInput, LiveResultsLogUncheckedCreateInput>
+  }
+
+  /**
+   * LiveResultsLog createMany
+   */
+  export type LiveResultsLogCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many LiveResultsLogs.
+     */
+    data: LiveResultsLogCreateManyInput | LiveResultsLogCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * LiveResultsLog createManyAndReturn
+   */
+  export type LiveResultsLogCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LiveResultsLog
+     */
+    select?: LiveResultsLogSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the LiveResultsLog
+     */
+    omit?: LiveResultsLogOmit<ExtArgs> | null
+    /**
+     * The data used to create many LiveResultsLogs.
+     */
+    data: LiveResultsLogCreateManyInput | LiveResultsLogCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * LiveResultsLog update
+   */
+  export type LiveResultsLogUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LiveResultsLog
+     */
+    select?: LiveResultsLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LiveResultsLog
+     */
+    omit?: LiveResultsLogOmit<ExtArgs> | null
+    /**
+     * The data needed to update a LiveResultsLog.
+     */
+    data: XOR<LiveResultsLogUpdateInput, LiveResultsLogUncheckedUpdateInput>
+    /**
+     * Choose, which LiveResultsLog to update.
+     */
+    where: LiveResultsLogWhereUniqueInput
+  }
+
+  /**
+   * LiveResultsLog updateMany
+   */
+  export type LiveResultsLogUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update LiveResultsLogs.
+     */
+    data: XOR<LiveResultsLogUpdateManyMutationInput, LiveResultsLogUncheckedUpdateManyInput>
+    /**
+     * Filter which LiveResultsLogs to update
+     */
+    where?: LiveResultsLogWhereInput
+    /**
+     * Limit how many LiveResultsLogs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * LiveResultsLog updateManyAndReturn
+   */
+  export type LiveResultsLogUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LiveResultsLog
+     */
+    select?: LiveResultsLogSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the LiveResultsLog
+     */
+    omit?: LiveResultsLogOmit<ExtArgs> | null
+    /**
+     * The data used to update LiveResultsLogs.
+     */
+    data: XOR<LiveResultsLogUpdateManyMutationInput, LiveResultsLogUncheckedUpdateManyInput>
+    /**
+     * Filter which LiveResultsLogs to update
+     */
+    where?: LiveResultsLogWhereInput
+    /**
+     * Limit how many LiveResultsLogs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * LiveResultsLog upsert
+   */
+  export type LiveResultsLogUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LiveResultsLog
+     */
+    select?: LiveResultsLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LiveResultsLog
+     */
+    omit?: LiveResultsLogOmit<ExtArgs> | null
+    /**
+     * The filter to search for the LiveResultsLog to update in case it exists.
+     */
+    where: LiveResultsLogWhereUniqueInput
+    /**
+     * In case the LiveResultsLog found by the `where` argument doesn't exist, create a new LiveResultsLog with this data.
+     */
+    create: XOR<LiveResultsLogCreateInput, LiveResultsLogUncheckedCreateInput>
+    /**
+     * In case the LiveResultsLog was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<LiveResultsLogUpdateInput, LiveResultsLogUncheckedUpdateInput>
+  }
+
+  /**
+   * LiveResultsLog delete
+   */
+  export type LiveResultsLogDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LiveResultsLog
+     */
+    select?: LiveResultsLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LiveResultsLog
+     */
+    omit?: LiveResultsLogOmit<ExtArgs> | null
+    /**
+     * Filter which LiveResultsLog to delete.
+     */
+    where: LiveResultsLogWhereUniqueInput
+  }
+
+  /**
+   * LiveResultsLog deleteMany
+   */
+  export type LiveResultsLogDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which LiveResultsLogs to delete
+     */
+    where?: LiveResultsLogWhereInput
+    /**
+     * Limit how many LiveResultsLogs to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * LiveResultsLog without action
+   */
+  export type LiveResultsLogDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LiveResultsLog
+     */
+    select?: LiveResultsLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LiveResultsLog
+     */
+    omit?: LiveResultsLogOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Model AuditLog
    */
 
@@ -11337,6 +12656,14 @@ export namespace Prisma {
     team2Goals: 'team2Goals',
     result: 'result',
     resultUpdatedAt: 'resultUpdatedAt',
+    resultSource: 'resultSource',
+    autoDetectedTeam1Goals: 'autoDetectedTeam1Goals',
+    autoDetectedTeam2Goals: 'autoDetectedTeam2Goals',
+    autoDetectedResult: 'autoDetectedResult',
+    autoDetectedSource: 'autoDetectedSource',
+    autoDetectionConfidence: 'autoDetectionConfidence',
+    autoDetectedAt: 'autoDetectedAt',
+    autoResultStatus: 'autoResultStatus',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -11418,6 +12745,23 @@ export namespace Prisma {
   };
 
   export type RankingSnapshotScalarFieldEnum = (typeof RankingSnapshotScalarFieldEnum)[keyof typeof RankingSnapshotScalarFieldEnum]
+
+
+  export const LiveResultsLogScalarFieldEnum: {
+    id: 'id',
+    type: 'type',
+    message: 'message',
+    matchId: 'matchId',
+    source: 'source',
+    confidence: 'confidence',
+    detectedGoals1: 'detectedGoals1',
+    detectedGoals2: 'detectedGoals2',
+    adminAction: 'adminAction',
+    rawData: 'rawData',
+    createdAt: 'createdAt'
+  };
+
+  export type LiveResultsLogScalarFieldEnum = (typeof LiveResultsLogScalarFieldEnum)[keyof typeof LiveResultsLogScalarFieldEnum]
 
 
   export const AuditLogScalarFieldEnum: {
@@ -11796,6 +13140,14 @@ export namespace Prisma {
     team2Goals?: IntNullableFilter<"Match"> | number | null
     result?: EnumMatchResultNullableFilter<"Match"> | $Enums.MatchResult | null
     resultUpdatedAt?: DateTimeNullableFilter<"Match"> | Date | string | null
+    resultSource?: StringNullableFilter<"Match"> | string | null
+    autoDetectedTeam1Goals?: IntNullableFilter<"Match"> | number | null
+    autoDetectedTeam2Goals?: IntNullableFilter<"Match"> | number | null
+    autoDetectedResult?: EnumMatchResultNullableFilter<"Match"> | $Enums.MatchResult | null
+    autoDetectedSource?: StringNullableFilter<"Match"> | string | null
+    autoDetectionConfidence?: StringNullableFilter<"Match"> | string | null
+    autoDetectedAt?: DateTimeNullableFilter<"Match"> | Date | string | null
+    autoResultStatus?: StringNullableFilter<"Match"> | string | null
     createdAt?: DateTimeFilter<"Match"> | Date | string
     updatedAt?: DateTimeFilter<"Match"> | Date | string
     team1?: XOR<TeamScalarRelationFilter, TeamWhereInput>
@@ -11818,6 +13170,14 @@ export namespace Prisma {
     team2Goals?: SortOrderInput | SortOrder
     result?: SortOrderInput | SortOrder
     resultUpdatedAt?: SortOrderInput | SortOrder
+    resultSource?: SortOrderInput | SortOrder
+    autoDetectedTeam1Goals?: SortOrderInput | SortOrder
+    autoDetectedTeam2Goals?: SortOrderInput | SortOrder
+    autoDetectedResult?: SortOrderInput | SortOrder
+    autoDetectedSource?: SortOrderInput | SortOrder
+    autoDetectionConfidence?: SortOrderInput | SortOrder
+    autoDetectedAt?: SortOrderInput | SortOrder
+    autoResultStatus?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     team1?: TeamOrderByWithRelationInput
@@ -11843,6 +13203,14 @@ export namespace Prisma {
     team2Goals?: IntNullableFilter<"Match"> | number | null
     result?: EnumMatchResultNullableFilter<"Match"> | $Enums.MatchResult | null
     resultUpdatedAt?: DateTimeNullableFilter<"Match"> | Date | string | null
+    resultSource?: StringNullableFilter<"Match"> | string | null
+    autoDetectedTeam1Goals?: IntNullableFilter<"Match"> | number | null
+    autoDetectedTeam2Goals?: IntNullableFilter<"Match"> | number | null
+    autoDetectedResult?: EnumMatchResultNullableFilter<"Match"> | $Enums.MatchResult | null
+    autoDetectedSource?: StringNullableFilter<"Match"> | string | null
+    autoDetectionConfidence?: StringNullableFilter<"Match"> | string | null
+    autoDetectedAt?: DateTimeNullableFilter<"Match"> | Date | string | null
+    autoResultStatus?: StringNullableFilter<"Match"> | string | null
     createdAt?: DateTimeFilter<"Match"> | Date | string
     updatedAt?: DateTimeFilter<"Match"> | Date | string
     team1?: XOR<TeamScalarRelationFilter, TeamWhereInput>
@@ -11865,6 +13233,14 @@ export namespace Prisma {
     team2Goals?: SortOrderInput | SortOrder
     result?: SortOrderInput | SortOrder
     resultUpdatedAt?: SortOrderInput | SortOrder
+    resultSource?: SortOrderInput | SortOrder
+    autoDetectedTeam1Goals?: SortOrderInput | SortOrder
+    autoDetectedTeam2Goals?: SortOrderInput | SortOrder
+    autoDetectedResult?: SortOrderInput | SortOrder
+    autoDetectedSource?: SortOrderInput | SortOrder
+    autoDetectionConfidence?: SortOrderInput | SortOrder
+    autoDetectedAt?: SortOrderInput | SortOrder
+    autoResultStatus?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: MatchCountOrderByAggregateInput
@@ -11892,6 +13268,14 @@ export namespace Prisma {
     team2Goals?: IntNullableWithAggregatesFilter<"Match"> | number | null
     result?: EnumMatchResultNullableWithAggregatesFilter<"Match"> | $Enums.MatchResult | null
     resultUpdatedAt?: DateTimeNullableWithAggregatesFilter<"Match"> | Date | string | null
+    resultSource?: StringNullableWithAggregatesFilter<"Match"> | string | null
+    autoDetectedTeam1Goals?: IntNullableWithAggregatesFilter<"Match"> | number | null
+    autoDetectedTeam2Goals?: IntNullableWithAggregatesFilter<"Match"> | number | null
+    autoDetectedResult?: EnumMatchResultNullableWithAggregatesFilter<"Match"> | $Enums.MatchResult | null
+    autoDetectedSource?: StringNullableWithAggregatesFilter<"Match"> | string | null
+    autoDetectionConfidence?: StringNullableWithAggregatesFilter<"Match"> | string | null
+    autoDetectedAt?: DateTimeNullableWithAggregatesFilter<"Match"> | Date | string | null
+    autoResultStatus?: StringNullableWithAggregatesFilter<"Match"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Match"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Match"> | Date | string
   }
@@ -12292,6 +13676,90 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"RankingSnapshot"> | Date | string
   }
 
+  export type LiveResultsLogWhereInput = {
+    AND?: LiveResultsLogWhereInput | LiveResultsLogWhereInput[]
+    OR?: LiveResultsLogWhereInput[]
+    NOT?: LiveResultsLogWhereInput | LiveResultsLogWhereInput[]
+    id?: StringFilter<"LiveResultsLog"> | string
+    type?: StringFilter<"LiveResultsLog"> | string
+    message?: StringFilter<"LiveResultsLog"> | string
+    matchId?: StringNullableFilter<"LiveResultsLog"> | string | null
+    source?: StringNullableFilter<"LiveResultsLog"> | string | null
+    confidence?: StringNullableFilter<"LiveResultsLog"> | string | null
+    detectedGoals1?: IntNullableFilter<"LiveResultsLog"> | number | null
+    detectedGoals2?: IntNullableFilter<"LiveResultsLog"> | number | null
+    adminAction?: StringNullableFilter<"LiveResultsLog"> | string | null
+    rawData?: StringNullableFilter<"LiveResultsLog"> | string | null
+    createdAt?: DateTimeFilter<"LiveResultsLog"> | Date | string
+  }
+
+  export type LiveResultsLogOrderByWithRelationInput = {
+    id?: SortOrder
+    type?: SortOrder
+    message?: SortOrder
+    matchId?: SortOrderInput | SortOrder
+    source?: SortOrderInput | SortOrder
+    confidence?: SortOrderInput | SortOrder
+    detectedGoals1?: SortOrderInput | SortOrder
+    detectedGoals2?: SortOrderInput | SortOrder
+    adminAction?: SortOrderInput | SortOrder
+    rawData?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type LiveResultsLogWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: LiveResultsLogWhereInput | LiveResultsLogWhereInput[]
+    OR?: LiveResultsLogWhereInput[]
+    NOT?: LiveResultsLogWhereInput | LiveResultsLogWhereInput[]
+    type?: StringFilter<"LiveResultsLog"> | string
+    message?: StringFilter<"LiveResultsLog"> | string
+    matchId?: StringNullableFilter<"LiveResultsLog"> | string | null
+    source?: StringNullableFilter<"LiveResultsLog"> | string | null
+    confidence?: StringNullableFilter<"LiveResultsLog"> | string | null
+    detectedGoals1?: IntNullableFilter<"LiveResultsLog"> | number | null
+    detectedGoals2?: IntNullableFilter<"LiveResultsLog"> | number | null
+    adminAction?: StringNullableFilter<"LiveResultsLog"> | string | null
+    rawData?: StringNullableFilter<"LiveResultsLog"> | string | null
+    createdAt?: DateTimeFilter<"LiveResultsLog"> | Date | string
+  }, "id">
+
+  export type LiveResultsLogOrderByWithAggregationInput = {
+    id?: SortOrder
+    type?: SortOrder
+    message?: SortOrder
+    matchId?: SortOrderInput | SortOrder
+    source?: SortOrderInput | SortOrder
+    confidence?: SortOrderInput | SortOrder
+    detectedGoals1?: SortOrderInput | SortOrder
+    detectedGoals2?: SortOrderInput | SortOrder
+    adminAction?: SortOrderInput | SortOrder
+    rawData?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: LiveResultsLogCountOrderByAggregateInput
+    _avg?: LiveResultsLogAvgOrderByAggregateInput
+    _max?: LiveResultsLogMaxOrderByAggregateInput
+    _min?: LiveResultsLogMinOrderByAggregateInput
+    _sum?: LiveResultsLogSumOrderByAggregateInput
+  }
+
+  export type LiveResultsLogScalarWhereWithAggregatesInput = {
+    AND?: LiveResultsLogScalarWhereWithAggregatesInput | LiveResultsLogScalarWhereWithAggregatesInput[]
+    OR?: LiveResultsLogScalarWhereWithAggregatesInput[]
+    NOT?: LiveResultsLogScalarWhereWithAggregatesInput | LiveResultsLogScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"LiveResultsLog"> | string
+    type?: StringWithAggregatesFilter<"LiveResultsLog"> | string
+    message?: StringWithAggregatesFilter<"LiveResultsLog"> | string
+    matchId?: StringNullableWithAggregatesFilter<"LiveResultsLog"> | string | null
+    source?: StringNullableWithAggregatesFilter<"LiveResultsLog"> | string | null
+    confidence?: StringNullableWithAggregatesFilter<"LiveResultsLog"> | string | null
+    detectedGoals1?: IntNullableWithAggregatesFilter<"LiveResultsLog"> | number | null
+    detectedGoals2?: IntNullableWithAggregatesFilter<"LiveResultsLog"> | number | null
+    adminAction?: StringNullableWithAggregatesFilter<"LiveResultsLog"> | string | null
+    rawData?: StringNullableWithAggregatesFilter<"LiveResultsLog"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"LiveResultsLog"> | Date | string
+  }
+
   export type AuditLogWhereInput = {
     AND?: AuditLogWhereInput | AuditLogWhereInput[]
     OR?: AuditLogWhereInput[]
@@ -12625,6 +14093,14 @@ export namespace Prisma {
     team2Goals?: number | null
     result?: $Enums.MatchResult | null
     resultUpdatedAt?: Date | string | null
+    resultSource?: string | null
+    autoDetectedTeam1Goals?: number | null
+    autoDetectedTeam2Goals?: number | null
+    autoDetectedResult?: $Enums.MatchResult | null
+    autoDetectedSource?: string | null
+    autoDetectionConfidence?: string | null
+    autoDetectedAt?: Date | string | null
+    autoResultStatus?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     team1: TeamCreateNestedOneWithoutMatchesAsTeam1Input
@@ -12647,6 +14123,14 @@ export namespace Prisma {
     team2Goals?: number | null
     result?: $Enums.MatchResult | null
     resultUpdatedAt?: Date | string | null
+    resultSource?: string | null
+    autoDetectedTeam1Goals?: number | null
+    autoDetectedTeam2Goals?: number | null
+    autoDetectedResult?: $Enums.MatchResult | null
+    autoDetectedSource?: string | null
+    autoDetectionConfidence?: string | null
+    autoDetectedAt?: Date | string | null
+    autoResultStatus?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     predictions?: PredictionUncheckedCreateNestedManyWithoutMatchInput
@@ -12665,6 +14149,14 @@ export namespace Prisma {
     team2Goals?: NullableIntFieldUpdateOperationsInput | number | null
     result?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
     resultUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    resultSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedTeam1Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedTeam2Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedResult?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
+    autoDetectedSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     team1?: TeamUpdateOneRequiredWithoutMatchesAsTeam1NestedInput
@@ -12687,6 +14179,14 @@ export namespace Prisma {
     team2Goals?: NullableIntFieldUpdateOperationsInput | number | null
     result?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
     resultUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    resultSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedTeam1Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedTeam2Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedResult?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
+    autoDetectedSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     predictions?: PredictionUncheckedUpdateManyWithoutMatchNestedInput
@@ -12707,6 +14207,14 @@ export namespace Prisma {
     team2Goals?: number | null
     result?: $Enums.MatchResult | null
     resultUpdatedAt?: Date | string | null
+    resultSource?: string | null
+    autoDetectedTeam1Goals?: number | null
+    autoDetectedTeam2Goals?: number | null
+    autoDetectedResult?: $Enums.MatchResult | null
+    autoDetectedSource?: string | null
+    autoDetectionConfidence?: string | null
+    autoDetectedAt?: Date | string | null
+    autoResultStatus?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -12724,6 +14232,14 @@ export namespace Prisma {
     team2Goals?: NullableIntFieldUpdateOperationsInput | number | null
     result?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
     resultUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    resultSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedTeam1Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedTeam2Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedResult?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
+    autoDetectedSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -12743,6 +14259,14 @@ export namespace Prisma {
     team2Goals?: NullableIntFieldUpdateOperationsInput | number | null
     result?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
     resultUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    resultSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedTeam1Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedTeam2Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedResult?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
+    autoDetectedSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -13203,6 +14727,104 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type LiveResultsLogCreateInput = {
+    id?: string
+    type: string
+    message: string
+    matchId?: string | null
+    source?: string | null
+    confidence?: string | null
+    detectedGoals1?: number | null
+    detectedGoals2?: number | null
+    adminAction?: string | null
+    rawData?: string | null
+    createdAt?: Date | string
+  }
+
+  export type LiveResultsLogUncheckedCreateInput = {
+    id?: string
+    type: string
+    message: string
+    matchId?: string | null
+    source?: string | null
+    confidence?: string | null
+    detectedGoals1?: number | null
+    detectedGoals2?: number | null
+    adminAction?: string | null
+    rawData?: string | null
+    createdAt?: Date | string
+  }
+
+  export type LiveResultsLogUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    message?: StringFieldUpdateOperationsInput | string
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: NullableStringFieldUpdateOperationsInput | string | null
+    confidence?: NullableStringFieldUpdateOperationsInput | string | null
+    detectedGoals1?: NullableIntFieldUpdateOperationsInput | number | null
+    detectedGoals2?: NullableIntFieldUpdateOperationsInput | number | null
+    adminAction?: NullableStringFieldUpdateOperationsInput | string | null
+    rawData?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LiveResultsLogUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    message?: StringFieldUpdateOperationsInput | string
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: NullableStringFieldUpdateOperationsInput | string | null
+    confidence?: NullableStringFieldUpdateOperationsInput | string | null
+    detectedGoals1?: NullableIntFieldUpdateOperationsInput | number | null
+    detectedGoals2?: NullableIntFieldUpdateOperationsInput | number | null
+    adminAction?: NullableStringFieldUpdateOperationsInput | string | null
+    rawData?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LiveResultsLogCreateManyInput = {
+    id?: string
+    type: string
+    message: string
+    matchId?: string | null
+    source?: string | null
+    confidence?: string | null
+    detectedGoals1?: number | null
+    detectedGoals2?: number | null
+    adminAction?: string | null
+    rawData?: string | null
+    createdAt?: Date | string
+  }
+
+  export type LiveResultsLogUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    message?: StringFieldUpdateOperationsInput | string
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: NullableStringFieldUpdateOperationsInput | string | null
+    confidence?: NullableStringFieldUpdateOperationsInput | string | null
+    detectedGoals1?: NullableIntFieldUpdateOperationsInput | number | null
+    detectedGoals2?: NullableIntFieldUpdateOperationsInput | number | null
+    adminAction?: NullableStringFieldUpdateOperationsInput | string | null
+    rawData?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LiveResultsLogUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    message?: StringFieldUpdateOperationsInput | string
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: NullableStringFieldUpdateOperationsInput | string | null
+    confidence?: NullableStringFieldUpdateOperationsInput | string | null
+    detectedGoals1?: NullableIntFieldUpdateOperationsInput | number | null
+    detectedGoals2?: NullableIntFieldUpdateOperationsInput | number | null
+    adminAction?: NullableStringFieldUpdateOperationsInput | string | null
+    rawData?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type AuditLogCreateInput = {
     id?: string
     userId?: string | null
@@ -13602,6 +15224,21 @@ export namespace Prisma {
     not?: NestedEnumMatchResultNullableFilter<$PrismaModel> | $Enums.MatchResult | null
   }
 
+  export type StringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
   export type TeamScalarRelationFilter = {
     is?: TeamWhereInput
     isNot?: TeamWhereInput
@@ -13632,6 +15269,14 @@ export namespace Prisma {
     team2Goals?: SortOrder
     result?: SortOrder
     resultUpdatedAt?: SortOrder
+    resultSource?: SortOrder
+    autoDetectedTeam1Goals?: SortOrder
+    autoDetectedTeam2Goals?: SortOrder
+    autoDetectedResult?: SortOrder
+    autoDetectedSource?: SortOrder
+    autoDetectionConfidence?: SortOrder
+    autoDetectedAt?: SortOrder
+    autoResultStatus?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -13640,6 +15285,8 @@ export namespace Prisma {
     matchNumber?: SortOrder
     team1Goals?: SortOrder
     team2Goals?: SortOrder
+    autoDetectedTeam1Goals?: SortOrder
+    autoDetectedTeam2Goals?: SortOrder
   }
 
   export type MatchMaxOrderByAggregateInput = {
@@ -13657,6 +15304,14 @@ export namespace Prisma {
     team2Goals?: SortOrder
     result?: SortOrder
     resultUpdatedAt?: SortOrder
+    resultSource?: SortOrder
+    autoDetectedTeam1Goals?: SortOrder
+    autoDetectedTeam2Goals?: SortOrder
+    autoDetectedResult?: SortOrder
+    autoDetectedSource?: SortOrder
+    autoDetectionConfidence?: SortOrder
+    autoDetectedAt?: SortOrder
+    autoResultStatus?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -13676,6 +15331,14 @@ export namespace Prisma {
     team2Goals?: SortOrder
     result?: SortOrder
     resultUpdatedAt?: SortOrder
+    resultSource?: SortOrder
+    autoDetectedTeam1Goals?: SortOrder
+    autoDetectedTeam2Goals?: SortOrder
+    autoDetectedResult?: SortOrder
+    autoDetectedSource?: SortOrder
+    autoDetectionConfidence?: SortOrder
+    autoDetectedAt?: SortOrder
+    autoResultStatus?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -13684,6 +15347,8 @@ export namespace Prisma {
     matchNumber?: SortOrder
     team1Goals?: SortOrder
     team2Goals?: SortOrder
+    autoDetectedTeam1Goals?: SortOrder
+    autoDetectedTeam2Goals?: SortOrder
   }
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
@@ -13738,7 +15403,7 @@ export namespace Prisma {
     _max?: NestedEnumMatchResultNullableFilter<$PrismaModel>
   }
 
-  export type StringNullableFilter<$PrismaModel = never> = {
+  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
     notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
@@ -13750,7 +15415,10 @@ export namespace Prisma {
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
     mode?: QueryMode
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
   export type PaymentNullableScalarRelationFilter = {
@@ -13806,24 +15474,6 @@ export namespace Prisma {
     isComplete?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-  }
-
-  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedStringNullableFilter<$PrismaModel>
-    _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
   export type EnumMatchResultFilter<$PrismaModel = never> = {
@@ -14087,6 +15737,58 @@ export namespace Prisma {
     previousPosition?: SortOrder
   }
 
+  export type LiveResultsLogCountOrderByAggregateInput = {
+    id?: SortOrder
+    type?: SortOrder
+    message?: SortOrder
+    matchId?: SortOrder
+    source?: SortOrder
+    confidence?: SortOrder
+    detectedGoals1?: SortOrder
+    detectedGoals2?: SortOrder
+    adminAction?: SortOrder
+    rawData?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type LiveResultsLogAvgOrderByAggregateInput = {
+    detectedGoals1?: SortOrder
+    detectedGoals2?: SortOrder
+  }
+
+  export type LiveResultsLogMaxOrderByAggregateInput = {
+    id?: SortOrder
+    type?: SortOrder
+    message?: SortOrder
+    matchId?: SortOrder
+    source?: SortOrder
+    confidence?: SortOrder
+    detectedGoals1?: SortOrder
+    detectedGoals2?: SortOrder
+    adminAction?: SortOrder
+    rawData?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type LiveResultsLogMinOrderByAggregateInput = {
+    id?: SortOrder
+    type?: SortOrder
+    message?: SortOrder
+    matchId?: SortOrder
+    source?: SortOrder
+    confidence?: SortOrder
+    detectedGoals1?: SortOrder
+    detectedGoals2?: SortOrder
+    adminAction?: SortOrder
+    rawData?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type LiveResultsLogSumOrderByAggregateInput = {
+    detectedGoals1?: SortOrder
+    detectedGoals2?: SortOrder
+  }
+
   export type AuditLogCountOrderByAggregateInput = {
     id?: SortOrder
     userId?: SortOrder
@@ -14286,6 +15988,10 @@ export namespace Prisma {
     set?: $Enums.MatchResult | null
   }
 
+  export type NullableStringFieldUpdateOperationsInput = {
+    set?: string | null
+  }
+
   export type TeamUpdateOneRequiredWithoutMatchesAsTeam1NestedInput = {
     create?: XOR<TeamCreateWithoutMatchesAsTeam1Input, TeamUncheckedCreateWithoutMatchesAsTeam1Input>
     connectOrCreate?: TeamCreateOrConnectWithoutMatchesAsTeam1Input
@@ -14366,10 +16072,6 @@ export namespace Prisma {
     create?: XOR<RankingSnapshotCreateWithoutParticipantInput, RankingSnapshotUncheckedCreateWithoutParticipantInput>
     connectOrCreate?: RankingSnapshotCreateOrConnectWithoutParticipantInput
     connect?: RankingSnapshotWhereUniqueInput
-  }
-
-  export type NullableStringFieldUpdateOperationsInput = {
-    set?: string | null
   }
 
   export type PredictionUpdateManyWithoutParticipantNestedInput = {
@@ -14692,6 +16394,20 @@ export namespace Prisma {
     not?: NestedEnumMatchResultNullableFilter<$PrismaModel> | $Enums.MatchResult | null
   }
 
+  export type NestedStringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -14742,20 +16458,6 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedEnumMatchResultNullableFilter<$PrismaModel>
     _max?: NestedEnumMatchResultNullableFilter<$PrismaModel>
-  }
-
-  export type NestedStringNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
   export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -14835,6 +16537,14 @@ export namespace Prisma {
     team2Goals?: number | null
     result?: $Enums.MatchResult | null
     resultUpdatedAt?: Date | string | null
+    resultSource?: string | null
+    autoDetectedTeam1Goals?: number | null
+    autoDetectedTeam2Goals?: number | null
+    autoDetectedResult?: $Enums.MatchResult | null
+    autoDetectedSource?: string | null
+    autoDetectionConfidence?: string | null
+    autoDetectedAt?: Date | string | null
+    autoResultStatus?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     team2: TeamCreateNestedOneWithoutMatchesAsTeam2Input
@@ -14855,6 +16565,14 @@ export namespace Prisma {
     team2Goals?: number | null
     result?: $Enums.MatchResult | null
     resultUpdatedAt?: Date | string | null
+    resultSource?: string | null
+    autoDetectedTeam1Goals?: number | null
+    autoDetectedTeam2Goals?: number | null
+    autoDetectedResult?: $Enums.MatchResult | null
+    autoDetectedSource?: string | null
+    autoDetectionConfidence?: string | null
+    autoDetectedAt?: Date | string | null
+    autoResultStatus?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     predictions?: PredictionUncheckedCreateNestedManyWithoutMatchInput
@@ -14883,6 +16601,14 @@ export namespace Prisma {
     team2Goals?: number | null
     result?: $Enums.MatchResult | null
     resultUpdatedAt?: Date | string | null
+    resultSource?: string | null
+    autoDetectedTeam1Goals?: number | null
+    autoDetectedTeam2Goals?: number | null
+    autoDetectedResult?: $Enums.MatchResult | null
+    autoDetectedSource?: string | null
+    autoDetectionConfidence?: string | null
+    autoDetectedAt?: Date | string | null
+    autoResultStatus?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     team1: TeamCreateNestedOneWithoutMatchesAsTeam1Input
@@ -14903,6 +16629,14 @@ export namespace Prisma {
     team2Goals?: number | null
     result?: $Enums.MatchResult | null
     resultUpdatedAt?: Date | string | null
+    resultSource?: string | null
+    autoDetectedTeam1Goals?: number | null
+    autoDetectedTeam2Goals?: number | null
+    autoDetectedResult?: $Enums.MatchResult | null
+    autoDetectedSource?: string | null
+    autoDetectionConfidence?: string | null
+    autoDetectedAt?: Date | string | null
+    autoResultStatus?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     predictions?: PredictionUncheckedCreateNestedManyWithoutMatchInput
@@ -14952,6 +16686,14 @@ export namespace Prisma {
     team2Goals?: IntNullableFilter<"Match"> | number | null
     result?: EnumMatchResultNullableFilter<"Match"> | $Enums.MatchResult | null
     resultUpdatedAt?: DateTimeNullableFilter<"Match"> | Date | string | null
+    resultSource?: StringNullableFilter<"Match"> | string | null
+    autoDetectedTeam1Goals?: IntNullableFilter<"Match"> | number | null
+    autoDetectedTeam2Goals?: IntNullableFilter<"Match"> | number | null
+    autoDetectedResult?: EnumMatchResultNullableFilter<"Match"> | $Enums.MatchResult | null
+    autoDetectedSource?: StringNullableFilter<"Match"> | string | null
+    autoDetectionConfidence?: StringNullableFilter<"Match"> | string | null
+    autoDetectedAt?: DateTimeNullableFilter<"Match"> | Date | string | null
+    autoResultStatus?: StringNullableFilter<"Match"> | string | null
     createdAt?: DateTimeFilter<"Match"> | Date | string
     updatedAt?: DateTimeFilter<"Match"> | Date | string
   }
@@ -15453,6 +17195,14 @@ export namespace Prisma {
     team2Goals?: number | null
     result?: $Enums.MatchResult | null
     resultUpdatedAt?: Date | string | null
+    resultSource?: string | null
+    autoDetectedTeam1Goals?: number | null
+    autoDetectedTeam2Goals?: number | null
+    autoDetectedResult?: $Enums.MatchResult | null
+    autoDetectedSource?: string | null
+    autoDetectionConfidence?: string | null
+    autoDetectedAt?: Date | string | null
+    autoResultStatus?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     team1: TeamCreateNestedOneWithoutMatchesAsTeam1Input
@@ -15474,6 +17224,14 @@ export namespace Prisma {
     team2Goals?: number | null
     result?: $Enums.MatchResult | null
     resultUpdatedAt?: Date | string | null
+    resultSource?: string | null
+    autoDetectedTeam1Goals?: number | null
+    autoDetectedTeam2Goals?: number | null
+    autoDetectedResult?: $Enums.MatchResult | null
+    autoDetectedSource?: string | null
+    autoDetectionConfidence?: string | null
+    autoDetectedAt?: Date | string | null
+    autoResultStatus?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -15552,6 +17310,14 @@ export namespace Prisma {
     team2Goals?: NullableIntFieldUpdateOperationsInput | number | null
     result?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
     resultUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    resultSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedTeam1Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedTeam2Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedResult?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
+    autoDetectedSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     team1?: TeamUpdateOneRequiredWithoutMatchesAsTeam1NestedInput
@@ -15573,6 +17339,14 @@ export namespace Prisma {
     team2Goals?: NullableIntFieldUpdateOperationsInput | number | null
     result?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
     resultUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    resultSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedTeam1Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedTeam2Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedResult?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
+    autoDetectedSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -15759,6 +17533,14 @@ export namespace Prisma {
     team2Goals?: number | null
     result?: $Enums.MatchResult | null
     resultUpdatedAt?: Date | string | null
+    resultSource?: string | null
+    autoDetectedTeam1Goals?: number | null
+    autoDetectedTeam2Goals?: number | null
+    autoDetectedResult?: $Enums.MatchResult | null
+    autoDetectedSource?: string | null
+    autoDetectionConfidence?: string | null
+    autoDetectedAt?: Date | string | null
+    autoResultStatus?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -15777,6 +17559,14 @@ export namespace Prisma {
     team2Goals?: number | null
     result?: $Enums.MatchResult | null
     resultUpdatedAt?: Date | string | null
+    resultSource?: string | null
+    autoDetectedTeam1Goals?: number | null
+    autoDetectedTeam2Goals?: number | null
+    autoDetectedResult?: $Enums.MatchResult | null
+    autoDetectedSource?: string | null
+    autoDetectionConfidence?: string | null
+    autoDetectedAt?: Date | string | null
+    autoResultStatus?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -15794,6 +17584,14 @@ export namespace Prisma {
     team2Goals?: NullableIntFieldUpdateOperationsInput | number | null
     result?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
     resultUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    resultSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedTeam1Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedTeam2Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedResult?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
+    autoDetectedSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     team2?: TeamUpdateOneRequiredWithoutMatchesAsTeam2NestedInput
@@ -15814,6 +17612,14 @@ export namespace Prisma {
     team2Goals?: NullableIntFieldUpdateOperationsInput | number | null
     result?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
     resultUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    resultSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedTeam1Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedTeam2Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedResult?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
+    autoDetectedSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     predictions?: PredictionUncheckedUpdateManyWithoutMatchNestedInput
@@ -15833,6 +17639,14 @@ export namespace Prisma {
     team2Goals?: NullableIntFieldUpdateOperationsInput | number | null
     result?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
     resultUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    resultSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedTeam1Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedTeam2Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedResult?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
+    autoDetectedSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -15850,6 +17664,14 @@ export namespace Prisma {
     team2Goals?: NullableIntFieldUpdateOperationsInput | number | null
     result?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
     resultUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    resultSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedTeam1Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedTeam2Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedResult?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
+    autoDetectedSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     team1?: TeamUpdateOneRequiredWithoutMatchesAsTeam1NestedInput
@@ -15870,6 +17692,14 @@ export namespace Prisma {
     team2Goals?: NullableIntFieldUpdateOperationsInput | number | null
     result?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
     resultUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    resultSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedTeam1Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedTeam2Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedResult?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
+    autoDetectedSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     predictions?: PredictionUncheckedUpdateManyWithoutMatchNestedInput
@@ -15889,6 +17719,14 @@ export namespace Prisma {
     team2Goals?: NullableIntFieldUpdateOperationsInput | number | null
     result?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
     resultUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    resultSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedTeam1Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedTeam2Goals?: NullableIntFieldUpdateOperationsInput | number | null
+    autoDetectedResult?: NullableEnumMatchResultFieldUpdateOperationsInput | $Enums.MatchResult | null
+    autoDetectedSource?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
+    autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

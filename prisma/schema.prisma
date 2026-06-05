@@ -61,6 +61,18 @@ model Match {
   team2Goals      Int?
   result          MatchResult?
   resultUpdatedAt DateTime?
+  resultSource    String?     // 'manual' | 'auto_fifa' | 'auto_google' | 'auto_web'
+
+  // Auto-detected result (pending admin review when confidence is not HIGH)
+  autoDetectedTeam1Goals  Int?
+  autoDetectedTeam2Goals  Int?
+  autoDetectedResult      MatchResult?
+  autoDetectedSource      String?
+  autoDetectionConfidence String?     // 'HIGH' | 'MEDIUM' | 'LOW'
+  autoDetectedAt          DateTime?
+  // 'CONFIRMED' | 'PENDING_REVIEW' | 'REJECTED' | null (manual)
+  autoResultStatus        String?
+
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
@@ -164,6 +176,21 @@ model RankingSnapshot {
   updatedAt            DateTime @updatedAt
 
   participant Participant @relation(fields: [participantId], references: [id])
+}
+
+model LiveResultsLog {
+  id             String   @id @default(cuid())
+  // CRON_RUN | RESULT_DETECTED | RESULT_CONFIRMED | RESULT_REJECTED | ERROR
+  type           String
+  message        String
+  matchId        String?
+  source         String?
+  confidence     String?
+  detectedGoals1 Int?
+  detectedGoals2 Int?
+  adminAction    String?  // CONFIRMED | REJECTED | EDITED
+  rawData        String?  // JSON blob of raw fetched data
+  createdAt      DateTime @default(now())
 }
 
 model AuditLog {

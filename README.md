@@ -302,6 +302,47 @@ npm run db:reset         # ⚠️ Borrar y recrear BD (solo desarrollo)
 
 ---
 
+## Resultados automáticos
+
+La app está preparada para actualizar resultados de partidos desde **fuentes públicas en línea**, sin requerir servicios pagos.
+
+### Comportamiento por defecto
+
+- **Desactivado por defecto** (`LIVE_RESULTS_ENABLED=false`) para evitar resultados incorrectos.
+- El modo manual desde el panel admin **siempre está disponible** y tiene prioridad absoluta.
+- Si la consulta automática falla, la app no se rompe: muestra un error controlado en admin.
+
+### Sistema de confianza
+
+| Confianza | Criterio | Acción |
+|-----------|----------|--------|
+| **HIGH** | 2+ fuentes coinciden | Auto-aplica si `LIVE_RESULTS_AUTO_APPLY=true` |
+| **MEDIUM** | Solo 1 fuente | Queda pendiente de revisión admin |
+| **LOW** | Fuentes discrepan | Queda pendiente de revisión admin |
+
+> Regla de oro: **Mejor un resultado pendiente que uno incorrecto.**
+
+### Variables de entorno para resultados automáticos
+
+```env
+LIVE_RESULTS_ENABLED=false       # Activar solo cuando esté probado
+LIVE_RESULTS_SOURCE=public_web   # Fuente de datos
+LIVE_RESULTS_AUTO_APPLY=false    # Auto-aplicar HIGH sin revisión
+LIVE_RESULTS_API_KEY=            # API key opcional (api-football.com free)
+CRON_SECRET=tu-secreto-aleatorio # Protege el endpoint cron
+```
+
+### Activar Vercel Cron (opcional, requiere plan Pro)
+
+Agrega a `vercel.json`:
+```json
+{ "crons": [{ "path": "/api/cron/update-live-results", "schedule": "0,10,20,30,40,50 * * * *" }] }
+```
+
+Alternativa gratuita: [cron-job.org](https://cron-job.org) con header `Authorization: Bearer <CRON_SECRET>`.
+
+---
+
 ## Checklist antes de publicar
 
 ### Base de datos
