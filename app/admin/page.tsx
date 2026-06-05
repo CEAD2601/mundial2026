@@ -55,24 +55,22 @@ export default async function AdminDashboard() {
     <div className="p-4 sm:p-6">
       <h1 className="text-2xl font-bold text-slate-800 mb-6">Dashboard</h1>
 
-      {/* Stats grid */}
+      {/* Stats grid — 2 cols on mobile, 4 on desktop */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
         {[
-          { val: totalParticipants, label: 'Participantes', color: 'text-green-600', icon: '👥' },
-          { val: completeParticipants, label: 'Quinielas completas', color: 'text-blue-600', icon: '📋' },
-          { val: verifiedPayments, label: 'Pagos verificados', color: 'text-emerald-600', icon: '✅' },
-          { val: pendingReview, label: 'En revisión', color: 'text-orange-500', icon: '⏳' },
-          { val: pendingPayments, label: 'Sin pago', color: 'text-slate-500', icon: '❌' },
-          { val: rejectedPayments, label: 'Rechazados', color: 'text-red-500', icon: '🚫' },
-          { val: finishedMatches, label: 'Partidos jugados', color: 'text-purple-600', icon: '⚽' },
-          { val: totalMatches, label: 'Total partidos', color: 'text-indigo-500', icon: '📅' },
+          { val: totalParticipants,  label: 'Participantes',       color: 'text-green-600',   icon: '👥' },
+          { val: completeParticipants, label: 'Quinielas completas', color: 'text-blue-600',  icon: '📋' },
+          { val: verifiedPayments,   label: 'Pagos verificados',   color: 'text-emerald-600', icon: '✅' },
+          { val: pendingReview,      label: 'En revisión',         color: 'text-orange-500',  icon: '⏳' },
+          { val: pendingPayments,    label: 'Sin pago',            color: 'text-slate-500',   icon: '❌' },
+          { val: rejectedPayments,   label: 'Rechazados',          color: 'text-red-500',     icon: '🚫' },
+          { val: finishedMatches,    label: 'Partidos jugados',    color: 'text-purple-600',  icon: '⚽' },
+          { val: totalMatches,       label: 'Total partidos',      color: 'text-indigo-500',  icon: '📅' },
         ].map(({ val, label, color, icon }) => (
-          <div key={label} className="bg-white rounded-xl shadow-sm p-4 border border-slate-100">
-            <div className="flex items-center gap-2 mb-1">
-              <span>{icon}</span>
-              <span className={`text-2xl font-bold ${color}`}>{val}</span>
-            </div>
-            <div className="text-xs text-slate-500">{label}</div>
+          <div key={label} className="bg-white rounded-xl shadow-sm p-3 sm:p-4 border border-slate-100">
+            <div className="text-lg sm:text-xl mb-0.5">{icon}</div>
+            <div className={`text-2xl sm:text-3xl font-bold ${color} leading-tight`}>{val}</div>
+            <div className="text-xs text-slate-500 mt-0.5 leading-snug">{label}</div>
           </div>
         ))}
       </div>
@@ -86,7 +84,7 @@ export default async function AdminDashboard() {
             <div className="font-bold">{fixedRate} Bs/USD</div>
           </div>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-center">
           {[
             { label: 'Total recaudado', usd: totalRaisedUsd, ves: totalRaisedVes, badge: null },
             { label: `1er premio (${p1Pct}%)`, usd: prize1Usd, ves: prize1Usd * fixedRate, badge: '🥇' },

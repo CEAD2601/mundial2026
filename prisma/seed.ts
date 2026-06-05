@@ -234,16 +234,24 @@ async function main() {
   }
   console.log(`Created ${matchesData.length} matches`)
 
-  // Test participants
+  // Demo participants — ONLY in development/local, NEVER in production
+  const isProduction = process.env.NODE_ENV === 'production'
+  const baseOnly = process.env.SEED_BASE_ONLY === 'true'
+
+  if (isProduction || baseOnly) {
+    console.log('Skipping demo participants (production or SEED_BASE_ONLY mode).')
+    console.log('Seeding complete!')
+    return
+  }
+
   const testParticipants = [
-    { fullName: 'Carlos Rodríguez', nationalId: '12345678', phone: '04141234567', city: 'Caracas' },
-    { fullName: 'María González', nationalId: '87654321', phone: '04161234567', city: 'Maracaibo' },
-    { fullName: 'José Pérez', nationalId: '11223344', phone: '04121234567', city: 'Valencia' },
-    { fullName: 'Ana Martínez', nationalId: '44332211', phone: '04261234567', city: 'Barquisimeto' },
-    { fullName: 'Luis Hernández', nationalId: '55667788', phone: '04241234567', city: 'Maturín' },
+    { fullName: 'Carlos Rodr\u{00ED}guez', nationalId: '12345678', phone: '04141234567', city: 'Caracas' },
+    { fullName: 'Mar\u{00ED}a Gonz\u{00E1}lez', nationalId: '87654321', phone: '04161234567', city: 'Maracaibo' },
+    { fullName: 'Jos\u{00E9} P\u{00E9}rez', nationalId: '11223344', phone: '04121234567', city: 'Valencia' },
+    { fullName: 'Ana Mart\u{00ED}nez', nationalId: '44332211', phone: '04261234567', city: 'Barquisimeto' },
+    { fullName: 'Luis Hern\u{00E1}ndez', nationalId: '55667788', phone: '04241234567', city: 'Matur\u{00ED}n' },
   ]
 
-  // Seed goal scenarios: [team1Goals, team2Goals] → result auto-derived
   const goalScenarios: [number, number][] = [
     [2, 1], [0, 0], [1, 2], [3, 0], [1, 1],
     [0, 1], [2, 2], [1, 0], [0, 2], [2, 0],
@@ -268,7 +276,6 @@ async function main() {
       },
     })
 
-    // Create predictions
     for (let j = 0; j < allMatches.length; j++) {
       const [g1, g2] = goalScenarios[(i + j) % goalScenarios.length]
       const predictedResult: MatchResult = g1 > g2 ? 'G1' : g1 < g2 ? 'G2' : 'E'
@@ -285,7 +292,6 @@ async function main() {
       })
     }
 
-    // Create payment
     await prisma.payment.upsert({
       where: { participantId: participant.id },
       update: {},
@@ -296,12 +302,11 @@ async function main() {
         senderBank: 'Banesco',
         paymentReference: `REF${100000 + i}`,
         paymentDate: new Date(),
-        exchangeRate: 55.5,
-        amountVes: 20 * 55.5,
+        exchangeRate: 730,
+        amountVes: 20 * 730,
       },
     })
 
-    // Create ranking snapshot
     await prisma.rankingSnapshot.upsert({
       where: { participantId: participant.id },
       update: {},
@@ -320,7 +325,7 @@ async function main() {
     })
   }
 
-  console.log(`Created ${testParticipants.length} test participants`)
+  console.log(`Created ${testParticipants.length} demo participants (development only)`)
   console.log('Seeding complete!')
 }
 
