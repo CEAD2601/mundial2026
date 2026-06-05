@@ -1,8 +1,14 @@
+import 'dotenv/config'
 import { PrismaClient, MatchResult, PaymentStatus } from '../lib/generated/prisma'
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
+import { PrismaNeon } from '@prisma/adapter-neon'
+import { neonConfig, Pool } from '@neondatabase/serverless'
+import ws from 'ws'
 
-const dbUrl = process.env.DATABASE_URL ?? 'file:./dev.db'
-const adapter = new PrismaBetterSqlite3({ url: dbUrl })
+neonConfig.webSocketConstructor = ws
+
+const connectionString = process.env.DATABASE_URL ?? ''
+const pool = new Pool({ connectionString })
+const adapter = new PrismaNeon(pool)
 const prisma = new PrismaClient({ adapter } as any)
 
 // Venezuela is UTC-4, so we add 4 hours to convert VET to UTC
