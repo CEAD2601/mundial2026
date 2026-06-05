@@ -25,6 +25,10 @@ model Setting {
   rankingVisible                  Boolean  @default(true)
   showOnlyPaidParticipants        Boolean  @default(true)
   allowPublicPredictionViewAfterDeadline Boolean @default(false)
+  // Fixed exchange rate (replaces volatile BCV rate)
+  fixedExchangeRate               Float    @default(700)
+  useFixedExchangeRate            Boolean  @default(true)
+
   tiebreakerRules                 String   @default("Por definir")
   createdAt                       DateTime @default(now())
   updatedAt                       DateTime @updatedAt

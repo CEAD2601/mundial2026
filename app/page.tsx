@@ -282,11 +282,11 @@ export default function Home() {
       <div className="bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-5 grid grid-cols-3 sm:grid-cols-5 gap-4 text-center">
           {[
-            { value: 72,   suffix: '',    label: 'Partidos',      color: 'text-green-600' },
-            { value: 12,   suffix: '',    label: 'Grupos',         color: 'text-blue-600' },
-            { value: 48,   suffix: '',    label: 'Equipos',        color: 'text-purple-600' },
-            { value: 20,   suffix: ' USD', label: 'Inscripción',   color: 'text-yellow-600' },
-            { value: 65,   suffix: '%',   label: 'Premio 1er lugar', color: 'text-amber-600' },
+            { value: 72,   suffix: '',     label: 'Partidos',           color: 'text-green-600' },
+            { value: 48,   suffix: '',     label: 'Equipos',            color: 'text-blue-600' },
+            { value: 20,   suffix: ' USD', label: 'Entrada',            color: 'text-yellow-600' },
+            { value: 14000, suffix: ' Bs', label: 'Monto fijo',         color: 'text-amber-600' },
+            { value: 65,   suffix: '%',    label: 'Premio 1er lugar',   color: 'text-purple-600' },
           ].map(({ value, suffix, label, color }, i) => (
             <div key={i} className={i >= 3 ? 'hidden sm:block' : ''}>
               <div className={`text-2xl font-extrabold ${color}`}>
@@ -440,15 +440,16 @@ export default function Home() {
               <div className="relative">
                 <p className="text-green-200 text-sm mb-2">Pozo estimado · 20 participantes</p>
                 <p className="text-5xl font-extrabold text-white drop-shadow">$400 <span className="text-2xl font-bold text-green-200">USD</span></p>
-                <p className="text-green-300 text-xs mt-2">20 participantes × $20 USD = $400 USD</p>
+                <p className="text-green-300 text-sm mt-1">280.000 Bs <span className="text-xs">(a tasa fija 700 Bs/USD)</span></p>
+                <p className="text-green-400 text-xs mt-1">20 participantes × $20 USD = $400 USD</p>
               </div>
             </div>
             {/* Prize rows */}
             <div className="divide-y divide-slate-100">
               {[
-                { medal: '🥇', pos: '1er Lugar', pct: 65, ex: 260, color: 'from-yellow-50 to-amber-50', badge: 'bg-yellow-100 text-yellow-800' },
-                { medal: '🥈', pos: '2do Lugar', pct: 20, ex: 80,  color: 'from-slate-50 to-slate-50',  badge: 'bg-slate-100 text-slate-600' },
-                { medal: '🏛️', pos: 'Organización', pct: 15, ex: 60, color: '', badge: 'bg-blue-50 text-blue-600' },
+                { medal: '🥇', pos: '1er Lugar', pct: 65, usd: 260, ves: 182000, color: 'from-yellow-50 to-amber-50', badge: 'bg-yellow-100 text-yellow-800' },
+                { medal: '🥈', pos: '2do Lugar', pct: 20, usd: 80,  ves: 56000,  color: 'from-slate-50 to-slate-50',  badge: 'bg-slate-100 text-slate-600' },
+                { medal: '🏛️', pos: 'Organización', pct: 15, usd: 60, ves: 42000, color: '', badge: 'bg-blue-50 text-blue-600' },
               ].map((row) => (
                 <div key={row.pos} className={`flex items-center justify-between px-6 py-5 bg-gradient-to-r ${row.color} hover:bg-opacity-80 transition-colors`}>
                   <div className="flex items-center gap-3">
@@ -457,7 +458,10 @@ export default function Home() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className={`text-sm font-bold px-3 py-1 rounded-full ${row.badge}`}>{row.pct}%</span>
-                    <span className="font-extrabold text-lg text-slate-800">${row.ex} USD</span>
+                    <div className="text-right">
+                      <div className="font-extrabold text-lg text-slate-800">${row.usd} USD</div>
+                      <div className="text-xs text-slate-500">{row.ves.toLocaleString('es-VE')} Bs</div>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -477,40 +481,36 @@ export default function Home() {
             </h2>
           </div>
           <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-6 sm:p-8 text-white shadow-xl">
-            <div className="grid sm:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                {[
-                  { label: 'Banco',    value: 'Banesco',      icon: '🏦' },
-                  { label: 'Teléfono', value: '04143043337',  icon: '📞' },
-                  { label: 'Cédula',   value: '4.561.947',    icon: '🪪' },
-                ].map(({ label, value, icon }) => (
-                  <div key={label} className="bg-white/10 rounded-xl px-4 py-3 flex items-center gap-3">
-                    <span className="text-xl">{icon}</span>
-                    <div>
-                      <div className="text-blue-200 text-xs">{label}</div>
-                      <div className="font-bold text-base">{value}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="space-y-4">
-                {[
-                  { label: 'Monto',    value: '20 USD',             icon: '💵' },
-                  { label: 'Moneda',   value: 'Bolívares',           icon: '🪙' },
-                  { label: 'Tasa',     value: 'Euro BCV del día',    icon: '📈' },
-                ].map(({ label, value, icon }) => (
-                  <div key={label} className="bg-white/10 rounded-xl px-4 py-3 flex items-center gap-3">
-                    <span className="text-xl">{icon}</span>
-                    <div>
-                      <div className="text-blue-200 text-xs">{label}</div>
-                      <div className="font-bold text-base">{value}</div>
-                    </div>
-                  </div>
-                ))}
+            {/* Amount highlight */}
+            <div className="bg-white/10 rounded-2xl p-4 text-center mb-6">
+              <div className="text-blue-200 text-xs mb-1 uppercase tracking-wider">Monto a pagar</div>
+              <div className="text-4xl font-extrabold">14.000 <span className="text-xl font-semibold">Bs</span></div>
+              <div className="flex items-center justify-center gap-3 mt-2 text-sm">
+                <span className="bg-white/15 rounded-full px-3 py-0.5">20 USD</span>
+                <span className="text-blue-200">·</span>
+                <span className="bg-white/15 rounded-full px-3 py-0.5">Tasa fija: 700 Bs/USD</span>
               </div>
             </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {[
+                { label: 'Banco',     value: 'Banesco',        icon: '🏦' },
+                { label: 'Teléfono',  value: '04143043337',    icon: '📞' },
+                { label: 'Cédula',    value: 'V-4.561.947',    icon: '🪪' },
+                { label: 'Monto',     value: '14.000 Bs',      icon: '💵' },
+                { label: 'Equiv. USD', value: '20 USD',        icon: '💲' },
+                { label: 'Tasa fija', value: '700 Bs/USD',     icon: '📌' },
+              ].map(({ label, value, icon }) => (
+                <div key={label} className="bg-white/10 rounded-xl px-4 py-3 flex items-center gap-3">
+                  <span className="text-xl">{icon}</span>
+                  <div>
+                    <div className="text-blue-200 text-xs">{label}</div>
+                    <div className="font-bold text-base">{value}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
             <div className="mt-5 bg-yellow-400/20 border border-yellow-300/30 rounded-xl p-3 text-sm text-yellow-100 text-center">
-              💡 El monto exacto en bolívares se calcula automáticamente al momento del pago
+              📌 Tasa fija de la quiniela: 700 Bs/USD · 20 USD = <strong>14.000 Bs exactos</strong>
             </div>
           </div>
         </section>

@@ -19,10 +19,16 @@ export async function GET(req: NextRequest) {
       }
     : {}
 
+  const includeCount = searchParams.get('includeCount') === 'true'
+
   const [participants, total] = await Promise.all([
     prisma.participant.findMany({
       where,
-      include: { payment: true, ranking: true },
+      include: {
+        payment: true,
+        ranking: true,
+        ...(includeCount ? { _count: { select: { predictions: true } } } : {}),
+      },
       orderBy: { createdAt: 'desc' },
       skip,
       take: limit,

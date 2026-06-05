@@ -4,14 +4,25 @@ import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
+interface PaymentData {
+  payment: { paymentStatus: string; paymentReference: string | null } | null
+  fixedRate: number
+  entryUsd: number
+  amountVes: number
+}
+
 export default function PagoPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = use(params)
   const router = useRouter()
-  const [exchangeRate, setExchangeRate] = useState<number>(0)
-  const [settings, setSettings] = useState<{ paymentPhone: string; paymentNationalId: string; paymentBank: string; entryPriceUsd: number } | null>(null)
-  const [existingPayment, setExistingPayment] = useState<{ paymentStatus: string; paymentReference: string | null } | null>(null)
+  const [data, setData] = useState<PaymentData | null>(null)
+  const [settings, setSettings] = useState<{
+    paymentPhone: string
+    paymentNationalId: string
+    paymentBank: string
+    entryPriceUsd: number
+    fixedExchangeRate: number
+  } | null>(null)
   const [loading, setLoading] = useState(true)
-
   const [form, setForm] = useState({
     senderBank: '',
     paymentReference: '',
@@ -22,30 +33,27 @@ export default function PagoPage({ params }: { params: Promise<{ code: string }>
   const [success, setSuccess] = useState(false)
   const [copied, setCopied] = useState('')
 
-  useEffect(() => {
-    loadData()
-  }, [code])
+  useEffect(() => { loadData() }, [code])  // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadData = async () => {
-    const [rateRes, settingsRes, paymentRes] = await Promise.all([
-      fetch('/api/exchange-rate'),
-      fetch('/api/settings'),
+    const [paymentRes, settingsRes] = await Promise.all([
       fetch(`/api/payments?code=${code}`),
+      fetch('/api/settings'),
     ])
-    if (rateRes.ok) {
-      const data = await rateRes.json()
-      setExchangeRate(data.rate ?? 0)
-    }
+    if (paymentRes.ok) setData(await paymentRes.json())
     if (settingsRes.ok) {
-      const data = await settingsRes.json()
-      setSettings(data.settings)
-    }
-    if (paymentRes.ok) {
-      const data = await paymentRes.json()
-      if (data.payment) setExistingPayment(data.payment)
+      const s = await settingsRes.json()
+      setSettings(s.settings)
     }
     setLoading(false)
   }
+
+  const entryUsd = settings?.entryPriceUsd ?? data?.entryUsd ?? 20
+  const fixedRate = settings?.fixedExchangeRate ?? data?.fixedRate ?? 700
+  const amountVes = Math.round(entryUsd * fixedRate)
+  const phone = settings?.paymentPhone ?? '04143043337'
+  const ci = settings?.paymentNationalId ?? '4561947'
+  const bank = settings?.paymentBank ?? 'Banesco'
 
   const copyToClipboard = async (text: string, label: string) => {
     await navigator.clipboard.writeText(text)
@@ -53,15 +61,16 @@ export default function PagoPage({ params }: { params: Promise<{ code: string }>
     setTimeout(() => setCopied(''), 2000)
   }
 
-  const entryPrice = settings?.entryPriceUsd ?? 20
-  const amountVes = exchangeRate > 0 ? entryPrice * exchangeRate : 0
-
-  const phone = settings?.paymentPhone ?? '04143043337'
-  const ci = settings?.paymentNationalId ?? '4561947'
-  const bank = settings?.paymentBank ?? 'Banesco'
+  const allPaymentData = `Pago Móvil ${bank}
+Teléfono: ${phone}
+CI: ${ci}
+Monto: ${amountVes.toLocaleString('es-VE')} Bs
+Equivalente: ${entryUsd} USD
+Tasa fija: ${fixedRate} Bs/USD
+Concepto: QUINIELA 2026 - ${code}`
 
   const whatsappMsg = encodeURIComponent(
-    `Hola! Quiero reportar mi pago para la Quiniela Mundial 2026.\n\nCódigo: ${code}\nMonto: $${entryPrice} USD\n(Bs. ${amountVes.toFixed(2)})`
+    `Hola! Quiero reportar mi pago para la Quiniela Mundial 2026.\n\nCódigo: ${code}\nMonto: ${amountVes.toLocaleString('es-VE')} Bs (${entryUsd} USD)\nTasa fija: ${fixedRate} Bs/USD`
   )
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -77,15 +86,14 @@ export default function PagoPage({ params }: { params: Promise<{ code: string }>
           senderBank: form.senderBank,
           paymentReference: form.paymentReference,
           paymentDate: form.paymentDate,
-          amountVes,
         }),
       })
       if (res.ok) {
         setSuccess(true)
         setTimeout(() => router.push(`/comprobante/${code}`), 1500)
       } else {
-        const data = await res.json()
-        setError(data.error ?? 'Error al registrar el pago')
+        const d = await res.json()
+        setError(d.error ?? 'Error al registrar el pago')
       }
     } catch {
       setError('Error de conexión')
@@ -104,7 +112,10 @@ export default function PagoPage({ params }: { params: Promise<{ code: string }>
     )
   }
 
-  const alreadyPaid = existingPayment?.paymentStatus === 'VERIFIED' || existingPayment?.paymentStatus === 'IN_REVIEW'
+  const existingPayment = data?.payment
+  const alreadyPaid =
+    existingPayment?.paymentStatus === 'VERIFIED' ||
+    existingPayment?.paymentStatus === 'IN_REVIEW'
 
   return (
     <div className="min-h-screen bg-slate-50 pb-8">
@@ -140,25 +151,40 @@ export default function PagoPage({ params }: { params: Promise<{ code: string }>
           </div>
         )}
 
-        {/* Amount */}
-        <div className="bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl p-5 text-center shadow-lg">
-          <p className="text-green-200 text-sm mb-1">Monto a pagar</p>
-          <p className="text-4xl font-bold">${entryPrice} <span className="text-lg font-normal">USD</span></p>
-          {amountVes > 0 && (
-            <p className="text-green-200 text-sm mt-1">≈ Bs. {amountVes.toFixed(2)} <span className="text-xs">(tasa {exchangeRate.toFixed(2)})</span></p>
-          )}
+        {/* Amount card */}
+        <div className="bg-gradient-to-br from-green-600 to-green-700 text-white rounded-2xl p-5 shadow-lg">
+          <p className="text-green-200 text-sm mb-2 text-center">Monto a pagar</p>
+          <div className="text-center mb-3">
+            <span className="text-5xl font-extrabold">{amountVes.toLocaleString('es-VE')}</span>
+            <span className="text-xl font-semibold ml-2">Bs</span>
+          </div>
+          <div className="bg-white/15 rounded-xl p-3 grid grid-cols-2 gap-3 text-center text-sm">
+            <div>
+              <div className="text-green-200 text-xs">Equivalente en USD</div>
+              <div className="font-bold text-lg">${entryUsd} USD</div>
+            </div>
+            <div>
+              <div className="text-green-200 text-xs">Tasa fija</div>
+              <div className="font-bold text-lg">{fixedRate} Bs/USD</div>
+            </div>
+          </div>
+          <p className="text-green-200 text-xs text-center mt-3">
+            La entrada cuesta {entryUsd} USD × {fixedRate} Bs/USD = {amountVes.toLocaleString('es-VE')} Bs
+          </p>
         </div>
 
         {/* Payment details */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
-          <h2 className="font-bold text-slate-700 mb-4">📱 Datos para pago móvil</h2>
-          <div className="space-y-3">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+          <h2 className="font-bold text-slate-700 mb-4">📱 Datos para Pago Móvil</h2>
+          <div className="space-y-2">
             {[
               { label: 'Banco', value: bank },
               { label: 'Teléfono', value: phone },
               { label: 'Cédula', value: `V-${ci}` },
+              { label: 'Monto', value: `${amountVes.toLocaleString('es-VE')} Bs` },
+              { label: 'Concepto', value: `QUINIELA 2026 - ${code}` },
             ].map(({ label, value }) => (
-              <div key={label} className="flex items-center justify-between bg-slate-50 rounded-lg px-4 py-3">
+              <div key={label} className="flex items-center justify-between bg-slate-50 rounded-xl px-4 py-3">
                 <div>
                   <p className="text-xs text-slate-400">{label}</p>
                   <p className="font-bold text-slate-800">{value}</p>
@@ -169,25 +195,44 @@ export default function PagoPage({ params }: { params: Promise<{ code: string }>
                     copied === label ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
                   }`}
                 >
-                  {copied === label ? '¡Copiado!' : 'Copiar'}
+                  {copied === label ? '✓ Copiado' : 'Copiar'}
                 </button>
               </div>
             ))}
           </div>
 
+          {/* Copy all button */}
+          <button
+            onClick={() => copyToClipboard(allPaymentData, 'todos')}
+            className={`mt-4 w-full font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors border-2 ${
+              copied === 'todos'
+                ? 'bg-green-100 border-green-400 text-green-700'
+                : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            📋 {copied === 'todos' ? '¡Datos copiados!' : 'Copiar todos los datos'}
+          </button>
+
+          {/* WhatsApp contact */}
           <a
             href={`https://wa.me/58${phone.replace(/^0/, '')}?text=${whatsappMsg}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-4 w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
+            className="mt-3 w-full bg-[#25D366] hover:bg-[#1fb856] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
           >
             <span className="text-xl">📲</span> Contactar por WhatsApp
           </a>
         </div>
 
+        {/* Note about manual verification */}
+        <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-800">
+          <strong>ℹ️</strong> Tu pago será revisado por el administrador antes de que aparezcas oficialmente en el ranking.
+          El proceso puede tomar hasta 24 horas.
+        </div>
+
         {/* Report payment form */}
         {!alreadyPaid && (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
             <h2 className="font-bold text-slate-700 mb-4">📋 Reportar mi pago</h2>
             {success ? (
               <div className="text-center py-4">
@@ -197,7 +242,9 @@ export default function PagoPage({ params }: { params: Promise<{ code: string }>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
-                {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">{error}</div>}
+                {error && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">{error}</div>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Banco emisor</label>
                   <input

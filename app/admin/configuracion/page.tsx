@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 interface Settings {
   appName: string
   entryPriceUsd: number
+  fixedExchangeRate: number
   paymentPhone: string
   paymentNationalId: string
   paymentBank: string
@@ -21,16 +22,17 @@ export default function ConfiguracionPage() {
   const [settings, setSettings] = useState<Settings>({
     appName: 'Quiniela Mundial 2026',
     entryPriceUsd: 20,
+    fixedExchangeRate: 700,
     paymentPhone: '04143043337',
     paymentNationalId: '4561947',
     paymentBank: 'Banesco',
-    firstPrizePercent: 50,
-    secondPrizePercent: 30,
-    organizationPercent: 20,
+    firstPrizePercent: 65,
+    secondPrizePercent: 20,
+    organizationPercent: 15,
     deadline: null,
     rankingVisible: true,
-    showOnlyPaidParticipants: false,
-    allowPublicPredictionViewAfterDeadline: true,
+    showOnlyPaidParticipants: true,
+    allowPublicPredictionViewAfterDeadline: false,
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -89,10 +91,25 @@ export default function ConfiguracionPage() {
               <label className="block text-sm font-medium text-slate-700 mb-1">Precio de entrada (USD)</label>
               <input
                 type="number"
+                min="1"
                 value={settings.entryPriceUsd}
                 onChange={(e) => setSettings({ ...settings, entryPriceUsd: parseFloat(e.target.value) })}
                 className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Tasa fija (Bs/USD)</label>
+              <input
+                type="number"
+                min="1"
+                value={settings.fixedExchangeRate}
+                onChange={(e) => setSettings({ ...settings, fixedExchangeRate: parseFloat(e.target.value) })}
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+              <p className="text-xs text-slate-400 mt-1">
+                Monto en Bs: {Math.round((settings.entryPriceUsd || 0) * (settings.fixedExchangeRate || 0)).toLocaleString('es-VE')} Bs
+                · Los pagos ya registrados conservan la tasa del momento.
+              </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Fecha límite de registro</label>

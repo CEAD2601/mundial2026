@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getCurrentExchangeRate } from '@/lib/exchange-rate'
 import { z } from 'zod'
+
+const DEFAULT_FIXED_RATE = 700
+const DEFAULT_ENTRY_USD = 20
 
 const reportPaymentSchema = z.object({
   participationCode: z.string(),
   senderBank: z.string().min(2),
   paymentReference: z.string().min(4),
   paymentDate: z.string(),
-  amountVes: z.number().optional(),
 })
 
 export async function POST(req: NextRequest) {
@@ -22,10 +23,13 @@ export async function POST(req: NextRequest) {
     })
     if (!participant) return NextResponse.json({ error: 'Participante no encontrado' }, { status: 404 })
 
-    const rateInfo = await getCurrentExchangeRate()
-    const amountVes = data.amountVes ?? 20 * rateInfo.rate
+    // Get current fixed rate from settings
+    const settings = await prisma.setting.findFirst()
+    const fixedRate = settings?.fixedExchangeRate ?? DEFAULT_FIXED_RATE
+    const entryUsd = settings?.entryPriceUsd ?? DEFAULT_ENTRY_USD
+    const amountVes = Math.round(entryUsd * fixedRate)
 
-    // Check if reference already exists
+    // Check for duplicate reference
     const existingRef = await prisma.payment.findUnique({
       where: { paymentReference: data.paymentReference },
     })
@@ -39,9 +43,11 @@ export async function POST(req: NextRequest) {
         senderBank: data.senderBank,
         paymentReference: data.paymentReference,
         paymentDate: new Date(data.paymentDate),
+        amountUsd: entryUsd,
         amountVes,
-        exchangeRate: rateInfo.rate,
-        exchangeRateDate: rateInfo.date,
+        // Store the fixed rate used at the time of payment
+        exchangeRate: fixedRate,
+        exchangeRateDate: new Date(),
         paymentStatus: 'IN_REVIEW',
       },
     })
@@ -67,6 +73,14 @@ export async function GET(req: NextRequest) {
   })
   if (!participant) return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
 
-  const rateInfo = await getCurrentExchangeRate()
-  return NextResponse.json({ payment: participant.payment, exchangeRate: rateInfo })
+  const settings = await prisma.setting.findFirst()
+  const fixedRate = settings?.fixedExchangeRate ?? DEFAULT_FIXED_RATE
+  const entryUsd = settings?.entryPriceUsd ?? DEFAULT_ENTRY_USD
+
+  return NextResponse.json({
+    payment: participant.payment,
+    fixedRate,
+    entryUsd,
+    amountVes: Math.round(entryUsd * fixedRate),
+  })
 }

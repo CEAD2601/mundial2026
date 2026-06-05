@@ -1,3 +1,10 @@
+/**
+ * Exchange rate utilities — Quiniela Mundial 2026
+ *
+ * Uses a FIXED exchange rate configured by the admin (default: 700 Bs/USD).
+ * This replaces the previous volatile BCV EUR rate approach.
+ */
+
 import { prisma } from './prisma'
 
 export interface ExchangeRateResult {
@@ -7,43 +14,50 @@ export interface ExchangeRateResult {
   source: string
 }
 
-export async function getBcvEuroRate(): Promise<number | null> {
+const DEFAULT_FIXED_RATE = 700
+
+/**
+ * Returns the fixed exchange rate from admin settings.
+ * Default: 700 Bs per USD.
+ */
+export async function getCurrentExchangeRate(): Promise<ExchangeRateResult> {
   try {
-    // BCV API - try to fetch EUR rate
-    const response = await fetch('https://ve.dolarapi.com/v1/dolares/euro', {
-      next: { revalidate: 3600 }, // cache for 1 hour
-      signal: AbortSignal.timeout(5000),
-    })
-    if (response.ok) {
-      const data = await response.json()
-      if (data?.promedio) return parseFloat(data.promedio)
-      if (data?.venta) return parseFloat(data.venta)
+    const settings = await prisma.setting.findFirst()
+    const rate = settings?.fixedExchangeRate ?? DEFAULT_FIXED_RATE
+    return {
+      rate,
+      currency: 'USD',
+      date: new Date(),
+      source: 'Tasa fija',
     }
   } catch {
-    // fallback
-  }
-  return null
-}
-
-export async function getCurrentExchangeRate(): Promise<ExchangeRateResult> {
-  const settings = await prisma.setting.findFirst()
-
-  // Try to get live rate
-  const liveRate = await getBcvEuroRate()
-  if (liveRate && liveRate > 0) {
-    return { rate: liveRate, currency: 'EUR', date: new Date(), source: 'BCV (live)' }
-  }
-
-  // Fall back to manual rate from settings
-  if (settings?.manualExchangeRate && settings.manualExchangeRate > 0) {
     return {
-      rate: settings.manualExchangeRate,
-      currency: settings.exchangeRateCurrency,
-      date: settings.manualExchangeRateDate ?? new Date(),
-      source: 'Manual (admin)',
+      rate: DEFAULT_FIXED_RATE,
+      currency: 'USD',
+      date: new Date(),
+      source: 'Tasa fija (default)',
     }
   }
+}
 
-  // Default fallback rate
-  return { rate: 55.0, currency: 'EUR', date: new Date(), source: 'Estimado' }
+/**
+ * Format Bs amount with dot thousands separator.
+ * e.g. 14000 → "14.000"
+ */
+export function formatVes(amount: number): string {
+  return amount.toLocaleString('es-VE', { maximumFractionDigits: 0 })
+}
+
+/**
+ * Calculate Bs equivalent for a USD amount at a given fixed rate.
+ */
+export function usdToVes(amountUsd: number, fixedRate: number): number {
+  return Math.round(amountUsd * fixedRate)
+}
+
+/**
+ * @deprecated Not used in main flow. Kept for reference only.
+ */
+export async function getBcvEuroRate(): Promise<number | null> {
+  return null
 }

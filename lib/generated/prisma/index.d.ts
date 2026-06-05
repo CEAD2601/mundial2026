@@ -1759,6 +1759,7 @@ export namespace Prisma {
     firstPrizePercent: number | null
     secondPrizePercent: number | null
     organizationPercent: number | null
+    fixedExchangeRate: number | null
   }
 
   export type SettingSumAggregateOutputType = {
@@ -1767,6 +1768,7 @@ export namespace Prisma {
     firstPrizePercent: number | null
     secondPrizePercent: number | null
     organizationPercent: number | null
+    fixedExchangeRate: number | null
   }
 
   export type SettingMinAggregateOutputType = {
@@ -1786,6 +1788,8 @@ export namespace Prisma {
     rankingVisible: boolean | null
     showOnlyPaidParticipants: boolean | null
     allowPublicPredictionViewAfterDeadline: boolean | null
+    fixedExchangeRate: number | null
+    useFixedExchangeRate: boolean | null
     tiebreakerRules: string | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -1808,6 +1812,8 @@ export namespace Prisma {
     rankingVisible: boolean | null
     showOnlyPaidParticipants: boolean | null
     allowPublicPredictionViewAfterDeadline: boolean | null
+    fixedExchangeRate: number | null
+    useFixedExchangeRate: boolean | null
     tiebreakerRules: string | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -1830,6 +1836,8 @@ export namespace Prisma {
     rankingVisible: number
     showOnlyPaidParticipants: number
     allowPublicPredictionViewAfterDeadline: number
+    fixedExchangeRate: number
+    useFixedExchangeRate: number
     tiebreakerRules: number
     createdAt: number
     updatedAt: number
@@ -1843,6 +1851,7 @@ export namespace Prisma {
     firstPrizePercent?: true
     secondPrizePercent?: true
     organizationPercent?: true
+    fixedExchangeRate?: true
   }
 
   export type SettingSumAggregateInputType = {
@@ -1851,6 +1860,7 @@ export namespace Prisma {
     firstPrizePercent?: true
     secondPrizePercent?: true
     organizationPercent?: true
+    fixedExchangeRate?: true
   }
 
   export type SettingMinAggregateInputType = {
@@ -1870,6 +1880,8 @@ export namespace Prisma {
     rankingVisible?: true
     showOnlyPaidParticipants?: true
     allowPublicPredictionViewAfterDeadline?: true
+    fixedExchangeRate?: true
+    useFixedExchangeRate?: true
     tiebreakerRules?: true
     createdAt?: true
     updatedAt?: true
@@ -1892,6 +1904,8 @@ export namespace Prisma {
     rankingVisible?: true
     showOnlyPaidParticipants?: true
     allowPublicPredictionViewAfterDeadline?: true
+    fixedExchangeRate?: true
+    useFixedExchangeRate?: true
     tiebreakerRules?: true
     createdAt?: true
     updatedAt?: true
@@ -1914,6 +1928,8 @@ export namespace Prisma {
     rankingVisible?: true
     showOnlyPaidParticipants?: true
     allowPublicPredictionViewAfterDeadline?: true
+    fixedExchangeRate?: true
+    useFixedExchangeRate?: true
     tiebreakerRules?: true
     createdAt?: true
     updatedAt?: true
@@ -2023,6 +2039,8 @@ export namespace Prisma {
     rankingVisible: boolean
     showOnlyPaidParticipants: boolean
     allowPublicPredictionViewAfterDeadline: boolean
+    fixedExchangeRate: number
+    useFixedExchangeRate: boolean
     tiebreakerRules: string
     createdAt: Date
     updatedAt: Date
@@ -2064,6 +2082,8 @@ export namespace Prisma {
     rankingVisible?: boolean
     showOnlyPaidParticipants?: boolean
     allowPublicPredictionViewAfterDeadline?: boolean
+    fixedExchangeRate?: boolean
+    useFixedExchangeRate?: boolean
     tiebreakerRules?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -2086,6 +2106,8 @@ export namespace Prisma {
     rankingVisible?: boolean
     showOnlyPaidParticipants?: boolean
     allowPublicPredictionViewAfterDeadline?: boolean
+    fixedExchangeRate?: boolean
+    useFixedExchangeRate?: boolean
     tiebreakerRules?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -2108,6 +2130,8 @@ export namespace Prisma {
     rankingVisible?: boolean
     showOnlyPaidParticipants?: boolean
     allowPublicPredictionViewAfterDeadline?: boolean
+    fixedExchangeRate?: boolean
+    useFixedExchangeRate?: boolean
     tiebreakerRules?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -2130,12 +2154,14 @@ export namespace Prisma {
     rankingVisible?: boolean
     showOnlyPaidParticipants?: boolean
     allowPublicPredictionViewAfterDeadline?: boolean
+    fixedExchangeRate?: boolean
+    useFixedExchangeRate?: boolean
     tiebreakerRules?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type SettingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "appName" | "entryPriceUsd" | "paymentPhone" | "paymentNationalId" | "paymentBank" | "exchangeRateCurrency" | "manualExchangeRate" | "manualExchangeRateDate" | "firstPrizePercent" | "secondPrizePercent" | "organizationPercent" | "deadline" | "rankingVisible" | "showOnlyPaidParticipants" | "allowPublicPredictionViewAfterDeadline" | "tiebreakerRules" | "createdAt" | "updatedAt", ExtArgs["result"]["setting"]>
+  export type SettingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "appName" | "entryPriceUsd" | "paymentPhone" | "paymentNationalId" | "paymentBank" | "exchangeRateCurrency" | "manualExchangeRate" | "manualExchangeRateDate" | "firstPrizePercent" | "secondPrizePercent" | "organizationPercent" | "deadline" | "rankingVisible" | "showOnlyPaidParticipants" | "allowPublicPredictionViewAfterDeadline" | "fixedExchangeRate" | "useFixedExchangeRate" | "tiebreakerRules" | "createdAt" | "updatedAt", ExtArgs["result"]["setting"]>
 
   export type $SettingPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Setting"
@@ -2157,6 +2183,8 @@ export namespace Prisma {
       rankingVisible: boolean
       showOnlyPaidParticipants: boolean
       allowPublicPredictionViewAfterDeadline: boolean
+      fixedExchangeRate: number
+      useFixedExchangeRate: boolean
       tiebreakerRules: string
       createdAt: Date
       updatedAt: Date
@@ -2599,6 +2627,8 @@ export namespace Prisma {
     readonly rankingVisible: FieldRef<"Setting", 'Boolean'>
     readonly showOnlyPaidParticipants: FieldRef<"Setting", 'Boolean'>
     readonly allowPublicPredictionViewAfterDeadline: FieldRef<"Setting", 'Boolean'>
+    readonly fixedExchangeRate: FieldRef<"Setting", 'Float'>
+    readonly useFixedExchangeRate: FieldRef<"Setting", 'Boolean'>
     readonly tiebreakerRules: FieldRef<"Setting", 'String'>
     readonly createdAt: FieldRef<"Setting", 'DateTime'>
     readonly updatedAt: FieldRef<"Setting", 'DateTime'>
@@ -12617,6 +12647,8 @@ export namespace Prisma {
     rankingVisible: 'rankingVisible',
     showOnlyPaidParticipants: 'showOnlyPaidParticipants',
     allowPublicPredictionViewAfterDeadline: 'allowPublicPredictionViewAfterDeadline',
+    fixedExchangeRate: 'fixedExchangeRate',
+    useFixedExchangeRate: 'useFixedExchangeRate',
     tiebreakerRules: 'tiebreakerRules',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -12935,6 +12967,8 @@ export namespace Prisma {
     rankingVisible?: BoolFilter<"Setting"> | boolean
     showOnlyPaidParticipants?: BoolFilter<"Setting"> | boolean
     allowPublicPredictionViewAfterDeadline?: BoolFilter<"Setting"> | boolean
+    fixedExchangeRate?: FloatFilter<"Setting"> | number
+    useFixedExchangeRate?: BoolFilter<"Setting"> | boolean
     tiebreakerRules?: StringFilter<"Setting"> | string
     createdAt?: DateTimeFilter<"Setting"> | Date | string
     updatedAt?: DateTimeFilter<"Setting"> | Date | string
@@ -12957,6 +12991,8 @@ export namespace Prisma {
     rankingVisible?: SortOrder
     showOnlyPaidParticipants?: SortOrder
     allowPublicPredictionViewAfterDeadline?: SortOrder
+    fixedExchangeRate?: SortOrder
+    useFixedExchangeRate?: SortOrder
     tiebreakerRules?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -12982,6 +13018,8 @@ export namespace Prisma {
     rankingVisible?: BoolFilter<"Setting"> | boolean
     showOnlyPaidParticipants?: BoolFilter<"Setting"> | boolean
     allowPublicPredictionViewAfterDeadline?: BoolFilter<"Setting"> | boolean
+    fixedExchangeRate?: FloatFilter<"Setting"> | number
+    useFixedExchangeRate?: BoolFilter<"Setting"> | boolean
     tiebreakerRules?: StringFilter<"Setting"> | string
     createdAt?: DateTimeFilter<"Setting"> | Date | string
     updatedAt?: DateTimeFilter<"Setting"> | Date | string
@@ -13004,6 +13042,8 @@ export namespace Prisma {
     rankingVisible?: SortOrder
     showOnlyPaidParticipants?: SortOrder
     allowPublicPredictionViewAfterDeadline?: SortOrder
+    fixedExchangeRate?: SortOrder
+    useFixedExchangeRate?: SortOrder
     tiebreakerRules?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -13034,6 +13074,8 @@ export namespace Prisma {
     rankingVisible?: BoolWithAggregatesFilter<"Setting"> | boolean
     showOnlyPaidParticipants?: BoolWithAggregatesFilter<"Setting"> | boolean
     allowPublicPredictionViewAfterDeadline?: BoolWithAggregatesFilter<"Setting"> | boolean
+    fixedExchangeRate?: FloatWithAggregatesFilter<"Setting"> | number
+    useFixedExchangeRate?: BoolWithAggregatesFilter<"Setting"> | boolean
     tiebreakerRules?: StringWithAggregatesFilter<"Setting"> | string
     createdAt?: DateTimeWithAggregatesFilter<"Setting"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Setting"> | Date | string
@@ -13844,6 +13886,8 @@ export namespace Prisma {
     rankingVisible?: boolean
     showOnlyPaidParticipants?: boolean
     allowPublicPredictionViewAfterDeadline?: boolean
+    fixedExchangeRate?: number
+    useFixedExchangeRate?: boolean
     tiebreakerRules?: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -13866,6 +13910,8 @@ export namespace Prisma {
     rankingVisible?: boolean
     showOnlyPaidParticipants?: boolean
     allowPublicPredictionViewAfterDeadline?: boolean
+    fixedExchangeRate?: number
+    useFixedExchangeRate?: boolean
     tiebreakerRules?: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -13888,6 +13934,8 @@ export namespace Prisma {
     rankingVisible?: BoolFieldUpdateOperationsInput | boolean
     showOnlyPaidParticipants?: BoolFieldUpdateOperationsInput | boolean
     allowPublicPredictionViewAfterDeadline?: BoolFieldUpdateOperationsInput | boolean
+    fixedExchangeRate?: FloatFieldUpdateOperationsInput | number
+    useFixedExchangeRate?: BoolFieldUpdateOperationsInput | boolean
     tiebreakerRules?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -13910,6 +13958,8 @@ export namespace Prisma {
     rankingVisible?: BoolFieldUpdateOperationsInput | boolean
     showOnlyPaidParticipants?: BoolFieldUpdateOperationsInput | boolean
     allowPublicPredictionViewAfterDeadline?: BoolFieldUpdateOperationsInput | boolean
+    fixedExchangeRate?: FloatFieldUpdateOperationsInput | number
+    useFixedExchangeRate?: BoolFieldUpdateOperationsInput | boolean
     tiebreakerRules?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -13932,6 +13982,8 @@ export namespace Prisma {
     rankingVisible?: boolean
     showOnlyPaidParticipants?: boolean
     allowPublicPredictionViewAfterDeadline?: boolean
+    fixedExchangeRate?: number
+    useFixedExchangeRate?: boolean
     tiebreakerRules?: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -13954,6 +14006,8 @@ export namespace Prisma {
     rankingVisible?: BoolFieldUpdateOperationsInput | boolean
     showOnlyPaidParticipants?: BoolFieldUpdateOperationsInput | boolean
     allowPublicPredictionViewAfterDeadline?: BoolFieldUpdateOperationsInput | boolean
+    fixedExchangeRate?: FloatFieldUpdateOperationsInput | number
+    useFixedExchangeRate?: BoolFieldUpdateOperationsInput | boolean
     tiebreakerRules?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -13976,6 +14030,8 @@ export namespace Prisma {
     rankingVisible?: BoolFieldUpdateOperationsInput | boolean
     showOnlyPaidParticipants?: BoolFieldUpdateOperationsInput | boolean
     allowPublicPredictionViewAfterDeadline?: BoolFieldUpdateOperationsInput | boolean
+    fixedExchangeRate?: FloatFieldUpdateOperationsInput | number
+    useFixedExchangeRate?: BoolFieldUpdateOperationsInput | boolean
     tiebreakerRules?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14988,6 +15044,8 @@ export namespace Prisma {
     rankingVisible?: SortOrder
     showOnlyPaidParticipants?: SortOrder
     allowPublicPredictionViewAfterDeadline?: SortOrder
+    fixedExchangeRate?: SortOrder
+    useFixedExchangeRate?: SortOrder
     tiebreakerRules?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -14999,6 +15057,7 @@ export namespace Prisma {
     firstPrizePercent?: SortOrder
     secondPrizePercent?: SortOrder
     organizationPercent?: SortOrder
+    fixedExchangeRate?: SortOrder
   }
 
   export type SettingMaxOrderByAggregateInput = {
@@ -15018,6 +15077,8 @@ export namespace Prisma {
     rankingVisible?: SortOrder
     showOnlyPaidParticipants?: SortOrder
     allowPublicPredictionViewAfterDeadline?: SortOrder
+    fixedExchangeRate?: SortOrder
+    useFixedExchangeRate?: SortOrder
     tiebreakerRules?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -15040,6 +15101,8 @@ export namespace Prisma {
     rankingVisible?: SortOrder
     showOnlyPaidParticipants?: SortOrder
     allowPublicPredictionViewAfterDeadline?: SortOrder
+    fixedExchangeRate?: SortOrder
+    useFixedExchangeRate?: SortOrder
     tiebreakerRules?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -15051,6 +15114,7 @@ export namespace Prisma {
     firstPrizePercent?: SortOrder
     secondPrizePercent?: SortOrder
     organizationPercent?: SortOrder
+    fixedExchangeRate?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {

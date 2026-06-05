@@ -1,7 +1,9 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url)
+  const isAdmin = searchParams.get('admin') === 'true'
   const settings = await prisma.setting.findFirst()
 
   const snapshots = await prisma.rankingSnapshot.findMany({
@@ -19,12 +21,14 @@ export async function GET() {
     ],
   })
 
-  const filtered = settings?.showOnlyPaidParticipants
-    ? snapshots.filter((s) => s.participant.payment?.paymentStatus === 'VERIFIED')
-    : snapshots
+  // Admin sees all; public respects showOnlyPaidParticipants setting
+  const filtered =
+    !isAdmin && settings?.showOnlyPaidParticipants
+      ? snapshots.filter((s) => s.participant.payment?.paymentStatus === 'VERIFIED')
+      : snapshots
 
   const result = filtered.map((s, i) => ({
-    position: i + 1,
+    currentPosition: i + 1,
     previousPosition: s.previousPosition,
     movement: s.previousPosition ? s.previousPosition - (i + 1) : 0,
     participantId: s.participantId,
@@ -38,7 +42,14 @@ export async function GET() {
     playedMatches: s.playedMatches,
     totalGoalDiffError: s.totalGoalDiffError,
     effectivenessPercent: s.effectivenessPercent,
+    updatedAt: s.updatedAt,
     paymentStatus: s.participant.payment?.paymentStatus,
+    participant: {
+      id: s.participant.id,
+      fullName: s.participant.fullName,
+      participationCode: s.participant.participationCode,
+      payment: s.participant.payment,
+    },
   }))
 
   return NextResponse.json({ ranking: result })

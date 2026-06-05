@@ -20,8 +20,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Link href="/admin/pagos" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors">
             💳 Pagos
           </Link>
+          <Link href="/admin/quinielas" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors">
+            📋 Quinielas
+          </Link>
           <Link href="/admin/resultados" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors">
             ⚽ Resultados
+          </Link>
+          <Link href="/admin/ranking" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors">
+            🏆 Ranking
           </Link>
           <Link href="/admin/configuracion" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors">
             ⚙️ Configuración
