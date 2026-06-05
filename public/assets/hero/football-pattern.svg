@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" opacity="0.06">
+  <defs>
+    <pattern id="hexPattern" x="0" y="0" width="80" height="92" patternUnits="userSpaceOnUse">
+      <!-- Hexagon -->
+      <polygon points="40,4 76,24 76,68 40,88 4,68 4,24"
+               fill="none" stroke="white" stroke-width="1.5"/>
+    </pattern>
+    <pattern id="ballPattern" x="0" y="0" width="120" height="120" patternUnits="userSpaceOnUse">
+      <!-- Football pentagon pattern suggestion -->
+      <circle cx="60" cy="60" r="28" fill="none" stroke="white" stroke-width="1.5"/>
+      <polygon points="60,32 76,48 70,68 50,68 44,48" fill="none" stroke="white" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="400" height="400" fill="url(#hexPattern)"/>
+</svg>

@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" fill="none">
+  <defs>
+    <linearGradient id="trophyGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="40%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+    <linearGradient id="trophyShine" x1="0%" y1="0%" x2="60%" y2="100%">
+      <stop offset="0%" stop-color="#fef3c7" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#fef3c7" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glowBase" cx="50%" cy="100%" r="50%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Glow base -->
+  <ellipse cx="100" cy="220" rx="80" ry="20" fill="url(#glowBase)"/>
+
+  <!-- Base plate -->
+  <rect x="55" y="205" width="90" height="12" rx="4" fill="url(#trophyGold)"/>
+  <rect x="70" y="195" width="60" height="12" rx="2" fill="url(#trophyGold)"/>
+
+  <!-- Stem -->
+  <rect x="88" y="170" width="24" height="28" rx="3" fill="url(#trophyGold)"/>
+
+  <!-- Cup body -->
+  <path d="M55,60 Q50,120 72,155 Q86,170 100,172 Q114,170 128,155 Q150,120 145,60 Z"
+        fill="url(#trophyGold)" filter="url(#softGlow)"/>
+
+  <!-- Cup shine -->
+  <path d="M68,70 Q65,110 78,140 Q85,155 90,160"
+        stroke="url(#trophyShine)" stroke-width="8" stroke-linecap="round" fill="none"/>
+
+  <!-- Handles left -->
+  <path d="M55,80 Q30,85 32,110 Q34,130 55,130"
+        stroke="url(#trophyGold)" stroke-width="10" fill="none" stroke-linecap="round"/>
+
+  <!-- Handles right -->
+  <path d="M145,80 Q170,85 168,110 Q166,130 145,130"
+        stroke="url(#trophyGold)" stroke-width="10" fill="none" stroke-linecap="round"/>
+
+  <!-- Stars on cup -->
+  <g fill="#fef3c7" opacity="0.7">
+    <polygon points="100,80 103,90 113,90 105,96 108,106 100,100 92,106 95,96 87,90 97,90" transform="scale(0.55) translate(82,90)"/>
+  </g>
+
+  <!-- Top star -->
+  <g filter="url(#softGlow)">
+    <polygon points="100,20 104,32 117,32 107,40 111,52 100,44 89,52 93,40 83,32 96,32"
+             fill="#fde68a" opacity="0.9"/>
+  </g>
+</svg>

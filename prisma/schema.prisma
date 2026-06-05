@@ -1,0 +1,177 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+model Setting {
+  id                              String   @id @default(cuid())
+  appName                         String   @default("Quiniela Mundial 2026")
+  entryPriceUsd                   Float    @default(20)
+  paymentPhone                    String   @default("04143043337")
+  paymentNationalId               String   @default("4561947")
+  paymentBank                     String   @default("Banesco")
+  exchangeRateCurrency            String   @default("EUR")
+  manualExchangeRate              Float?
+  manualExchangeRateDate          DateTime?
+  firstPrizePercent               Float    @default(65)
+  secondPrizePercent              Float    @default(20)
+  organizationPercent             Float    @default(15)
+  deadline                        DateTime?
+  rankingVisible                  Boolean  @default(true)
+  showOnlyPaidParticipants        Boolean  @default(true)
+  allowPublicPredictionViewAfterDeadline Boolean @default(false)
+  tiebreakerRules                 String   @default("Por definir")
+  createdAt                       DateTime @default(now())
+  updatedAt                       DateTime @updatedAt
+}
+
+model Team {
+  id           String   @id @default(cuid())
+  officialName String
+  displayName  String
+  shortName    String
+  fifaCode     String   @unique
+  isoCode      String
+  flagEmoji    String   @default("")
+  group        String
+  aliases      String   @default("[]")
+  createdAt    DateTime @default(now())
+
+  matchesAsTeam1 Match[] @relation("Team1")
+  matchesAsTeam2 Match[] @relation("Team2")
+}
+
+model Match {
+  id              String      @id @default(cuid())
+  matchNumber     Int         @unique
+  group           String
+  team1Id         String
+  team2Id         String
+  kickoffUtc      DateTime
+  venue           String      @default("")
+  city            String      @default("")
+  source          String      @default("Excel import")
+  status          MatchStatus @default(SCHEDULED)
+  team1Goals      Int?
+  team2Goals      Int?
+  result          MatchResult?
+  resultUpdatedAt DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  team1       Team         @relation("Team1", fields: [team1Id], references: [id])
+  team2       Team         @relation("Team2", fields: [team2Id], references: [id])
+  predictions Prediction[]
+}
+
+enum MatchStatus {
+  SCHEDULED
+  IN_PROGRESS
+  FINISHED
+  CANCELLED
+}
+
+enum MatchResult {
+  G1
+  E
+  G2
+}
+
+model Participant {
+  id                String    @id @default(cuid())
+  fullName          String
+  nationalId        String    @unique
+  phone             String
+  email             String?
+  city              String?
+  participationCode String    @unique
+  confirmationHash  String?
+  submittedAt       DateTime?
+  isComplete        Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  predictions Prediction[]
+  payment     Payment?
+  ranking     RankingSnapshot?
+}
+
+model Prediction {
+  id                   String      @id @default(cuid())
+  participantId        String
+  matchId              String
+  predictedTeam1Goals  Int
+  predictedTeam2Goals  Int
+  predictedResult      MatchResult
+  points               Int         @default(0)
+  isExactScore         Boolean?
+  isCorrectResult      Boolean?
+  goalDifferenceError  Int?
+  createdAt            DateTime    @default(now())
+
+  participant Participant @relation(fields: [participantId], references: [id])
+  match       Match       @relation(fields: [matchId], references: [id])
+
+  @@unique([participantId, matchId])
+}
+
+model Payment {
+  id               String        @id @default(cuid())
+  participantId    String        @unique
+  amountUsd        Float         @default(20)
+  exchangeRate     Float?
+  exchangeRateDate DateTime?
+  amountVes        Float?
+  senderBank       String?
+  paymentReference String?       @unique
+  paymentDate      DateTime?
+  paymentProofPath String?
+  paymentStatus    PaymentStatus @default(PENDING)
+  adminNotes       String?
+  verifiedAt       DateTime?
+  rejectedAt       DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  participant Participant @relation(fields: [participantId], references: [id])
+}
+
+enum PaymentStatus {
+  PENDING
+  IN_REVIEW
+  VERIFIED
+  REJECTED
+}
+
+model RankingSnapshot {
+  id                   String   @id @default(cuid())
+  participantId        String   @unique
+  totalPoints          Int      @default(0)
+  exactScores          Int      @default(0)
+  correctResults       Int      @default(0)
+  wrongPredictions     Int      @default(0)
+  pendingPredictions   Int      @default(0)
+  playedMatches        Int      @default(0)
+  totalGoalDiffError   Int      @default(0)
+  effectivenessPercent Float    @default(0)
+  currentPosition      Int      @default(0)
+  previousPosition     Int?
+  updatedAt            DateTime @updatedAt
+
+  participant Participant @relation(fields: [participantId], references: [id])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entityType String
+  entityId   String?
+  oldValue   String?
+  newValue   String?
+  createdAt  DateTime @default(now())
+}

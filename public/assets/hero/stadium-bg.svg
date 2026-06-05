@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 600" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- Deep field gradient -->
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0f1e;stop-opacity:1" />
+      <stop offset="40%" style="stop-color:#0d1f3c;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f3d2a;stop-opacity:1" />
+    </linearGradient>
+    <!-- Field green gradient -->
+    <linearGradient id="fieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#166534;stop-opacity:0.9" />
+      <stop offset="100%" style="stop-color:#14532d;stop-opacity:1" />
+    </linearGradient>
+    <!-- Gold glow -->
+    <radialGradient id="goldGlow" cx="50%" cy="30%" r="50%">
+      <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:0.15" />
+      <stop offset="100%" style="stop-color:#fbbf24;stop-opacity:0" />
+    </radialGradient>
+    <!-- Stadium light glow left -->
+    <radialGradient id="lightLeft" cx="0%" cy="0%" r="50%">
+      <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#60a5fa;stop-opacity:0" />
+    </radialGradient>
+    <!-- Stadium light glow right -->
+    <radialGradient id="lightRight" cx="100%" cy="0%" r="50%">
+      <stop offset="0%" style="stop-color:#34d399;stop-opacity:0.25" />
+      <stop offset="100%" style="stop-color:#34d399;stop-opacity:0" />
+    </radialGradient>
+    <filter id="blur4">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+    <filter id="blur2">
+      <feGaussianBlur stdDeviation="2"/>
+    </filter>
+    <filter id="blur8">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1440" height="600" fill="url(#skyGrad)"/>
+
+  <!-- Gold center glow -->
+  <rect width="1440" height="600" fill="url(#goldGlow)"/>
+
+  <!-- Light glow from corners -->
+  <rect width="1440" height="600" fill="url(#lightLeft)"/>
+  <rect width="1440" height="600" fill="url(#lightRight)"/>
+
+  <!-- Stars -->
+  <g opacity="0.6">
+    <circle cx="100" cy="40" r="1.5" fill="white" opacity="0.8"/>
+    <circle cx="200" cy="80" r="1" fill="white" opacity="0.6"/>
+    <circle cx="320" cy="30" r="1.5" fill="white" opacity="0.9"/>
+    <circle cx="450" cy="60" r="1" fill="white" opacity="0.5"/>
+    <circle cx="580" cy="25" r="1.5" fill="white" opacity="0.7"/>
+    <circle cx="700" cy="50" r="1" fill="white" opacity="0.6"/>
+    <circle cx="820" cy="35" r="1.5" fill="white" opacity="0.8"/>
+    <circle cx="950" cy="70" r="1" fill="white" opacity="0.5"/>
+    <circle cx="1080" cy="20" r="1.5" fill="white" opacity="0.9"/>
+    <circle cx="1200" cy="55" r="1" fill="white" opacity="0.6"/>
+    <circle cx="1340" cy="40" r="1.5" fill="white" opacity="0.7"/>
+    <circle cx="160" cy="120" r="1" fill="white" opacity="0.4"/>
+    <circle cx="390" cy="100" r="1.5" fill="white" opacity="0.5"/>
+    <circle cx="640" cy="110" r="1" fill="white" opacity="0.6"/>
+    <circle cx="880" cy="90" r="1.5" fill="white" opacity="0.4"/>
+    <circle cx="1120" cy="115" r="1" fill="white" opacity="0.5"/>
+    <circle cx="1380" cy="95" r="1.5" fill="white" opacity="0.6"/>
+  </g>
+
+  <!-- Stadium silhouette left stands -->
+  <path d="M0,300 Q80,200 180,180 L200,300 Z" fill="#0d1b2a" opacity="0.7"/>
+  <path d="M0,300 Q60,220 140,210 L150,300 Z" fill="#0a1520" opacity="0.5"/>
+
+  <!-- Stadium silhouette right stands -->
+  <path d="M1440,300 Q1360,200 1260,180 L1240,300 Z" fill="#0d1b2a" opacity="0.7"/>
+  <path d="M1440,300 Q1380,220 1300,210 L1290,300 Z" fill="#0a1520" opacity="0.5"/>
+
+  <!-- Stadium lights left -->
+  <line x1="170" y1="185" x2="720" y2="400" stroke="#fbbf24" stroke-width="1.5" opacity="0.15" filter="url(#blur2)"/>
+  <line x1="170" y1="185" x2="620" y2="420" stroke="#60a5fa" stroke-width="1" opacity="0.1" filter="url(#blur2)"/>
+  <circle cx="170" cy="183" r="8" fill="#fbbf24" opacity="0.6" filter="url(#blur4)"/>
+  <circle cx="170" cy="183" r="3" fill="white" opacity="0.9"/>
+
+  <!-- Stadium lights right -->
+  <line x1="1270" y1="185" x2="720" y2="400" stroke="#fbbf24" stroke-width="1.5" opacity="0.15" filter="url(#blur2)"/>
+  <line x1="1270" y1="185" x2="820" y2="420" stroke="#34d399" stroke-width="1" opacity="0.1" filter="url(#blur2)"/>
+  <circle cx="1270" cy="183" r="8" fill="#fbbf24" opacity="0.6" filter="url(#blur4)"/>
+  <circle cx="1270" cy="183" r="3" fill="white" opacity="0.9"/>
+
+  <!-- Pitch / Field -->
+  <ellipse cx="720" cy="560" rx="700" ry="120" fill="url(#fieldGrad)"/>
+
+  <!-- Field stripes -->
+  <g opacity="0.3">
+    <ellipse cx="720" cy="560" rx="660" ry="110" fill="none" stroke="#15803d" stroke-width="20"/>
+    <ellipse cx="720" cy="560" rx="580" ry="97" fill="none" stroke="#166534" stroke-width="20"/>
+    <ellipse cx="720" cy="560" rx="500" ry="83" fill="none" stroke="#15803d" stroke-width="20"/>
+    <ellipse cx="720" cy="560" rx="420" ry="70" fill="none" stroke="#166534" stroke-width="20"/>
+  </g>
+
+  <!-- Center circle -->
+  <ellipse cx="720" cy="540" rx="120" ry="35" fill="none" stroke="white" stroke-width="2" opacity="0.4"/>
+  <ellipse cx="720" cy="540" rx="5" ry="3" fill="white" opacity="0.5"/>
+
+  <!-- Penalty spots suggestion -->
+  <line x1="720" y1="440" x2="720" y2="600" stroke="white" stroke-width="1.5" opacity="0.3"/>
+
+  <!-- Gold trophy glow center top -->
+  <ellipse cx="720" cy="160" rx="200" ry="80" fill="#fbbf24" opacity="0.04" filter="url(#blur8)"/>
+
+  <!-- Particle dots floating -->
+  <circle cx="350" cy="200" r="2" fill="#fbbf24" opacity="0.4"/>
+  <circle cx="500" cy="280" r="1.5" fill="#60a5fa" opacity="0.3"/>
+  <circle cx="650" cy="150" r="2" fill="#34d399" opacity="0.35"/>
+  <circle cx="800" cy="240" r="1.5" fill="#fbbf24" opacity="0.3"/>
+  <circle cx="950" cy="180" r="2" fill="#60a5fa" opacity="0.4"/>
+  <circle cx="1100" cy="260" r="1.5" fill="#34d399" opacity="0.3"/>
+  <circle cx="420" cy="320" r="1.5" fill="#fbbf24" opacity="0.25"/>
+  <circle cx="1020" cy="310" r="2" fill="#60a5fa" opacity="0.25"/>
+
+</svg>
