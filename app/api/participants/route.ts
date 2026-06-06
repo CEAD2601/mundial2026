@@ -92,5 +92,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ participationCode: participant.participationCode })
   }
 
+  const phone = searchParams.get('phone')
+  if (phone) {
+    // Match last 10 digits so +584141234567, 04141234567, 4141234567 all work
+    const last10 = phone.replace(/\D/g, '').slice(-10)
+    const participant = await prisma.participant.findFirst({
+      where: { phone: { endsWith: last10 } },
+    })
+    if (!participant) return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
+    return NextResponse.json({ participationCode: participant.participationCode })
+  }
+
   return NextResponse.json({ error: 'Parámetro requerido' }, { status: 400 })
 }
