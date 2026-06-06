@@ -104,6 +104,11 @@ export default function MiQuinielaPage({ params }: { params: Promise<{ code: str
   const { ranking, predictions } = participant
   const payStatus = participant.payment?.paymentStatus ?? 'PENDING'
 
+  const TOTAL_MATCHES = 72
+  const completedCount = predictions.length
+  const isIncomplete = !participant.isComplete && completedCount < TOTAL_MATCHES
+  const remaining = TOTAL_MATCHES - completedCount
+
   const groupPreds = (group: string) => predictions.filter((p) => p.match.group === group)
 
   return (
@@ -138,6 +143,55 @@ export default function MiQuinielaPage({ params }: { params: Promise<{ code: str
             <div className="text-xs text-slate-400 mt-0.5">✅ Correctos</div>
           </div>
         </div>
+
+        {/* ── INCOMPLETE BANNER ────────────────────────────── */}
+        {isIncomplete && (
+          <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-5">
+            <div className="flex items-start gap-3 mb-4">
+              <span className="text-3xl">⚠️</span>
+              <div>
+                <p className="font-bold text-amber-800 text-base">Tu quiniela está incompleta</p>
+                <p className="text-amber-700 text-sm mt-1">
+                  Has completado <strong>{completedCount} de {TOTAL_MATCHES}</strong> partidos.
+                  {remaining > 0 && ` Te faltan ${remaining} partido${remaining !== 1 ? 's' : ''} por pronosticar.`}
+                </p>
+                <p className="text-amber-600 text-xs mt-2">
+                  Completa todos los marcadores antes de confirmar tu quiniela para participar oficialmente.
+                </p>
+              </div>
+            </div>
+            {/* Progress bar */}
+            <div className="mb-4">
+              <div className="flex justify-between text-xs text-amber-700 mb-1">
+                <span>{completedCount}/{TOTAL_MATCHES} pronósticos</span>
+                <span>{Math.round((completedCount / TOTAL_MATCHES) * 100)}%</span>
+              </div>
+              <div className="h-2.5 bg-amber-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-amber-500 rounded-full transition-all"
+                  style={{ width: `${(completedCount / TOTAL_MATCHES) * 100}%` }}
+                />
+              </div>
+            </div>
+            <Link
+              href={`/quiniela/${code}`}
+              className="block w-full bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-3.5 rounded-xl text-center transition-colors text-base shadow-md"
+            >
+              ⚽ Completar mi quiniela →
+            </Link>
+          </div>
+        )}
+
+        {/* ── LOCKED BANNER (complete + confirmed) ─────────── */}
+        {participant.isComplete && (
+          <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-3">
+            <span className="text-2xl">🔒</span>
+            <div>
+              <p className="font-bold text-green-800 text-sm">Quiniela enviada y bloqueada</p>
+              <p className="text-green-600 text-xs">{completedCount}/72 pronósticos · No se puede modificar</p>
+            </div>
+          </div>
+        )}
 
         {/* Payment status */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 flex items-center justify-between">
@@ -247,19 +301,40 @@ export default function MiQuinielaPage({ params }: { params: Promise<{ code: str
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3">
-          <Link
-            href={`/comprobante/${code}`}
-            className="flex-1 border border-slate-300 text-slate-600 font-semibold py-3 rounded-xl text-center hover:bg-slate-50 transition-colors text-sm"
-          >
-            Ver comprobante
-          </Link>
-          <Link
-            href="/ranking"
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl text-center transition-colors text-sm"
-          >
-            Ver ranking
-          </Link>
+        <div className="flex flex-col gap-2">
+          {/* Primary action — Completar if incomplete, Ver ranking if complete */}
+          {isIncomplete ? (
+            <Link
+              href={`/quiniela/${code}`}
+              className="w-full bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-4 rounded-2xl text-center transition-colors text-base shadow-lg"
+            >
+              ⚽ Completar mi quiniela →
+            </Link>
+          ) : (
+            <Link
+              href="/ranking"
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-2xl text-center transition-colors text-sm"
+            >
+              🏆 Ver ranking
+            </Link>
+          )}
+          {/* Secondary actions */}
+          <div className="flex gap-2">
+            <Link
+              href={`/comprobante/${code}`}
+              className="flex-1 border border-slate-300 text-slate-600 font-semibold py-2.5 rounded-xl text-center hover:bg-slate-50 transition-colors text-sm"
+            >
+              Ver comprobante
+            </Link>
+            {!isIncomplete && (
+              <Link
+                href={`/pago/${code}`}
+                className="flex-1 border border-slate-300 text-slate-600 font-semibold py-2.5 rounded-xl text-center hover:bg-slate-50 transition-colors text-sm"
+              >
+                Estado del pago
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </div>
