@@ -6,12 +6,12 @@ const faqs = [
     a: 'Ve a la página de registro, ingresa tus datos personales (nombre, cédula, teléfono) y recibirás un código de participación único de 6 caracteres.',
   },
   {
-    q: '¿Cuánto cuesta participar?',
-    a: 'La inscripción cuesta $20 USD, pagaderos por pago móvil en bolívares a la tasa del día.',
+    q: '\u{BF}Cu\u{E1}nto cuesta participar?',
+    a: 'La inscripci\u{F3}n cuesta 20 USD, pagados en bol\u{ED}vares por Pago M\u{F3}vil Banesco. Se usa una tasa fija de 730 Bs/USD, lo que equivale a 14.600 Bs exactos.',
   },
   {
-    q: '¿Cómo funciona el sistema de pronósticos?',
-    a: 'Para cada partido debes seleccionar: 1 (gana el equipo local), X (empate) o 2 (gana el equipo visitante). Cada pronóstico correcto suma 3 puntos.',
+    q: '\u{BF}C\u{F3}mo funciona el sistema de pron\u{F3}sticos?',
+    a: 'Debes predecir el marcador exacto (goles de cada equipo) para cada uno de los 72 partidos. Marcador exacto = 3 puntos, ganador/empate correcto = 1 punto, resultado incorrecto = 0 puntos.',
   },
   {
     q: '¿Puedo cambiar mis pronósticos?',
@@ -23,7 +23,7 @@ const faqs = [
   },
   {
     q: '¿Cómo se distribuyen los premios?',
-    a: 'El 50% del fondo va al primer lugar, el 30% al segundo lugar, y el 20% restante cubre los gastos de organización.',
+    a: 'El 65% del fondo va al primer lugar, el 20% al segundo lugar y el 15% restante cubre los gastos de organizaci\u{F3}n.',
   },
   {
     q: '¿Cómo se realiza el pago?',

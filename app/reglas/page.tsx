@@ -47,9 +47,9 @@ const sections = [
     title: '5. Premios',
     icon: '🎁',
     rules: [
-      '1er lugar: 50% del fondo total recaudado.',
-      '2do lugar: 30% del fondo total recaudado.',
-      '20% restante cubre los gastos de organización.',
+      '1er lugar: 65% del fondo total recaudado.',
+      '2do lugar: 20% del fondo total recaudado.',
+      '15% restante cubre los gastos de organizaci\u{F3}n.',
       'El fondo se calcula únicamente con los pagos verificados.',
       'Los premios se entregan al finalizar la fase de grupos y se calcula el ranking final.',
     ],

@@ -25,8 +25,8 @@ export default async function EstadisticasPage() {
 
   const entryPrice = settings?.entryPriceUsd ?? 20
   const totalRaised = verifiedPayments * entryPrice
-  const firstPrizePct = settings?.firstPrizePercent ?? 50
-  const secondPrizePct = settings?.secondPrizePercent ?? 30
+  const firstPrizePct = settings?.firstPrizePercent ?? 65
+  const secondPrizePct = settings?.secondPrizePercent ?? 20
   const firstPrize = (totalRaised * firstPrizePct) / 100
   const secondPrize = (totalRaised * secondPrizePct) / 100
 
