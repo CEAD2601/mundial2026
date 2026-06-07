@@ -72,7 +72,7 @@ async function main() {
     // Group D
     { officialName: 'Estados Unidos', displayName: 'EE.UU.', shortName: 'USA', fifaCode: 'USA', isoCode: 'us', flagEmoji: '🇺🇸', group: 'D', aliases: '["EE.UU","EE.UU.","Estados Unidos","USA"]' },
     { officialName: 'Paraguay', displayName: 'Paraguay', shortName: 'PAR', fifaCode: 'PAR', isoCode: 'py', flagEmoji: '🇵🇾', group: 'D', aliases: '["PARAGUAY","PARGUAY","Paraguay"]' },
-    { officialName: 'Australia', displayName: 'Australia', shortName: 'AUS', fifaCode: 'AUS', isoCode: 'au', flagEmoji: '🇦🇺', group: 'D', aliases: '["AUSTRALIA","Australia","AUSTRIA"]' },
+    { officialName: 'Australia', displayName: 'Australia', shortName: 'AUS', fifaCode: 'AUS', isoCode: 'au', flagEmoji: '🇦🇺', group: 'D', aliases: '["AUSTRALIA","Australia"]' },
     { officialName: 'Turquía', displayName: 'Turquía', shortName: 'TUR', fifaCode: 'TUR', isoCode: 'tr', flagEmoji: '🇹🇷', group: 'D', aliases: '["TURQUIA","Turquía"]' },
     // Group E
     { officialName: 'Alemania', displayName: 'Alemania', shortName: 'GER', fifaCode: 'GER', isoCode: 'de', flagEmoji: '🇩🇪', group: 'E', aliases: '["ALEMANIA","Alemania"]' },
@@ -103,7 +103,7 @@ async function main() {
     { officialName: 'Argentina', displayName: 'Argentina', shortName: 'ARG', fifaCode: 'ARG', isoCode: 'ar', flagEmoji: '🇦🇷', group: 'J', aliases: '["ARGENTINA","Argentina"]' },
     { officialName: 'Argelia', displayName: 'Argelia', shortName: 'ALG', fifaCode: 'ALG', isoCode: 'dz', flagEmoji: '🇩🇿', group: 'J', aliases: '["ARGELIA","Argelia"]' },
     { officialName: 'Jordania', displayName: 'Jordania', shortName: 'JOR', fifaCode: 'JOR', isoCode: 'jo', flagEmoji: '🇯🇴', group: 'J', aliases: '["JORDANIA","Jordania"]' },
-    { officialName: 'Australia', displayName: 'Australia (J)', shortName: 'AUS', fifaCode: 'AUS2', isoCode: 'au', flagEmoji: '🇦🇺', group: 'J', aliases: '["AUSTRALIA","Australia"]' },
+    { officialName: 'Austria', displayName: 'Austria', shortName: 'AUT', fifaCode: 'AUT', isoCode: 'at', flagEmoji: '🇦🇹', group: 'J', aliases: '["AUSTRIA","Austria"]' },
     // Group K
     { officialName: 'Portugal', displayName: 'Portugal', shortName: 'POR', fifaCode: 'POR', isoCode: 'pt', flagEmoji: '🇵🇹', group: 'K', aliases: '["PORTUGAL","Portugal"]' },
     { officialName: 'Colombia', displayName: 'Colombia', shortName: 'COL', fifaCode: 'COL', isoCode: 'co', flagEmoji: '🇨🇴', group: 'K', aliases: '["COLOMBIA","Colombia"]' },
@@ -196,10 +196,10 @@ async function main() {
     [54, 'I', 'NOR', 'FRA', '2026-06-26', '15:00'],
     // Group J
     [55, 'J', 'ARG', 'ALG', '2026-06-16', '21:00'],
-    [56, 'J', 'AUS2', 'JOR', '2026-06-17', '12:00'],
-    [57, 'J', 'ARG', 'AUS2', '2026-06-22', '13:00'],
+    [56, 'J', 'AUT', 'JOR', '2026-06-17', '12:00'],
+    [57, 'J', 'ARG', 'AUT', '2026-06-22', '13:00'],
     [58, 'J', 'JOR', 'ALG', '2026-06-23', '23:00'],
-    [59, 'J', 'ALG', 'AUS2', '2026-06-27', '22:00'],
+    [59, 'J', 'ALG', 'AUT', '2026-06-27', '22:00'],
     [60, 'J', 'JOR', 'ARG', '2026-06-27', '22:00'],
     // Group K
     [61, 'K', 'POR', 'COD', '2026-06-17', '13:00'],

@@ -16,7 +16,9 @@
     "db:seed-base": "SEED_BASE_ONLY=true tsx prisma/seed.ts",
     "db:reset-participation": "tsx scripts/reset-participation-data.ts",
     "db:studio": "prisma studio",
-    "db:reset": "prisma migrate reset --force"
+    "db:reset": "prisma migrate reset --force",
+    "db:fix-austria": "tsx scripts/fix-austria-team.ts",
+    "data:audit": "tsx scripts/audit-world-cup-data.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
