@@ -66,7 +66,9 @@ const faqs = [
   { q: '¿Cómo funciona la quiniela?',
     a: 'Predices el marcador exacto (número de goles de cada equipo) para cada uno de los 72 partidos de la fase de grupos. Marcador exacto = 3 puntos, ganador/empate correcto = 1 punto. Gana quien acumule más puntos.' },
   { q: '¿Cuánto cuesta participar?',
-    a: 'La inscripción es de 20 USD. Para facilitar el pago se usa una tasa fija de 730 Bs/USD, lo que equivale a 14.600 Bs por Pago Móvil Banesco.' },
+    a: 'La inscripción es de 20 USD. Puedes pagar por Pago Móvil Banesco (14.600 Bs a tasa fija 730 Bs/USD) o por Zelle (20 USD directamente).' },
+  { q: '¿Cómo puedo pagar?',
+    a: 'Puedes pagar por Pago Móvil Banesco (Teléfono: 04143043337 · CI: 4561947 · Monto: 14.600 Bs) o por Zelle (kissigloxxi@hotmail.com · 20 USD). Después de pagar, reporta la referencia o comprobante para que el administrador verifique tu participación.' },
   { q: '¿Hasta cuándo puedo inscribirme?',
     a: 'Puedes registrarte hasta el inicio del primer partido: 11 de junio de 2026 a las 3:00 PM hora Venezuela. Después no se aceptan más inscripciones.' },
   { q: '\u{BF}C\u{F3}mo se distribuyen los premios?',
@@ -110,7 +112,7 @@ const steps = [
   { icon: '📝', title: 'Regístrate',           desc: 'Nombre, cédula y teléfono' },
   { icon: '⚽', title: 'Llena tu quiniela',     desc: 'Predice los 72 partidos' },
   { icon: '✅', title: 'Confirma',               desc: 'Revisa y confirma. Queda bloqueada' },
-  { icon: '📱', title: 'Paga',                   desc: 'Pago Móvil Banesco · 20 USD en Bs.' },
+  { icon: '💳', title: 'Paga',                   desc: 'Pago Móvil Banesco o Zelle' },
   { icon: '📷', title: 'Reporta el pago',        desc: 'Ingresa la referencia de pago' },
   { icon: '⏳', title: 'Verificación',           desc: 'El admin confirma tu participación' },
   { icon: '📊', title: 'Sigue el ranking',       desc: 'Ve tu posición en tiempo real' },
@@ -269,7 +271,7 @@ export default function Home() {
 
           {/* Trust indicator */}
           <div className="mt-6 flex items-center gap-4 text-white/50 text-xs">
-            <span className="flex items-center gap-1"><span className="text-green-400">✓</span> Pago Móvil Banesco</span>
+            <span className="flex items-center gap-1"><span className="text-green-400">✓</span> Pago M{'ó'}vil o Zelle</span>
             <span className="w-px h-3 bg-white/20" />
             <span className="flex items-center gap-1"><span className="text-green-400">✓</span> 20 USD / 14.600 Bs · Tasa fija</span>
             <span className="w-px h-3 bg-white/20" />
@@ -484,41 +486,72 @@ export default function Home() {
           <div className="text-center mb-8">
             <span className="inline-block bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Pago</span>
             <h2 className="text-3xl font-extrabold text-slate-900">
-              Datos de <span className="text-blue-700">Pago Móvil</span>
+              M{'é'}todos de <span className="text-blue-700">Pago</span>
             </h2>
+            <p className="text-slate-500 mt-2 text-sm">
+              Puedes pagar por Pago M{'ó'}vil Banesco o por Zelle. Elige el que prefieras.
+            </p>
           </div>
-          <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-6 sm:p-8 text-white shadow-xl">
-            {/* Amount highlight */}
-            <div className="bg-white/10 rounded-2xl p-4 text-center mb-6">
-              <div className="text-blue-200 text-xs mb-1 uppercase tracking-wider">Monto a pagar</div>
-              <div className="text-4xl font-extrabold">14.600 <span className="text-xl font-semibold">Bs</span></div>
-              <div className="flex items-center justify-center gap-3 mt-2 text-sm">
-                <span className="bg-white/15 rounded-full px-3 py-0.5">20 USD</span>
-                <span className="text-blue-200">·</span>
-                <span className="bg-white/15 rounded-full px-3 py-0.5">Tasa fija: 730 Bs/USD</span>
+          <div className="grid sm:grid-cols-2 gap-5">
+            {/* Pago Móvil */}
+            <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-3xl p-6 text-white shadow-xl">
+              <div className="text-center mb-5">
+                <div className="text-3xl mb-1">{'📱'}</div>
+                <h3 className="font-extrabold text-xl">Pago M{'ó'}vil</h3>
+                <div className="text-green-200 text-sm mt-1">Pago en bol{'í'}vares</div>
+              </div>
+              <div className="bg-white/10 rounded-2xl p-3 text-center mb-4">
+                <div className="text-green-200 text-xs mb-1">Monto</div>
+                <div className="text-3xl font-extrabold">14.600 <span className="text-lg font-semibold">Bs</span></div>
+                <div className="text-green-200 text-xs mt-1">20 USD · Tasa fija 730 Bs/USD</div>
+              </div>
+              <div className="space-y-2">
+                {[
+                  { label: 'Banco',    value: 'Banesco',     icon: '🏦' },
+                  { label: 'Tel\u{E9}fono', value: '04143043337', icon: '📞' },
+                  { label: 'C\u{E9}dula',   value: 'V-4.561.947', icon: '🪪' },
+                ].map(({ label, value, icon }) => (
+                  <div key={label} className="bg-white/10 rounded-xl px-3 py-2.5 flex items-center gap-3">
+                    <span className="text-lg">{icon}</span>
+                    <div>
+                      <div className="text-green-200 text-xs">{label}</div>
+                      <div className="font-bold text-sm">{value}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {[
-                { label: 'Banco',     value: 'Banesco',        icon: '🏦' },
-                { label: 'Teléfono',  value: '04143043337',    icon: '📞' },
-                { label: 'Cédula',    value: 'V-4.561.947',    icon: '🪪' },
-                { label: 'Monto',     value: '14.600 Bs',      icon: '💵' },
-                { label: 'Equiv. USD', value: '20 USD',        icon: '💲' },
-                { label: 'Tasa fija', value: '730 Bs/USD',     icon: '📌' },
-              ].map(({ label, value, icon }) => (
-                <div key={label} className="bg-white/10 rounded-xl px-4 py-3 flex items-center gap-3">
-                  <span className="text-xl">{icon}</span>
-                  <div>
-                    <div className="text-blue-200 text-xs">{label}</div>
-                    <div className="font-bold text-base">{value}</div>
+            {/* Zelle */}
+            <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-6 text-white shadow-xl">
+              <div className="text-center mb-5">
+                <div className="text-3xl mb-1">{'💵'}</div>
+                <h3 className="font-extrabold text-xl">Zelle</h3>
+                <div className="text-blue-200 text-sm mt-1">Pago en d{'ó'}lares</div>
+              </div>
+              <div className="bg-white/10 rounded-2xl p-3 text-center mb-4">
+                <div className="text-blue-200 text-xs mb-1">Monto</div>
+                <div className="text-3xl font-extrabold">20 <span className="text-lg font-semibold">USD</span></div>
+                <div className="text-blue-200 text-xs mt-1">Pago directo en d{'ó'}lares</div>
+              </div>
+              <div className="space-y-2">
+                {[
+                  { label: 'M\u{E9}todo', value: 'Zelle',                       icon: '💵' },
+                  { label: 'Correo',  value: 'kissigloxxi@hotmail.com',      icon: '📧' },
+                  { label: 'Monto',   value: '20 USD',                        icon: '💲' },
+                ].map(({ label, value, icon }) => (
+                  <div key={label} className="bg-white/10 rounded-xl px-3 py-2.5 flex items-center gap-3">
+                    <span className="text-lg">{icon}</span>
+                    <div>
+                      <div className="text-blue-200 text-xs">{label}</div>
+                      <div className="font-bold text-sm">{value}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-            <div className="mt-5 bg-yellow-400/20 border border-yellow-300/30 rounded-xl p-3 text-sm text-yellow-100 text-center">
-              📌 La entrada cuesta 20 USD · Tasa fija de la quiniela: 730 Bs/USD = <strong>14.600 Bs exactos</strong>
-            </div>
+          </div>
+          <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-sm text-yellow-800 text-center">
+            {'📌'} Entrada: <strong>20 USD</strong> · Pago M{'ó'}vil: <strong>14.600 Bs</strong> · Zelle: <strong>20 USD</strong> · Tasa fija: 730 Bs/USD
           </div>
         </section>
 
@@ -687,7 +720,7 @@ export default function Home() {
             >
               ⚽ Crear mi quiniela — 20 USD
             </Link>
-            <p className="text-green-200 text-xs mt-4">Pago Móvil Banesco · 20 USD / 14.600 Bs · Tasa fija 730 Bs/USD</p>
+            <p className="text-green-200 text-xs mt-4">Pago M{'ó'}vil Banesco · Zelle · 20 USD / 14.600 Bs · Tasa fija 730 Bs/USD</p>
           </div>
         </section>
 
@@ -697,7 +730,7 @@ export default function Home() {
       <footer className="bg-slate-900 text-slate-400 py-8 text-center text-sm">
         <div className="max-w-4xl mx-auto px-4">
           <p className="font-semibold text-white mb-1">Quiniela Mundial 2026 🏆</p>
-          <p className="text-xs mb-4">Pago Móvil Banesco · 04143043337 · CI 4561947 · 20 USD / 14.600 Bs · Tasa fija 730 Bs/USD</p>
+          <p className="text-xs mb-4">Pago M{'ó'}vil Banesco 04143043337 · CI 4561947 · Zelle: kissigloxxi@hotmail.com · 20 USD / 14.600 Bs · Tasa fija 730 Bs/USD</p>
           <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs">
             {[
               { href: '/registro',    label: 'Participar' },

@@ -42,6 +42,7 @@ async function main() {
       paymentPhone: '04143043337',
       paymentNationalId: '4561947',
       paymentBank: 'Banesco',
+      zelleEmail: 'kissigloxxi@hotmail.com',
       exchangeRateCurrency: 'USD',
       firstPrizePercent: 65,
       secondPrizePercent: 20,

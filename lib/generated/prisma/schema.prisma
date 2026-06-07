@@ -15,7 +15,8 @@ model Setting {
   paymentPhone                           String    @default("04143043337")
   paymentNationalId                      String    @default("4561947")
   paymentBank                            String    @default("Banesco")
-  exchangeRateCurrency                   String    @default("EUR")
+  zelleEmail                             String    @default("kissigloxxi@hotmail.com")
+  exchangeRateCurrency                   String    @default("USD")
   manualExchangeRate                     Float?
   manualExchangeRateDate                 DateTime?
   firstPrizePercent                      Float     @default(65)
@@ -139,11 +140,17 @@ model Prediction {
 model Payment {
   id               String        @id @default(cuid())
   participantId    String        @unique
+  paymentMethod    PaymentMethod @default(PAGO_MOVIL)
   amountUsd        Float         @default(20)
   exchangeRate     Float?
   exchangeRateDate DateTime?
   amountVes        Float?
+  // Pago Móvil fields
   senderBank       String?
+  // Zelle fields
+  senderName       String?
+  senderEmail      String?
+  // Common fields
   paymentReference String?       @unique
   paymentDate      DateTime?
   paymentProofPath String?
@@ -155,6 +162,11 @@ model Payment {
   updatedAt        DateTime      @updatedAt
 
   participant Participant @relation(fields: [participantId], references: [id])
+}
+
+enum PaymentMethod {
+  PAGO_MOVIL
+  ZELLE
 }
 
 enum PaymentStatus {

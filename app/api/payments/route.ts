@@ -5,12 +5,31 @@ import { z } from 'zod'
 const DEFAULT_FIXED_RATE = 730
 const DEFAULT_ENTRY_USD = 20
 
-const reportPaymentSchema = z.object({
+const pagoMovilSchema = z.object({
   participationCode: z.string(),
+  paymentMethod: z.literal('PAGO_MOVIL'),
   senderBank: z.string().min(2),
   paymentReference: z.string().min(4),
   paymentDate: z.string(),
+  amountVesPaid: z.number().optional(),
+  adminNotes: z.string().optional(),
 })
+
+const zelleSchema = z.object({
+  participationCode: z.string(),
+  paymentMethod: z.literal('ZELLE'),
+  senderName: z.string().min(2),
+  senderContact: z.string().min(3),  // email or phone
+  paymentReference: z.string().min(2),
+  paymentDate: z.string(),
+  amountUsdPaid: z.number().optional(),
+  adminNotes: z.string().optional(),
+})
+
+const reportPaymentSchema = z.discriminatedUnion('paymentMethod', [
+  pagoMovilSchema,
+  zelleSchema,
+])
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,7 +42,6 @@ export async function POST(req: NextRequest) {
     })
     if (!participant) return NextResponse.json({ error: 'Participante no encontrado' }, { status: 404 })
 
-    // Get current fixed rate from settings
     const settings = await prisma.setting.findFirst()
     const fixedRate = settings?.fixedExchangeRate ?? DEFAULT_FIXED_RATE
     const entryUsd = settings?.entryPriceUsd ?? DEFAULT_ENTRY_USD
@@ -37,20 +55,39 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Referencia de pago ya registrada' }, { status: 409 })
     }
 
-    await prisma.payment.update({
-      where: { participantId: participant.id },
-      data: {
-        senderBank: data.senderBank,
-        paymentReference: data.paymentReference,
-        paymentDate: new Date(data.paymentDate),
-        amountUsd: entryUsd,
-        amountVes,
-        // Store the fixed rate used at the time of payment
-        exchangeRate: fixedRate,
-        exchangeRateDate: new Date(),
-        paymentStatus: 'IN_REVIEW',
-      },
-    })
+    const commonData = {
+      paymentMethod: data.paymentMethod as 'PAGO_MOVIL' | 'ZELLE',
+      paymentReference: data.paymentReference,
+      paymentDate: new Date(data.paymentDate),
+      amountUsd: entryUsd,
+      exchangeRate: fixedRate,
+      exchangeRateDate: new Date(),
+      paymentStatus: 'IN_REVIEW' as const,
+    }
+
+    if (data.paymentMethod === 'PAGO_MOVIL') {
+      await prisma.payment.update({
+        where: { participantId: participant.id },
+        data: {
+          ...commonData,
+          amountVes,
+          senderBank: data.senderBank,
+          senderName: null,
+          senderEmail: null,
+        },
+      })
+    } else {
+      await prisma.payment.update({
+        where: { participantId: participant.id },
+        data: {
+          ...commonData,
+          amountVes: null,
+          senderBank: null,
+          senderName: data.senderName,
+          senderEmail: data.senderContact,
+        },
+      })
+    }
 
     return NextResponse.json({ success: true })
   } catch (err: unknown) {
@@ -76,13 +113,14 @@ export async function GET(req: NextRequest) {
   const settings = await prisma.setting.findFirst()
   const fixedRate = settings?.fixedExchangeRate ?? DEFAULT_FIXED_RATE
   const entryUsd = settings?.entryPriceUsd ?? DEFAULT_ENTRY_USD
+  const zelleEmail = settings?.zelleEmail ?? 'kissigloxxi@hotmail.com'
 
   return NextResponse.json({
     payment: participant.payment,
     fixedRate,
     entryUsd,
     amountVes: Math.round(entryUsd * fixedRate),
-    // Participant own data — safe to return since accessed via their unique code
+    zelleEmail,
     participant: {
       fullName: participant.fullName,
       nationalId: participant.nationalId,

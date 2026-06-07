@@ -32,7 +32,7 @@ interface Participant {
   fullName: string
   participationCode: string
   isComplete: boolean
-  payment: { paymentStatus: string } | null
+  payment: { paymentStatus: string; paymentMethod: string | null; amountVes: number | null; amountUsd: number } | null
   predictions: Prediction[]
   ranking: {
     totalPoints: number
@@ -194,15 +194,26 @@ export default function MiQuinielaPage({ params }: { params: Promise<{ code: str
         )}
 
         {/* Payment status */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 flex items-center justify-between">
-          <span className="text-sm text-slate-600">Estado del pago</span>
-          <div className="flex items-center gap-2">
-            <span className={`text-xs px-3 py-1 rounded-full font-medium ${STATUS_COLOR[payStatus]}`}>
-              {STATUS_LABEL[payStatus]}
-            </span>
-            <Link href={`/pago/${code}`} className="text-xs text-green-600 hover:underline">
-              {payStatus === 'PENDING' ? 'Pagar →' : 'Ver →'}
-            </Link>
+        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-sm text-slate-600">Estado del pago</span>
+              {participant.payment?.paymentMethod && (
+                <div className="text-xs text-slate-400 mt-0.5">
+                  {participant.payment.paymentMethod === 'ZELLE'
+                    ? '💵 Zelle · ' + (participant.payment.amountUsd ?? 20) + ' USD'
+                    : '📱 Pago Móvil · ' + (participant.payment.amountVes?.toLocaleString('es-VE') ?? '14.600') + ' Bs'}
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`text-xs px-3 py-1 rounded-full font-medium ${STATUS_COLOR[payStatus]}`}>
+                {STATUS_LABEL[payStatus]}
+              </span>
+              <Link href={`/pago/${code}`} className="text-xs text-green-600 hover:underline">
+                {payStatus === 'PENDING' ? 'Pagar →' : 'Ver →'}
+              </Link>
+            </div>
           </div>
         </div>
 

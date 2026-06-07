@@ -7,9 +7,11 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const search = searchParams.get('search') ?? ''
   const status = searchParams.get('status') ?? ''
+  const method = searchParams.get('method') ?? ''
 
   const where: Prisma.PaymentWhereInput = {}
   if (status) where.paymentStatus = status as Prisma.EnumPaymentStatusFilter
+  if (method) where.paymentMethod = method as Prisma.EnumPaymentMethodFilter
   if (search) {
     where.OR = [
       { participant: { fullName: { contains: search, mode: Prisma.QueryMode.insensitive } } },
@@ -35,6 +37,8 @@ const updatePaymentSchema = z.object({
   adminNotes: z.string().optional(),
   paymentReference: z.string().optional(),
   senderBank: z.string().optional(),
+  senderName: z.string().optional(),
+  senderEmail: z.string().optional(),
 })
 
 export async function PUT(req: NextRequest) {
@@ -57,6 +61,8 @@ export async function PUT(req: NextRequest) {
     if (data.adminNotes !== undefined) updateData.adminNotes = data.adminNotes
     if (data.paymentReference !== undefined) updateData.paymentReference = data.paymentReference
     if (data.senderBank !== undefined) updateData.senderBank = data.senderBank
+    if (data.senderName !== undefined) updateData.senderName = data.senderName
+    if (data.senderEmail !== undefined) updateData.senderEmail = data.senderEmail
     if (data.status === 'VERIFIED') updateData.verifiedAt = new Date()
     if (data.status === 'REJECTED') updateData.rejectedAt = new Date()
     // Clear verifiedAt when reverting from VERIFIED

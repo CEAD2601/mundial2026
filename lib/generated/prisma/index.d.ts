@@ -82,6 +82,14 @@ export const MatchResult: {
 export type MatchResult = (typeof MatchResult)[keyof typeof MatchResult]
 
 
+export const PaymentMethod: {
+  PAGO_MOVIL: 'PAGO_MOVIL',
+  ZELLE: 'ZELLE'
+};
+
+export type PaymentMethod = (typeof PaymentMethod)[keyof typeof PaymentMethod]
+
+
 export const PaymentStatus: {
   PENDING: 'PENDING',
   IN_REVIEW: 'IN_REVIEW',
@@ -100,6 +108,10 @@ export const MatchStatus: typeof $Enums.MatchStatus
 export type MatchResult = $Enums.MatchResult
 
 export const MatchResult: typeof $Enums.MatchResult
+
+export type PaymentMethod = $Enums.PaymentMethod
+
+export const PaymentMethod: typeof $Enums.PaymentMethod
 
 export type PaymentStatus = $Enums.PaymentStatus
 
@@ -1778,6 +1790,7 @@ export namespace Prisma {
     paymentPhone: string | null
     paymentNationalId: string | null
     paymentBank: string | null
+    zelleEmail: string | null
     exchangeRateCurrency: string | null
     manualExchangeRate: number | null
     manualExchangeRateDate: Date | null
@@ -1802,6 +1815,7 @@ export namespace Prisma {
     paymentPhone: string | null
     paymentNationalId: string | null
     paymentBank: string | null
+    zelleEmail: string | null
     exchangeRateCurrency: string | null
     manualExchangeRate: number | null
     manualExchangeRateDate: Date | null
@@ -1826,6 +1840,7 @@ export namespace Prisma {
     paymentPhone: number
     paymentNationalId: number
     paymentBank: number
+    zelleEmail: number
     exchangeRateCurrency: number
     manualExchangeRate: number
     manualExchangeRateDate: number
@@ -1870,6 +1885,7 @@ export namespace Prisma {
     paymentPhone?: true
     paymentNationalId?: true
     paymentBank?: true
+    zelleEmail?: true
     exchangeRateCurrency?: true
     manualExchangeRate?: true
     manualExchangeRateDate?: true
@@ -1894,6 +1910,7 @@ export namespace Prisma {
     paymentPhone?: true
     paymentNationalId?: true
     paymentBank?: true
+    zelleEmail?: true
     exchangeRateCurrency?: true
     manualExchangeRate?: true
     manualExchangeRateDate?: true
@@ -1918,6 +1935,7 @@ export namespace Prisma {
     paymentPhone?: true
     paymentNationalId?: true
     paymentBank?: true
+    zelleEmail?: true
     exchangeRateCurrency?: true
     manualExchangeRate?: true
     manualExchangeRateDate?: true
@@ -2029,6 +2047,7 @@ export namespace Prisma {
     paymentPhone: string
     paymentNationalId: string
     paymentBank: string
+    zelleEmail: string
     exchangeRateCurrency: string
     manualExchangeRate: number | null
     manualExchangeRateDate: Date | null
@@ -2072,6 +2091,7 @@ export namespace Prisma {
     paymentPhone?: boolean
     paymentNationalId?: boolean
     paymentBank?: boolean
+    zelleEmail?: boolean
     exchangeRateCurrency?: boolean
     manualExchangeRate?: boolean
     manualExchangeRateDate?: boolean
@@ -2096,6 +2116,7 @@ export namespace Prisma {
     paymentPhone?: boolean
     paymentNationalId?: boolean
     paymentBank?: boolean
+    zelleEmail?: boolean
     exchangeRateCurrency?: boolean
     manualExchangeRate?: boolean
     manualExchangeRateDate?: boolean
@@ -2120,6 +2141,7 @@ export namespace Prisma {
     paymentPhone?: boolean
     paymentNationalId?: boolean
     paymentBank?: boolean
+    zelleEmail?: boolean
     exchangeRateCurrency?: boolean
     manualExchangeRate?: boolean
     manualExchangeRateDate?: boolean
@@ -2144,6 +2166,7 @@ export namespace Prisma {
     paymentPhone?: boolean
     paymentNationalId?: boolean
     paymentBank?: boolean
+    zelleEmail?: boolean
     exchangeRateCurrency?: boolean
     manualExchangeRate?: boolean
     manualExchangeRateDate?: boolean
@@ -2161,7 +2184,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type SettingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "appName" | "entryPriceUsd" | "paymentPhone" | "paymentNationalId" | "paymentBank" | "exchangeRateCurrency" | "manualExchangeRate" | "manualExchangeRateDate" | "firstPrizePercent" | "secondPrizePercent" | "organizationPercent" | "deadline" | "rankingVisible" | "showOnlyPaidParticipants" | "allowPublicPredictionViewAfterDeadline" | "fixedExchangeRate" | "useFixedExchangeRate" | "tiebreakerRules" | "createdAt" | "updatedAt", ExtArgs["result"]["setting"]>
+  export type SettingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "appName" | "entryPriceUsd" | "paymentPhone" | "paymentNationalId" | "paymentBank" | "zelleEmail" | "exchangeRateCurrency" | "manualExchangeRate" | "manualExchangeRateDate" | "firstPrizePercent" | "secondPrizePercent" | "organizationPercent" | "deadline" | "rankingVisible" | "showOnlyPaidParticipants" | "allowPublicPredictionViewAfterDeadline" | "fixedExchangeRate" | "useFixedExchangeRate" | "tiebreakerRules" | "createdAt" | "updatedAt", ExtArgs["result"]["setting"]>
 
   export type $SettingPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Setting"
@@ -2173,6 +2196,7 @@ export namespace Prisma {
       paymentPhone: string
       paymentNationalId: string
       paymentBank: string
+      zelleEmail: string
       exchangeRateCurrency: string
       manualExchangeRate: number | null
       manualExchangeRateDate: Date | null
@@ -2617,6 +2641,7 @@ export namespace Prisma {
     readonly paymentPhone: FieldRef<"Setting", 'String'>
     readonly paymentNationalId: FieldRef<"Setting", 'String'>
     readonly paymentBank: FieldRef<"Setting", 'String'>
+    readonly zelleEmail: FieldRef<"Setting", 'String'>
     readonly exchangeRateCurrency: FieldRef<"Setting", 'String'>
     readonly manualExchangeRate: FieldRef<"Setting", 'Float'>
     readonly manualExchangeRateDate: FieldRef<"Setting", 'DateTime'>
@@ -8003,11 +8028,14 @@ export namespace Prisma {
   export type PaymentMinAggregateOutputType = {
     id: string | null
     participantId: string | null
+    paymentMethod: $Enums.PaymentMethod | null
     amountUsd: number | null
     exchangeRate: number | null
     exchangeRateDate: Date | null
     amountVes: number | null
     senderBank: string | null
+    senderName: string | null
+    senderEmail: string | null
     paymentReference: string | null
     paymentDate: Date | null
     paymentProofPath: string | null
@@ -8022,11 +8050,14 @@ export namespace Prisma {
   export type PaymentMaxAggregateOutputType = {
     id: string | null
     participantId: string | null
+    paymentMethod: $Enums.PaymentMethod | null
     amountUsd: number | null
     exchangeRate: number | null
     exchangeRateDate: Date | null
     amountVes: number | null
     senderBank: string | null
+    senderName: string | null
+    senderEmail: string | null
     paymentReference: string | null
     paymentDate: Date | null
     paymentProofPath: string | null
@@ -8041,11 +8072,14 @@ export namespace Prisma {
   export type PaymentCountAggregateOutputType = {
     id: number
     participantId: number
+    paymentMethod: number
     amountUsd: number
     exchangeRate: number
     exchangeRateDate: number
     amountVes: number
     senderBank: number
+    senderName: number
+    senderEmail: number
     paymentReference: number
     paymentDate: number
     paymentProofPath: number
@@ -8074,11 +8108,14 @@ export namespace Prisma {
   export type PaymentMinAggregateInputType = {
     id?: true
     participantId?: true
+    paymentMethod?: true
     amountUsd?: true
     exchangeRate?: true
     exchangeRateDate?: true
     amountVes?: true
     senderBank?: true
+    senderName?: true
+    senderEmail?: true
     paymentReference?: true
     paymentDate?: true
     paymentProofPath?: true
@@ -8093,11 +8130,14 @@ export namespace Prisma {
   export type PaymentMaxAggregateInputType = {
     id?: true
     participantId?: true
+    paymentMethod?: true
     amountUsd?: true
     exchangeRate?: true
     exchangeRateDate?: true
     amountVes?: true
     senderBank?: true
+    senderName?: true
+    senderEmail?: true
     paymentReference?: true
     paymentDate?: true
     paymentProofPath?: true
@@ -8112,11 +8152,14 @@ export namespace Prisma {
   export type PaymentCountAggregateInputType = {
     id?: true
     participantId?: true
+    paymentMethod?: true
     amountUsd?: true
     exchangeRate?: true
     exchangeRateDate?: true
     amountVes?: true
     senderBank?: true
+    senderName?: true
+    senderEmail?: true
     paymentReference?: true
     paymentDate?: true
     paymentProofPath?: true
@@ -8218,11 +8261,14 @@ export namespace Prisma {
   export type PaymentGroupByOutputType = {
     id: string
     participantId: string
+    paymentMethod: $Enums.PaymentMethod
     amountUsd: number
     exchangeRate: number | null
     exchangeRateDate: Date | null
     amountVes: number | null
     senderBank: string | null
+    senderName: string | null
+    senderEmail: string | null
     paymentReference: string | null
     paymentDate: Date | null
     paymentProofPath: string | null
@@ -8256,11 +8302,14 @@ export namespace Prisma {
   export type PaymentSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     participantId?: boolean
+    paymentMethod?: boolean
     amountUsd?: boolean
     exchangeRate?: boolean
     exchangeRateDate?: boolean
     amountVes?: boolean
     senderBank?: boolean
+    senderName?: boolean
+    senderEmail?: boolean
     paymentReference?: boolean
     paymentDate?: boolean
     paymentProofPath?: boolean
@@ -8276,11 +8325,14 @@ export namespace Prisma {
   export type PaymentSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     participantId?: boolean
+    paymentMethod?: boolean
     amountUsd?: boolean
     exchangeRate?: boolean
     exchangeRateDate?: boolean
     amountVes?: boolean
     senderBank?: boolean
+    senderName?: boolean
+    senderEmail?: boolean
     paymentReference?: boolean
     paymentDate?: boolean
     paymentProofPath?: boolean
@@ -8296,11 +8348,14 @@ export namespace Prisma {
   export type PaymentSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     participantId?: boolean
+    paymentMethod?: boolean
     amountUsd?: boolean
     exchangeRate?: boolean
     exchangeRateDate?: boolean
     amountVes?: boolean
     senderBank?: boolean
+    senderName?: boolean
+    senderEmail?: boolean
     paymentReference?: boolean
     paymentDate?: boolean
     paymentProofPath?: boolean
@@ -8316,11 +8371,14 @@ export namespace Prisma {
   export type PaymentSelectScalar = {
     id?: boolean
     participantId?: boolean
+    paymentMethod?: boolean
     amountUsd?: boolean
     exchangeRate?: boolean
     exchangeRateDate?: boolean
     amountVes?: boolean
     senderBank?: boolean
+    senderName?: boolean
+    senderEmail?: boolean
     paymentReference?: boolean
     paymentDate?: boolean
     paymentProofPath?: boolean
@@ -8332,7 +8390,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type PaymentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "participantId" | "amountUsd" | "exchangeRate" | "exchangeRateDate" | "amountVes" | "senderBank" | "paymentReference" | "paymentDate" | "paymentProofPath" | "paymentStatus" | "adminNotes" | "verifiedAt" | "rejectedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["payment"]>
+  export type PaymentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "participantId" | "paymentMethod" | "amountUsd" | "exchangeRate" | "exchangeRateDate" | "amountVes" | "senderBank" | "senderName" | "senderEmail" | "paymentReference" | "paymentDate" | "paymentProofPath" | "paymentStatus" | "adminNotes" | "verifiedAt" | "rejectedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["payment"]>
   export type PaymentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     participant?: boolean | ParticipantDefaultArgs<ExtArgs>
   }
@@ -8351,11 +8409,14 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       participantId: string
+      paymentMethod: $Enums.PaymentMethod
       amountUsd: number
       exchangeRate: number | null
       exchangeRateDate: Date | null
       amountVes: number | null
       senderBank: string | null
+      senderName: string | null
+      senderEmail: string | null
       paymentReference: string | null
       paymentDate: Date | null
       paymentProofPath: string | null
@@ -8791,11 +8852,14 @@ export namespace Prisma {
   interface PaymentFieldRefs {
     readonly id: FieldRef<"Payment", 'String'>
     readonly participantId: FieldRef<"Payment", 'String'>
+    readonly paymentMethod: FieldRef<"Payment", 'PaymentMethod'>
     readonly amountUsd: FieldRef<"Payment", 'Float'>
     readonly exchangeRate: FieldRef<"Payment", 'Float'>
     readonly exchangeRateDate: FieldRef<"Payment", 'DateTime'>
     readonly amountVes: FieldRef<"Payment", 'Float'>
     readonly senderBank: FieldRef<"Payment", 'String'>
+    readonly senderName: FieldRef<"Payment", 'String'>
+    readonly senderEmail: FieldRef<"Payment", 'String'>
     readonly paymentReference: FieldRef<"Payment", 'String'>
     readonly paymentDate: FieldRef<"Payment", 'DateTime'>
     readonly paymentProofPath: FieldRef<"Payment", 'String'>
@@ -12637,6 +12701,7 @@ export namespace Prisma {
     paymentPhone: 'paymentPhone',
     paymentNationalId: 'paymentNationalId',
     paymentBank: 'paymentBank',
+    zelleEmail: 'zelleEmail',
     exchangeRateCurrency: 'exchangeRateCurrency',
     manualExchangeRate: 'manualExchangeRate',
     manualExchangeRateDate: 'manualExchangeRateDate',
@@ -12741,11 +12806,14 @@ export namespace Prisma {
   export const PaymentScalarFieldEnum: {
     id: 'id',
     participantId: 'participantId',
+    paymentMethod: 'paymentMethod',
     amountUsd: 'amountUsd',
     exchangeRate: 'exchangeRate',
     exchangeRateDate: 'exchangeRateDate',
     amountVes: 'amountVes',
     senderBank: 'senderBank',
+    senderName: 'senderName',
+    senderEmail: 'senderEmail',
     paymentReference: 'paymentReference',
     paymentDate: 'paymentDate',
     paymentProofPath: 'paymentProofPath',
@@ -12931,6 +12999,20 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'PaymentMethod'
+   */
+  export type EnumPaymentMethodFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PaymentMethod'>
+    
+
+
+  /**
+   * Reference to a field of type 'PaymentMethod[]'
+   */
+  export type ListEnumPaymentMethodFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PaymentMethod[]'>
+    
+
+
+  /**
    * Reference to a field of type 'PaymentStatus'
    */
   export type EnumPaymentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PaymentStatus'>
@@ -12957,6 +13039,7 @@ export namespace Prisma {
     paymentPhone?: StringFilter<"Setting"> | string
     paymentNationalId?: StringFilter<"Setting"> | string
     paymentBank?: StringFilter<"Setting"> | string
+    zelleEmail?: StringFilter<"Setting"> | string
     exchangeRateCurrency?: StringFilter<"Setting"> | string
     manualExchangeRate?: FloatNullableFilter<"Setting"> | number | null
     manualExchangeRateDate?: DateTimeNullableFilter<"Setting"> | Date | string | null
@@ -12981,6 +13064,7 @@ export namespace Prisma {
     paymentPhone?: SortOrder
     paymentNationalId?: SortOrder
     paymentBank?: SortOrder
+    zelleEmail?: SortOrder
     exchangeRateCurrency?: SortOrder
     manualExchangeRate?: SortOrderInput | SortOrder
     manualExchangeRateDate?: SortOrderInput | SortOrder
@@ -13008,6 +13092,7 @@ export namespace Prisma {
     paymentPhone?: StringFilter<"Setting"> | string
     paymentNationalId?: StringFilter<"Setting"> | string
     paymentBank?: StringFilter<"Setting"> | string
+    zelleEmail?: StringFilter<"Setting"> | string
     exchangeRateCurrency?: StringFilter<"Setting"> | string
     manualExchangeRate?: FloatNullableFilter<"Setting"> | number | null
     manualExchangeRateDate?: DateTimeNullableFilter<"Setting"> | Date | string | null
@@ -13032,6 +13117,7 @@ export namespace Prisma {
     paymentPhone?: SortOrder
     paymentNationalId?: SortOrder
     paymentBank?: SortOrder
+    zelleEmail?: SortOrder
     exchangeRateCurrency?: SortOrder
     manualExchangeRate?: SortOrderInput | SortOrder
     manualExchangeRateDate?: SortOrderInput | SortOrder
@@ -13064,6 +13150,7 @@ export namespace Prisma {
     paymentPhone?: StringWithAggregatesFilter<"Setting"> | string
     paymentNationalId?: StringWithAggregatesFilter<"Setting"> | string
     paymentBank?: StringWithAggregatesFilter<"Setting"> | string
+    zelleEmail?: StringWithAggregatesFilter<"Setting"> | string
     exchangeRateCurrency?: StringWithAggregatesFilter<"Setting"> | string
     manualExchangeRate?: FloatNullableWithAggregatesFilter<"Setting"> | number | null
     manualExchangeRateDate?: DateTimeNullableWithAggregatesFilter<"Setting"> | Date | string | null
@@ -13515,11 +13602,14 @@ export namespace Prisma {
     NOT?: PaymentWhereInput | PaymentWhereInput[]
     id?: StringFilter<"Payment"> | string
     participantId?: StringFilter<"Payment"> | string
+    paymentMethod?: EnumPaymentMethodFilter<"Payment"> | $Enums.PaymentMethod
     amountUsd?: FloatFilter<"Payment"> | number
     exchangeRate?: FloatNullableFilter<"Payment"> | number | null
     exchangeRateDate?: DateTimeNullableFilter<"Payment"> | Date | string | null
     amountVes?: FloatNullableFilter<"Payment"> | number | null
     senderBank?: StringNullableFilter<"Payment"> | string | null
+    senderName?: StringNullableFilter<"Payment"> | string | null
+    senderEmail?: StringNullableFilter<"Payment"> | string | null
     paymentReference?: StringNullableFilter<"Payment"> | string | null
     paymentDate?: DateTimeNullableFilter<"Payment"> | Date | string | null
     paymentProofPath?: StringNullableFilter<"Payment"> | string | null
@@ -13535,11 +13625,14 @@ export namespace Prisma {
   export type PaymentOrderByWithRelationInput = {
     id?: SortOrder
     participantId?: SortOrder
+    paymentMethod?: SortOrder
     amountUsd?: SortOrder
     exchangeRate?: SortOrderInput | SortOrder
     exchangeRateDate?: SortOrderInput | SortOrder
     amountVes?: SortOrderInput | SortOrder
     senderBank?: SortOrderInput | SortOrder
+    senderName?: SortOrderInput | SortOrder
+    senderEmail?: SortOrderInput | SortOrder
     paymentReference?: SortOrderInput | SortOrder
     paymentDate?: SortOrderInput | SortOrder
     paymentProofPath?: SortOrderInput | SortOrder
@@ -13559,11 +13652,14 @@ export namespace Prisma {
     AND?: PaymentWhereInput | PaymentWhereInput[]
     OR?: PaymentWhereInput[]
     NOT?: PaymentWhereInput | PaymentWhereInput[]
+    paymentMethod?: EnumPaymentMethodFilter<"Payment"> | $Enums.PaymentMethod
     amountUsd?: FloatFilter<"Payment"> | number
     exchangeRate?: FloatNullableFilter<"Payment"> | number | null
     exchangeRateDate?: DateTimeNullableFilter<"Payment"> | Date | string | null
     amountVes?: FloatNullableFilter<"Payment"> | number | null
     senderBank?: StringNullableFilter<"Payment"> | string | null
+    senderName?: StringNullableFilter<"Payment"> | string | null
+    senderEmail?: StringNullableFilter<"Payment"> | string | null
     paymentDate?: DateTimeNullableFilter<"Payment"> | Date | string | null
     paymentProofPath?: StringNullableFilter<"Payment"> | string | null
     paymentStatus?: EnumPaymentStatusFilter<"Payment"> | $Enums.PaymentStatus
@@ -13578,11 +13674,14 @@ export namespace Prisma {
   export type PaymentOrderByWithAggregationInput = {
     id?: SortOrder
     participantId?: SortOrder
+    paymentMethod?: SortOrder
     amountUsd?: SortOrder
     exchangeRate?: SortOrderInput | SortOrder
     exchangeRateDate?: SortOrderInput | SortOrder
     amountVes?: SortOrderInput | SortOrder
     senderBank?: SortOrderInput | SortOrder
+    senderName?: SortOrderInput | SortOrder
+    senderEmail?: SortOrderInput | SortOrder
     paymentReference?: SortOrderInput | SortOrder
     paymentDate?: SortOrderInput | SortOrder
     paymentProofPath?: SortOrderInput | SortOrder
@@ -13605,11 +13704,14 @@ export namespace Prisma {
     NOT?: PaymentScalarWhereWithAggregatesInput | PaymentScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"Payment"> | string
     participantId?: StringWithAggregatesFilter<"Payment"> | string
+    paymentMethod?: EnumPaymentMethodWithAggregatesFilter<"Payment"> | $Enums.PaymentMethod
     amountUsd?: FloatWithAggregatesFilter<"Payment"> | number
     exchangeRate?: FloatNullableWithAggregatesFilter<"Payment"> | number | null
     exchangeRateDate?: DateTimeNullableWithAggregatesFilter<"Payment"> | Date | string | null
     amountVes?: FloatNullableWithAggregatesFilter<"Payment"> | number | null
     senderBank?: StringNullableWithAggregatesFilter<"Payment"> | string | null
+    senderName?: StringNullableWithAggregatesFilter<"Payment"> | string | null
+    senderEmail?: StringNullableWithAggregatesFilter<"Payment"> | string | null
     paymentReference?: StringNullableWithAggregatesFilter<"Payment"> | string | null
     paymentDate?: DateTimeNullableWithAggregatesFilter<"Payment"> | Date | string | null
     paymentProofPath?: StringNullableWithAggregatesFilter<"Payment"> | string | null
@@ -13876,6 +13978,7 @@ export namespace Prisma {
     paymentPhone?: string
     paymentNationalId?: string
     paymentBank?: string
+    zelleEmail?: string
     exchangeRateCurrency?: string
     manualExchangeRate?: number | null
     manualExchangeRateDate?: Date | string | null
@@ -13900,6 +14003,7 @@ export namespace Prisma {
     paymentPhone?: string
     paymentNationalId?: string
     paymentBank?: string
+    zelleEmail?: string
     exchangeRateCurrency?: string
     manualExchangeRate?: number | null
     manualExchangeRateDate?: Date | string | null
@@ -13924,6 +14028,7 @@ export namespace Prisma {
     paymentPhone?: StringFieldUpdateOperationsInput | string
     paymentNationalId?: StringFieldUpdateOperationsInput | string
     paymentBank?: StringFieldUpdateOperationsInput | string
+    zelleEmail?: StringFieldUpdateOperationsInput | string
     exchangeRateCurrency?: StringFieldUpdateOperationsInput | string
     manualExchangeRate?: NullableFloatFieldUpdateOperationsInput | number | null
     manualExchangeRateDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -13948,6 +14053,7 @@ export namespace Prisma {
     paymentPhone?: StringFieldUpdateOperationsInput | string
     paymentNationalId?: StringFieldUpdateOperationsInput | string
     paymentBank?: StringFieldUpdateOperationsInput | string
+    zelleEmail?: StringFieldUpdateOperationsInput | string
     exchangeRateCurrency?: StringFieldUpdateOperationsInput | string
     manualExchangeRate?: NullableFloatFieldUpdateOperationsInput | number | null
     manualExchangeRateDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -13972,6 +14078,7 @@ export namespace Prisma {
     paymentPhone?: string
     paymentNationalId?: string
     paymentBank?: string
+    zelleEmail?: string
     exchangeRateCurrency?: string
     manualExchangeRate?: number | null
     manualExchangeRateDate?: Date | string | null
@@ -13996,6 +14103,7 @@ export namespace Prisma {
     paymentPhone?: StringFieldUpdateOperationsInput | string
     paymentNationalId?: StringFieldUpdateOperationsInput | string
     paymentBank?: StringFieldUpdateOperationsInput | string
+    zelleEmail?: StringFieldUpdateOperationsInput | string
     exchangeRateCurrency?: StringFieldUpdateOperationsInput | string
     manualExchangeRate?: NullableFloatFieldUpdateOperationsInput | number | null
     manualExchangeRateDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -14020,6 +14128,7 @@ export namespace Prisma {
     paymentPhone?: StringFieldUpdateOperationsInput | string
     paymentNationalId?: StringFieldUpdateOperationsInput | string
     paymentBank?: StringFieldUpdateOperationsInput | string
+    zelleEmail?: StringFieldUpdateOperationsInput | string
     exchangeRateCurrency?: StringFieldUpdateOperationsInput | string
     manualExchangeRate?: NullableFloatFieldUpdateOperationsInput | number | null
     manualExchangeRateDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -14542,11 +14651,14 @@ export namespace Prisma {
 
   export type PaymentCreateInput = {
     id?: string
+    paymentMethod?: $Enums.PaymentMethod
     amountUsd?: number
     exchangeRate?: number | null
     exchangeRateDate?: Date | string | null
     amountVes?: number | null
     senderBank?: string | null
+    senderName?: string | null
+    senderEmail?: string | null
     paymentReference?: string | null
     paymentDate?: Date | string | null
     paymentProofPath?: string | null
@@ -14562,11 +14674,14 @@ export namespace Prisma {
   export type PaymentUncheckedCreateInput = {
     id?: string
     participantId: string
+    paymentMethod?: $Enums.PaymentMethod
     amountUsd?: number
     exchangeRate?: number | null
     exchangeRateDate?: Date | string | null
     amountVes?: number | null
     senderBank?: string | null
+    senderName?: string | null
+    senderEmail?: string | null
     paymentReference?: string | null
     paymentDate?: Date | string | null
     paymentProofPath?: string | null
@@ -14580,11 +14695,14 @@ export namespace Prisma {
 
   export type PaymentUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     amountUsd?: FloatFieldUpdateOperationsInput | number
     exchangeRate?: NullableFloatFieldUpdateOperationsInput | number | null
     exchangeRateDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     amountVes?: NullableFloatFieldUpdateOperationsInput | number | null
     senderBank?: NullableStringFieldUpdateOperationsInput | string | null
+    senderName?: NullableStringFieldUpdateOperationsInput | string | null
+    senderEmail?: NullableStringFieldUpdateOperationsInput | string | null
     paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
     paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paymentProofPath?: NullableStringFieldUpdateOperationsInput | string | null
@@ -14600,11 +14718,14 @@ export namespace Prisma {
   export type PaymentUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     participantId?: StringFieldUpdateOperationsInput | string
+    paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     amountUsd?: FloatFieldUpdateOperationsInput | number
     exchangeRate?: NullableFloatFieldUpdateOperationsInput | number | null
     exchangeRateDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     amountVes?: NullableFloatFieldUpdateOperationsInput | number | null
     senderBank?: NullableStringFieldUpdateOperationsInput | string | null
+    senderName?: NullableStringFieldUpdateOperationsInput | string | null
+    senderEmail?: NullableStringFieldUpdateOperationsInput | string | null
     paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
     paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paymentProofPath?: NullableStringFieldUpdateOperationsInput | string | null
@@ -14619,11 +14740,14 @@ export namespace Prisma {
   export type PaymentCreateManyInput = {
     id?: string
     participantId: string
+    paymentMethod?: $Enums.PaymentMethod
     amountUsd?: number
     exchangeRate?: number | null
     exchangeRateDate?: Date | string | null
     amountVes?: number | null
     senderBank?: string | null
+    senderName?: string | null
+    senderEmail?: string | null
     paymentReference?: string | null
     paymentDate?: Date | string | null
     paymentProofPath?: string | null
@@ -14637,11 +14761,14 @@ export namespace Prisma {
 
   export type PaymentUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     amountUsd?: FloatFieldUpdateOperationsInput | number
     exchangeRate?: NullableFloatFieldUpdateOperationsInput | number | null
     exchangeRateDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     amountVes?: NullableFloatFieldUpdateOperationsInput | number | null
     senderBank?: NullableStringFieldUpdateOperationsInput | string | null
+    senderName?: NullableStringFieldUpdateOperationsInput | string | null
+    senderEmail?: NullableStringFieldUpdateOperationsInput | string | null
     paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
     paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paymentProofPath?: NullableStringFieldUpdateOperationsInput | string | null
@@ -14656,11 +14783,14 @@ export namespace Prisma {
   export type PaymentUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     participantId?: StringFieldUpdateOperationsInput | string
+    paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     amountUsd?: FloatFieldUpdateOperationsInput | number
     exchangeRate?: NullableFloatFieldUpdateOperationsInput | number | null
     exchangeRateDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     amountVes?: NullableFloatFieldUpdateOperationsInput | number | null
     senderBank?: NullableStringFieldUpdateOperationsInput | string | null
+    senderName?: NullableStringFieldUpdateOperationsInput | string | null
+    senderEmail?: NullableStringFieldUpdateOperationsInput | string | null
     paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
     paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paymentProofPath?: NullableStringFieldUpdateOperationsInput | string | null
@@ -15034,6 +15164,7 @@ export namespace Prisma {
     paymentPhone?: SortOrder
     paymentNationalId?: SortOrder
     paymentBank?: SortOrder
+    zelleEmail?: SortOrder
     exchangeRateCurrency?: SortOrder
     manualExchangeRate?: SortOrder
     manualExchangeRateDate?: SortOrder
@@ -15067,6 +15198,7 @@ export namespace Prisma {
     paymentPhone?: SortOrder
     paymentNationalId?: SortOrder
     paymentBank?: SortOrder
+    zelleEmail?: SortOrder
     exchangeRateCurrency?: SortOrder
     manualExchangeRate?: SortOrder
     manualExchangeRateDate?: SortOrder
@@ -15091,6 +15223,7 @@ export namespace Prisma {
     paymentPhone?: SortOrder
     paymentNationalId?: SortOrder
     paymentBank?: SortOrder
+    zelleEmail?: SortOrder
     exchangeRateCurrency?: SortOrder
     manualExchangeRate?: SortOrder
     manualExchangeRateDate?: SortOrder
@@ -15641,6 +15774,13 @@ export namespace Prisma {
     _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
+  export type EnumPaymentMethodFilter<$PrismaModel = never> = {
+    equals?: $Enums.PaymentMethod | EnumPaymentMethodFieldRefInput<$PrismaModel>
+    in?: $Enums.PaymentMethod[] | ListEnumPaymentMethodFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PaymentMethod[] | ListEnumPaymentMethodFieldRefInput<$PrismaModel>
+    not?: NestedEnumPaymentMethodFilter<$PrismaModel> | $Enums.PaymentMethod
+  }
+
   export type EnumPaymentStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.PaymentStatus | EnumPaymentStatusFieldRefInput<$PrismaModel>
     in?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
@@ -15651,11 +15791,14 @@ export namespace Prisma {
   export type PaymentCountOrderByAggregateInput = {
     id?: SortOrder
     participantId?: SortOrder
+    paymentMethod?: SortOrder
     amountUsd?: SortOrder
     exchangeRate?: SortOrder
     exchangeRateDate?: SortOrder
     amountVes?: SortOrder
     senderBank?: SortOrder
+    senderName?: SortOrder
+    senderEmail?: SortOrder
     paymentReference?: SortOrder
     paymentDate?: SortOrder
     paymentProofPath?: SortOrder
@@ -15676,11 +15819,14 @@ export namespace Prisma {
   export type PaymentMaxOrderByAggregateInput = {
     id?: SortOrder
     participantId?: SortOrder
+    paymentMethod?: SortOrder
     amountUsd?: SortOrder
     exchangeRate?: SortOrder
     exchangeRateDate?: SortOrder
     amountVes?: SortOrder
     senderBank?: SortOrder
+    senderName?: SortOrder
+    senderEmail?: SortOrder
     paymentReference?: SortOrder
     paymentDate?: SortOrder
     paymentProofPath?: SortOrder
@@ -15695,11 +15841,14 @@ export namespace Prisma {
   export type PaymentMinOrderByAggregateInput = {
     id?: SortOrder
     participantId?: SortOrder
+    paymentMethod?: SortOrder
     amountUsd?: SortOrder
     exchangeRate?: SortOrder
     exchangeRateDate?: SortOrder
     amountVes?: SortOrder
     senderBank?: SortOrder
+    senderName?: SortOrder
+    senderEmail?: SortOrder
     paymentReference?: SortOrder
     paymentDate?: SortOrder
     paymentProofPath?: SortOrder
@@ -15715,6 +15864,16 @@ export namespace Prisma {
     amountUsd?: SortOrder
     exchangeRate?: SortOrder
     amountVes?: SortOrder
+  }
+
+  export type EnumPaymentMethodWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.PaymentMethod | EnumPaymentMethodFieldRefInput<$PrismaModel>
+    in?: $Enums.PaymentMethod[] | ListEnumPaymentMethodFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PaymentMethod[] | ListEnumPaymentMethodFieldRefInput<$PrismaModel>
+    not?: NestedEnumPaymentMethodWithAggregatesFilter<$PrismaModel> | $Enums.PaymentMethod
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumPaymentMethodFilter<$PrismaModel>
+    _max?: NestedEnumPaymentMethodFilter<$PrismaModel>
   }
 
   export type EnumPaymentStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -16248,6 +16407,10 @@ export namespace Prisma {
     connect?: ParticipantWhereUniqueInput
   }
 
+  export type EnumPaymentMethodFieldUpdateOperationsInput = {
+    set?: $Enums.PaymentMethod
+  }
+
   export type EnumPaymentStatusFieldUpdateOperationsInput = {
     set?: $Enums.PaymentStatus
   }
@@ -16571,11 +16734,28 @@ export namespace Prisma {
     _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
+  export type NestedEnumPaymentMethodFilter<$PrismaModel = never> = {
+    equals?: $Enums.PaymentMethod | EnumPaymentMethodFieldRefInput<$PrismaModel>
+    in?: $Enums.PaymentMethod[] | ListEnumPaymentMethodFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PaymentMethod[] | ListEnumPaymentMethodFieldRefInput<$PrismaModel>
+    not?: NestedEnumPaymentMethodFilter<$PrismaModel> | $Enums.PaymentMethod
+  }
+
   export type NestedEnumPaymentStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.PaymentStatus | EnumPaymentStatusFieldRefInput<$PrismaModel>
     in?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
     notIn?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
     not?: NestedEnumPaymentStatusFilter<$PrismaModel> | $Enums.PaymentStatus
+  }
+
+  export type NestedEnumPaymentMethodWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.PaymentMethod | EnumPaymentMethodFieldRefInput<$PrismaModel>
+    in?: $Enums.PaymentMethod[] | ListEnumPaymentMethodFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PaymentMethod[] | ListEnumPaymentMethodFieldRefInput<$PrismaModel>
+    not?: NestedEnumPaymentMethodWithAggregatesFilter<$PrismaModel> | $Enums.PaymentMethod
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumPaymentMethodFilter<$PrismaModel>
+    _max?: NestedEnumPaymentMethodFilter<$PrismaModel>
   }
 
   export type NestedEnumPaymentStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -17029,11 +17209,14 @@ export namespace Prisma {
 
   export type PaymentCreateWithoutParticipantInput = {
     id?: string
+    paymentMethod?: $Enums.PaymentMethod
     amountUsd?: number
     exchangeRate?: number | null
     exchangeRateDate?: Date | string | null
     amountVes?: number | null
     senderBank?: string | null
+    senderName?: string | null
+    senderEmail?: string | null
     paymentReference?: string | null
     paymentDate?: Date | string | null
     paymentProofPath?: string | null
@@ -17047,11 +17230,14 @@ export namespace Prisma {
 
   export type PaymentUncheckedCreateWithoutParticipantInput = {
     id?: string
+    paymentMethod?: $Enums.PaymentMethod
     amountUsd?: number
     exchangeRate?: number | null
     exchangeRateDate?: Date | string | null
     amountVes?: number | null
     senderBank?: string | null
+    senderName?: string | null
+    senderEmail?: string | null
     paymentReference?: string | null
     paymentDate?: Date | string | null
     paymentProofPath?: string | null
@@ -17132,11 +17318,14 @@ export namespace Prisma {
 
   export type PaymentUpdateWithoutParticipantInput = {
     id?: StringFieldUpdateOperationsInput | string
+    paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     amountUsd?: FloatFieldUpdateOperationsInput | number
     exchangeRate?: NullableFloatFieldUpdateOperationsInput | number | null
     exchangeRateDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     amountVes?: NullableFloatFieldUpdateOperationsInput | number | null
     senderBank?: NullableStringFieldUpdateOperationsInput | string | null
+    senderName?: NullableStringFieldUpdateOperationsInput | string | null
+    senderEmail?: NullableStringFieldUpdateOperationsInput | string | null
     paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
     paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paymentProofPath?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17150,11 +17339,14 @@ export namespace Prisma {
 
   export type PaymentUncheckedUpdateWithoutParticipantInput = {
     id?: StringFieldUpdateOperationsInput | string
+    paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     amountUsd?: FloatFieldUpdateOperationsInput | number
     exchangeRate?: NullableFloatFieldUpdateOperationsInput | number | null
     exchangeRateDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     amountVes?: NullableFloatFieldUpdateOperationsInput | number | null
     senderBank?: NullableStringFieldUpdateOperationsInput | string | null
+    senderName?: NullableStringFieldUpdateOperationsInput | string | null
+    senderEmail?: NullableStringFieldUpdateOperationsInput | string | null
     paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
     paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paymentProofPath?: NullableStringFieldUpdateOperationsInput | string | null
