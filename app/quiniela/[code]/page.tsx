@@ -488,17 +488,43 @@ export default function QuinielaPage({ params }: { params: Promise<{ code: strin
         {/* Scroll anchor */}
         <div ref={matchListRef} />
 
-        <div className="space-y-3">
-          <div className="flex items-center justify-between mb-1">
-            <h3 className="font-bold text-slate-700 flex items-center gap-2">
-              Grupo {activeGroup}
-              {activeGroupDone && <span className="text-green-500 text-sm">{'✅'}</span>}
-            </h3>
-            <span className="text-xs text-slate-400">
-              {activeCompleted} / {activeTotal} completados
-            </span>
-          </div>
+        {/* Group header row */}
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-bold text-slate-700 flex items-center gap-2 text-base">
+            Grupo {activeGroup}
+            {activeGroupDone && <span className="text-green-500">{'✅'}</span>}
+          </h3>
+          <span className="text-xs text-slate-400 font-medium">
+            {activeCompleted} / {activeTotal} completados
+          </span>
+        </div>
 
+        {/* ── TOP CTA: shown immediately when group is complete ─────────── */}
+        {!isLocked && activeGroupDone && (
+          <div className="mb-4 bg-green-600 rounded-2xl p-4 shadow-lg">
+            <p className="text-white font-bold text-sm mb-3 flex items-center gap-2">
+              {'✅'} {'¡'}Grupo {activeGroup} completado!
+            </p>
+            {next ? (
+              <button
+                onClick={() => handleContinue(activeGroup)}
+                className="w-full bg-white text-green-700 font-extrabold py-4 rounded-xl flex items-center justify-center gap-2 text-base transition-colors hover:bg-green-50 shadow"
+              >
+                Continuar al Grupo {next} <ArrowRight size={20} />
+              </button>
+            ) : (
+              <button
+                onClick={() => goToRevision()}
+                className="w-full bg-white text-green-700 font-extrabold py-4 rounded-xl flex items-center justify-center gap-2 text-base transition-colors hover:bg-green-50 shadow"
+              >
+                {'🏆'} Revisar mi quiniela <ArrowRight size={20} />
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* ── Match list ────────────────────────────────────────────────── */}
+        <div className="space-y-3">
           {activeGroupMatches.map((match) => (
             <div
               key={match.id}
@@ -667,55 +693,64 @@ export default function QuinielaPage({ params }: { params: Promise<{ code: strin
 
       {/* ── Bottom action bar ────────────────────────────────────────────── */}
       {!isLocked && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg z-20">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-slate-200 shadow-2xl z-30">
           <div className="max-w-2xl mx-auto px-4 py-3">
-            {activeGroupDone && next ? (
-              /* When current group is done: show Continuar as primary */
-              <div className="flex gap-3">
+            {activeGroupDone ? (
+              /* Group is complete → primary action is always "Continuar" or "Revisar" */
+              <div className="flex gap-2">
                 <button
                   onClick={() => savePicks()}
-                  disabled={saving || completedCount === 0}
-                  className="border border-green-600 text-green-600 font-semibold py-3 px-4 rounded-xl hover:bg-green-50 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 text-sm"
+                  disabled={saving}
+                  className="shrink-0 border border-green-600 text-green-600 font-semibold py-3 px-4 rounded-xl hover:bg-green-50 transition-colors flex items-center justify-center gap-1 text-sm disabled:opacity-40"
                 >
-                  <Save size={15} />
+                  <Save size={14} />
                   {saving ? '...' : saveSuccess ? '¡OK!' : 'Guardar'}
                 </button>
-                <button
-                  onClick={() => handleContinue(activeGroup)}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 text-base transition-colors"
-                >
-                  Grupo {next} <ArrowRight size={18} />
-                </button>
+                {next ? (
+                  <button
+                    onClick={() => handleContinue(activeGroup)}
+                    className="flex-1 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 text-base transition-colors shadow-lg"
+                  >
+                    Continuar al Grupo {next} <ArrowRight size={18} />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => goToRevision()}
+                    className="flex-1 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 text-base transition-colors shadow-lg"
+                  >
+                    {'🏆'} Revisar mi quiniela <ArrowRight size={18} />
+                  </button>
+                )}
               </div>
             ) : (
-              /* Default: Guardar + Revisar */
-              <div className="flex gap-3">
+              /* Group incomplete → Guardar + go-to-pending */
+              <div className="flex gap-2">
                 <button
                   onClick={() => savePicks()}
                   disabled={saving || completedCount === 0}
-                  className="flex-1 border border-green-600 text-green-600 font-semibold py-3 rounded-xl hover:bg-green-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-40"
+                  className="shrink-0 border border-slate-300 text-slate-600 font-semibold py-3 px-4 rounded-xl hover:bg-slate-50 transition-colors flex items-center justify-center gap-1 text-sm disabled:opacity-40"
                 >
-                  <Save size={16} />
-                  {saving ? 'Guardando...' : saveSuccess ? '¡Guardado!' : 'Guardar'}
+                  <Save size={14} />
+                  {saving ? '...' : saveSuccess ? '¡OK!' : 'Guardar'}
                 </button>
-                <button
-                  onClick={completedCount < totalMatches ? goToFirstPending : goToRevision}
-                  disabled={saving}
-                  className={`flex-1 font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 ${
-                    completedCount === totalMatches
-                      ? 'bg-green-600 hover:bg-green-700 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  {completedCount === totalMatches ? (
-                    <>Revisar <ArrowRight size={16} /></>
-                  ) : (
-                    <>
-                      {'🔍'} Primer pendiente
-                      <span className="text-xs ml-1 opacity-70">({totalMatches - completedCount})</span>
-                    </>
-                  )}
-                </button>
+                {completedCount === totalMatches ? (
+                  <button
+                    onClick={() => goToRevision()}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 text-base transition-colors"
+                  >
+                    Revisar quiniela <ArrowRight size={18} />
+                  </button>
+                ) : (
+                  <button
+                    onClick={goToFirstPending}
+                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 text-sm transition-colors"
+                  >
+                    {'🔍'} Ir al primer pendiente
+                    <span className="bg-amber-700 text-xs px-1.5 py-0.5 rounded-full font-bold">
+                      {totalMatches - completedCount}
+                    </span>
+                  </button>
+                )}
               </div>
             )}
           </div>
