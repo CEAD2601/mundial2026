@@ -188,6 +188,8 @@ export default function QuinielaPage({ params }: { params: Promise<{ code: strin
   const highlightRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    // Version marker – confirms which build is running in production
+    console.log('[Quiniela] build: guided-navigation-v3 | commit: 111074a+')
     loadData()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code])
