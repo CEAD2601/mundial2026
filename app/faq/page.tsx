@@ -7,7 +7,7 @@ const faqs = [
   },
   {
     q: '\u{BF}Cu\u{E1}nto cuesta participar?',
-    a: 'La inscripci\u{F3}n cuesta 20 USD, pagados en bol\u{ED}vares por Pago M\u{F3}vil Banesco. Se usa una tasa fija de 730 Bs/USD, lo que equivale a 14.600 Bs exactos.',
+    a: 'La inscripci\u{F3}n cuesta 20 USD. Puedes pagar por Pago M\u{F3}vil Banesco (14.600 Bs a tasa fija 730 Bs/USD) o directamente por Zelle (20 USD).',
   },
   {
     q: '\u{BF}C\u{F3}mo funciona el sistema de pron\u{F3}sticos?',
@@ -27,7 +27,7 @@ const faqs = [
   },
   {
     q: '¿Cómo se realiza el pago?',
-    a: 'Mediante pago móvil bancario en Venezuela (Bolívares). Los datos de la cuenta receptora se muestran en la página de pago. Luego debes reportar tu referencia para que sea verificada.',
+    a: 'Puedes pagar por Pago M\u{F3}vil Banesco o por Zelle.\n\nPago M\u{F3}vil: Banesco · Tel\u{E9}fono 04143043337 · CI 4561947 · Monto 14.600 Bs (tasa fija 730 Bs/USD).\n\nZelle: kissigloxxi@hotmail.com · Monto 20 USD.\n\nDespu\u{E9}s de pagar, reporta la referencia o comprobante para que el administrador verifique tu participaci\u{F3}n.',
   },
   {
     q: '¿Cuándo se verifica mi pago?',
@@ -43,7 +43,7 @@ const faqs = [
   },
   {
     q: '¿Puedo participar desde fuera de Venezuela?',
-    a: 'Sí, pero el pago debe realizarse en bolívares mediante pago móvil bancario venezolano.',
+    a: 'S\u{ED}. Puedes participar desde cualquier pa\u{ED}s. Si est\u{E1}s en Venezuela o prefieres pagar en bol\u{ED}vares, usa Pago M\u{F3}vil Banesco (14.600 Bs). Si prefieres pagar en d\u{F3}lares, usa Zelle (kissigloxxi@hotmail.com · 20 USD).',
   },
   {
     q: '¿Qué pasa si pierdo mi código?',
@@ -69,7 +69,7 @@ export default function FaqPage() {
               <span>{faq.q}</span>
               <span className="text-slate-400 text-lg group-open:rotate-180 transition-transform">▾</span>
             </summary>
-            <div className="px-5 pb-4 text-slate-600 text-sm leading-relaxed">
+            <div className="px-5 pb-4 text-slate-600 text-sm leading-relaxed whitespace-pre-line">
               {faq.a}
             </div>
           </details>

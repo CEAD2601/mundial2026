@@ -33,7 +33,7 @@ export default async function AdminDashboard() {
   ])
 
   const entryUsd = settings?.entryPriceUsd ?? 20
-  const fixedRate = settings?.fixedExchangeRate ?? 700
+  const fixedRate = settings?.fixedExchangeRate ?? 730
   const entryVes = Math.round(entryUsd * fixedRate)
 
   const totalRaisedUsd = verifiedPayments * entryUsd
