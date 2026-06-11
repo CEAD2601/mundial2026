@@ -79,6 +79,14 @@ export default function ResultadosAdminPage() {
   const [editingMatch, setEditingMatch] = useState<string | null>(null)
   const [editScores, setEditScores] = useState<{ g1: string; g2: string }>({ g1: '', g2: '' })
   const [triggeringCron, setTriggeringCron] = useState(false)
+  const [cronSummary, setCronSummary] = useState<{
+    matchesChecked: number
+    resultsDetected: number
+    resultsAutoApplied: number
+    resultsPendingReview: number
+    errors: string[]
+    timestamp: string
+  } | null>(null)
 
   const loadMatches = useCallback(async () => {
     const res = await fetch('/api/results')
@@ -176,20 +184,23 @@ export default function ResultadosAdminPage() {
   }
 
   const triggerCronManually = async () => {
-    const secret = prompt('Ingresa el CRON_SECRET para ejecutar la actualización:')
-    if (!secret) return
     setTriggeringCron(true)
-    const res = await fetch(`/api/cron/update-live-results?secret=${encodeURIComponent(secret)}`, {
-      method: 'POST',
-    })
-    const data = await res.json()
-    if (res.ok) {
-      alert(`Actualización completada:\n${JSON.stringify(data.summary, null, 2)}`)
-      await Promise.all([loadMatches(), loadLiveResults()])
-    } else {
-      alert(data.error ?? 'Error al ejecutar actualización')
+    setCronSummary(null)
+    try {
+      const res = await fetch('/api/admin/live-results/update', { method: 'POST' })
+      const data = await res.json()
+      if (res.ok && data.summary) {
+        setCronSummary(data.summary)
+        await Promise.all([loadMatches(), loadLiveResults()])
+      } else {
+        setCronSummary(null)
+        alert(data.error ?? 'Error al ejecutar la actualización')
+      }
+    } catch {
+      alert('Error de conexión al ejecutar la actualización')
+    } finally {
+      setTriggeringCron(false)
     }
-    setTriggeringCron(false)
   }
 
   const groupMatches = matches.filter((m) => m.group === activeGroup)
@@ -367,9 +378,14 @@ export default function ResultadosAdminPage() {
               <button
                 onClick={triggerCronManually}
                 disabled={triggeringCron}
-                className="bg-purple-600 hover:bg-purple-700 disabled:opacity-60 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                className="bg-purple-600 hover:bg-purple-700 disabled:opacity-60 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
               >
-                {triggeringCron ? '⏳ Ejecutando...' : '▶ Actualizar ahora'}
+                {triggeringCron ? (
+                  <>
+                    <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    Buscando resultados…
+                  </>
+                ) : '▶ Actualizar ahora'}
               </button>
             </div>
 
@@ -420,9 +436,52 @@ export default function ResultadosAdminPage() {
 
             {liveStatus && !liveStatus.enabled && (
               <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
-                <strong>ℹ️ Automatización desactivada.</strong> Para activar, configura{' '}
+                <strong>⚠️ Automatización desactivada.</strong> Configura{' '}
                 <code className="bg-amber-100 px-1 rounded">LIVE_RESULTS_ENABLED=true</code> en
-                Vercel. El modo manual siempre está disponible en la pestaña anterior.
+                Vercel y vuelve a desplegar. El modo manual siempre está disponible.
+              </div>
+            )}
+            {liveStatus && liveStatus.enabled && (
+              <div className="mt-4 bg-green-50 border border-green-200 rounded-xl p-3 text-sm text-green-800">
+                ✅ Automatización activada. Los resultados se consultan desde fuentes públicas y quedan pendientes de revisión del administrador antes de actualizar el ranking.
+              </div>
+            )}
+
+            {/* Summary after running */}
+            {cronSummary && (
+              <div className="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <p className="text-xs font-bold text-slate-600 uppercase tracking-wide mb-3">
+                  Resultado de la última actualización
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { label: 'Partidos consultados', value: cronSummary.matchesChecked, color: 'text-slate-700' },
+                    { label: 'Resultados detectados', value: cronSummary.resultsDetected, color: 'text-blue-700' },
+                    { label: 'Pendientes revisión', value: cronSummary.resultsPendingReview, color: 'text-amber-700' },
+                    { label: 'Aplicados automát.', value: cronSummary.resultsAutoApplied, color: 'text-green-700' },
+                  ].map(({ label, value, color }) => (
+                    <div key={label} className="bg-white rounded-lg p-3 border border-slate-100 text-center">
+                      <div className={`text-2xl font-bold ${color}`}>{value}</div>
+                      <div className="text-xs text-slate-500 mt-0.5">{label}</div>
+                    </div>
+                  ))}
+                </div>
+                {cronSummary.resultsDetected === 0 && (
+                  <p className="text-sm text-slate-500 text-center mt-3">
+                    No se encontraron resultados nuevos en este momento.
+                  </p>
+                )}
+                {cronSummary.errors.length > 0 && (
+                  <div className="mt-3 bg-red-50 border border-red-100 rounded-lg p-2">
+                    <p className="text-xs font-bold text-red-700 mb-1">Errores:</p>
+                    {cronSummary.errors.map((e, i) => (
+                      <p key={i} className="text-xs text-red-600">{e}</p>
+                    ))}
+                  </div>
+                )}
+                <p className="text-xs text-slate-400 text-center mt-2">
+                  {new Date(cronSummary.timestamp).toLocaleString('es-VE')}
+                </p>
               </div>
             )}
           </div>
