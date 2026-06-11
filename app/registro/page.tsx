@@ -6,7 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { User, Phone, CreditCard, MapPin, Mail, ArrowRight, AlertCircle } from 'lucide-react'
+import { User, Phone, CreditCard, MapPin, Mail, ArrowRight, AlertCircle, Lock } from 'lucide-react'
+import { isRegistrationOpen } from '@/lib/deadline'
 
 const schema = z.object({
   fullName: z.string().min(3, 'El nombre debe tener al menos 3 caracteres').max(100),
@@ -21,6 +22,7 @@ export default function RegistroPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [serverError, setServerError] = useState('')
+  const registrationOpen = isRegistrationOpen()
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -55,6 +57,52 @@ export default function RegistroPage() {
       setServerError('Error de conexión. Intenta de nuevo.')
       setLoading(false)
     }
+  }
+
+  if (!registrationOpen) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col">
+        <header className="bg-gradient-to-r from-slate-700 to-blue-800 text-white py-4 px-4">
+          <div className="max-w-lg mx-auto flex items-center justify-between">
+            <Link href="/" className="text-slate-300 text-sm hover:text-white transition-colors">← Inicio</Link>
+            <h1 className="font-bold text-lg">Quiniela Mundial 2026</h1>
+            <div className="w-16" />
+          </div>
+        </header>
+        <main className="flex-1 flex items-center justify-center px-4 py-12">
+          <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-8 max-w-md w-full text-center">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Lock className="text-slate-500" size={28} />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">Inscripciones cerradas</h2>
+            <p className="text-slate-500 text-sm mb-6 leading-relaxed">
+              El plazo para registrarse y llenar la quiniela termin{'ó'} al iniciar el primer partido.
+              Puedes seguir el ranking y los resultados durante el Mundial.
+            </p>
+            <div className="flex flex-col gap-3">
+              <Link
+                href="/ranking"
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
+              >
+                {'🏆'} Ver ranking
+              </Link>
+              <Link
+                href="/resultados"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
+              >
+                {'⚽'} Ver resultados
+              </Link>
+              <Link
+                href="/mi-quiniela"
+                className="w-full border border-slate-300 text-slate-600 font-semibold py-3 rounded-xl hover:bg-slate-50 transition-colors text-sm"
+              >
+                Ver mi quiniela
+              </Link>
+            </div>
+          </div>
+        </main>
+      </div>
+    )
   }
 
   return (

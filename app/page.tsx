@@ -8,6 +8,7 @@ import { getWhatsAppShareUrl, getInviteMessage } from '@/lib/share'
 import { getPublicAppUrl } from '@/lib/app-url'
 import type { PrizePoolStats } from '@/lib/prizes'
 import { DEFAULT_PRIZE_SETTINGS, calculatePrizePool } from '@/lib/prizes'
+import { REGISTRATION_DEADLINE, isRegistrationOpen } from '@/lib/deadline'
 
 const EMPTY_POOL: PrizePoolStats = calculatePrizePool({ verifiedPaymentsCount: 0, ...DEFAULT_PRIZE_SETTINGS })
 
@@ -166,6 +167,15 @@ export default function Home() {
       .catch(() => {/* keep empty-pool fallback */})
   }, [])
 
+  // Registration open/closed — re-evaluated every minute so the UI updates at deadline
+  const [registrationOpen, setRegistrationOpen] = useState(() => isRegistrationOpen())
+  useEffect(() => {
+    const msUntilClose = REGISTRATION_DEADLINE.getTime() - Date.now()
+    if (msUntilClose <= 0) { setRegistrationOpen(false); return }
+    const t = setTimeout(() => setRegistrationOpen(false), msUntilClose)
+    return () => clearTimeout(t)
+  }, [])
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
 
@@ -251,35 +261,67 @@ export default function Home() {
             <Countdown />
           </div>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center w-full max-w-sm sm:max-w-none">
-            <Link
-              href="/registro"
-              className="group relative bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-extrabold px-8 py-4 rounded-2xl text-base sm:text-lg transition-all shadow-2xl hover:shadow-yellow-400/40 hover:-translate-y-1 inline-flex items-center gap-2 w-full sm:w-auto justify-center"
-              style={{ boxShadow: '0 8px 32px rgba(251,191,36,0.4), 0 2px 8px rgba(0,0,0,0.3)' }}
-            >
-              <span className="text-xl group-hover:scale-110 transition-transform">⚽</span>
-              Crear mi quiniela
-              <span className="absolute -top-2.5 -right-2.5 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg border border-red-400">
-                20 USD
-              </span>
-            </Link>
-            <Link
-              href="/ranking"
-              className="bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white font-semibold px-7 py-4 rounded-2xl text-base transition-all inline-flex items-center gap-2 hover:-translate-y-0.5 w-full sm:w-auto justify-center"
-            >
-              🏆 Ver ranking
-            </Link>
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-[#25D366]/80 hover:bg-[#25D366] backdrop-blur-md border border-[#25D366]/50 text-white font-semibold px-7 py-4 rounded-2xl text-base transition-all inline-flex items-center gap-2 hover:-translate-y-0.5 w-full sm:w-auto justify-center"
-            >
-              <MessageCircle size={18} className="shrink-0" />
-              Invitar amigos
-            </a>
-          </div>
+          {/* CTAs — change when registration closes */}
+          {registrationOpen ? (
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center w-full max-w-sm sm:max-w-none">
+              <Link
+                href="/registro"
+                className="group relative bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-extrabold px-8 py-4 rounded-2xl text-base sm:text-lg transition-all shadow-2xl hover:shadow-yellow-400/40 hover:-translate-y-1 inline-flex items-center gap-2 w-full sm:w-auto justify-center"
+                style={{ boxShadow: '0 8px 32px rgba(251,191,36,0.4), 0 2px 8px rgba(0,0,0,0.3)' }}
+              >
+                <span className="text-xl group-hover:scale-110 transition-transform">⚽</span>
+                Crear mi quiniela
+                <span className="absolute -top-2.5 -right-2.5 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg border border-red-400">
+                  20 USD
+                </span>
+              </Link>
+              <Link
+                href="/ranking"
+                className="bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white font-semibold px-7 py-4 rounded-2xl text-base transition-all inline-flex items-center gap-2 hover:-translate-y-0.5 w-full sm:w-auto justify-center"
+              >
+                {'🏆'} Ver ranking
+              </Link>
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-[#25D366]/80 hover:bg-[#25D366] backdrop-blur-md border border-[#25D366]/50 text-white font-semibold px-7 py-4 rounded-2xl text-base transition-all inline-flex items-center gap-2 hover:-translate-y-0.5 w-full sm:w-auto justify-center"
+              >
+                <MessageCircle size={18} className="shrink-0" />
+                Invitar amigos
+              </a>
+            </div>
+          ) : (
+            /* ── INSCRIPCIONES CERRADAS ── */
+            <div className="w-full max-w-md mx-auto">
+              <div className="bg-white/15 backdrop-blur-sm border border-white/30 rounded-2xl px-6 py-4 mb-4 text-center">
+                <p className="text-white font-bold text-lg mb-1">{'🔒'} Inscripciones cerradas</p>
+                <p className="text-white/80 text-sm">
+                  Las inscripciones ya cerraron. Sigue el ranking y los resultados del Mundial.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Link
+                  href="/ranking"
+                  className="bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-extrabold px-8 py-4 rounded-2xl text-base transition-all inline-flex items-center justify-center gap-2 w-full sm:w-auto shadow-xl"
+                >
+                  {'🏆'} Ver ranking
+                </Link>
+                <Link
+                  href="/resultados"
+                  className="bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white font-semibold px-7 py-4 rounded-2xl text-base transition-all inline-flex items-center justify-center gap-2 w-full sm:w-auto"
+                >
+                  {'⚽'} Ver resultados
+                </Link>
+                <Link
+                  href="/mi-quiniela"
+                  className="bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white font-semibold px-7 py-4 rounded-2xl text-base transition-all inline-flex items-center justify-center gap-2 w-full sm:w-auto"
+                >
+                  Ver mi quiniela
+                </Link>
+              </div>
+            </div>
+          )}
 
           {/* Trust indicator */}
           <div className="mt-6 flex items-center gap-4 text-white/50 text-xs">

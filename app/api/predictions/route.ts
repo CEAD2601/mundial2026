@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { isRegistrationOpen } from '@/lib/deadline'
 import { z } from 'zod'
 
 const savePredictionsSchema = z.object({
@@ -22,6 +23,11 @@ function deriveResult(g1: number, g2: number): 'G1' | 'E' | 'G2' {
 
 export async function POST(req: NextRequest) {
   try {
+    // Deadline guard — no new or updated predictions after tournament start
+    if (!isRegistrationOpen()) {
+      return NextResponse.json({ error: 'Las inscripciones ya cerraron. No se pueden modificar pronósticos.' }, { status: 403 })
+    }
+
     const body = await req.json()
     const data = savePredictionsSchema.parse(body)
 

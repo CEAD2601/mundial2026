@@ -15,7 +15,8 @@ const NAV = [
   { href: '/admin/quinielas',     icon: '\u{1F4CB}', label: 'Quinielas' },
   { href: '/admin/resultados',    icon: '\u{26BD}',  label: 'Resultados' },
   { href: '/admin/ranking',       icon: '\u{1F3C6}', label: 'Ranking' },
-  { href: '/admin/configuracion', icon: '⚙️', label: 'Configuración' },
+  { href: '/admin/backups',       icon: '\u{1F4BE}', label: 'Backups' },
+  { href: '/admin/configuracion', icon: '\u{2699}\u{FE0F}', label: 'Configuración' },
 ]
 
 function NavLinks({ onSelect }: { onSelect?: () => void }) {

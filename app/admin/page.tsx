@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { calculatePrizePool, DEFAULT_PRIZE_SETTINGS, fmtVes } from '@/lib/prizes'
+import { REGISTRATION_DEADLINE, isRegistrationOpen } from '@/lib/deadline'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,10 +53,27 @@ export default async function AdminDashboard() {
   const orgUsd = pool.organizationUsd
 
   const leader = topRanking[0]
+  const regOpen = isRegistrationOpen()
+  const deadlineStr = REGISTRATION_DEADLINE.toLocaleString('es-VE', {
+    timeZone: 'America/Caracas',
+    dateStyle: 'long',
+    timeStyle: 'short',
+  })
 
   return (
     <div className="p-4 sm:p-6">
-      <h1 className="text-2xl font-bold text-slate-800 mb-6">Dashboard</h1>
+      <h1 className="text-2xl font-bold text-slate-800 mb-4">Dashboard</h1>
+
+      {/* Registration status banner */}
+      <div className={`rounded-xl border p-3 mb-5 flex items-center gap-3 text-sm ${regOpen ? 'bg-green-50 border-green-200 text-green-800' : 'bg-slate-100 border-slate-300 text-slate-700'}`}>
+        <span className="text-xl shrink-0">{regOpen ? '🟢' : '🔒'}</span>
+        <div>
+          <span className="font-semibold">Inscripciones: {regOpen ? 'Abiertas' : 'Cerradas'}</span>
+          <span className="ml-2 text-xs opacity-70">
+            {regOpen ? `Cierran el ${deadlineStr} (Venezuela)` : `Cerraron el ${deadlineStr} (Venezuela)`}
+          </span>
+        </div>
+      </div>
 
       {/* Stats grid — 2 cols on mobile, 4 on desktop */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">

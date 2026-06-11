@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { generateParticipationCode } from '@/lib/utils'
+import { isRegistrationOpen } from '@/lib/deadline'
 import { z } from 'zod'
 
 const registerSchema = z.object({
@@ -13,6 +14,11 @@ const registerSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    // Deadline guard — no new registrations after tournament start
+    if (!isRegistrationOpen()) {
+      return NextResponse.json({ error: 'Las inscripciones ya cerraron.' }, { status: 403 })
+    }
+
     const body = await req.json()
     const data = registerSchema.parse(body)
 
