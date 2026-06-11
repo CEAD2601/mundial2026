@@ -29,5 +29,9 @@ export async function POST() {
   await run('nextPhaseLabel column', () =>
     sql`ALTER TABLE "Setting" ADD COLUMN IF NOT EXISTS "nextPhaseLabel" TEXT NOT NULL DEFAULT 'Octavos · Cuartos · Semifinales · Final'`)
 
+  // Fix rows where nextPhaseLabel still has the old default value
+  await run('nextPhaseLabel data fix', () =>
+    sql`UPDATE "Setting" SET "nextPhaseLabel" = 'Octavos · Cuartos · Semifinales · Final' WHERE "nextPhaseLabel" IN ('Eliminación Directa', 'Eliminaci\u{F3}n Directa', '')`)
+
   return NextResponse.json({ ok: true, results })
 }
