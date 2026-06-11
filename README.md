@@ -325,21 +325,41 @@ La app está preparada para actualizar resultados de partidos desde **fuentes p�
 ### Variables de entorno para resultados automáticos
 
 ```env
-LIVE_RESULTS_ENABLED=false       # Activar solo cuando esté probado
-LIVE_RESULTS_SOURCE=public_web   # Fuente de datos
-LIVE_RESULTS_AUTO_APPLY=false    # Auto-aplicar HIGH sin revisión
-LIVE_RESULTS_API_KEY=            # API key opcional (api-football.com free)
-CRON_SECRET=tu-secreto-aleatorio # Protege el endpoint cron
+LIVE_RESULTS_ENABLED=true        # ✅ Activado en producción
+LIVE_RESULTS_SOURCE=public_web   # Fuente: ESPN API (pública, sin auth)
+LIVE_RESULTS_AUTO_APPLY=false    # false = requiere revisión admin siempre
+LIVE_RESULTS_POLL_INTERVAL_MINUTES=10
+LIVE_RESULTS_API_KEY=            # Opcional: api-football.com free tier (segunda fuente)
+CRON_SECRET=<valor-secreto>      # Protege /api/cron/update-live-results
 ```
 
-### Activar Vercel Cron (opcional, requiere plan Pro)
+### Cron job configurado en vercel.json
 
-Agrega a `vercel.json`:
 ```json
-{ "crons": [{ "path": "/api/cron/update-live-results", "schedule": "0,10,20,30,40,50 * * * *" }] }
+{ "crons": [{ "path": "/api/cron/update-live-results", "schedule": "*/10 * * * *" }] }
 ```
 
-Alternativa gratuita: [cron-job.org](https://cron-job.org) con header `Authorization: Bearer <CRON_SECRET>`.
+Ejecuta automáticamente cada 10 minutos. Vercel Cron envía `Authorization: Bearer <CRON_SECRET>` automáticamente.
+
+### Ejecutar manualmente ("Actualizar ahora")
+
+En Admin → Resultados → pestaña "Resultados automáticos":
+1. Clic en **▶ Actualizar ahora**
+2. Ingresar `CRON_SECRET` cuando se solicite
+3. Ver resumen: partidos consultados / resultados encontrados / pendientes de revisión
+
+### Confirmar resultados detectados
+
+1. Admin → Resultados → "Resultados automáticos" → "Pendientes de confirmación"
+2. **✓ Confirmar** — aplica resultado y actualiza ranking automáticamente
+3. **✏️ Editar** — corrige marcador antes de confirmar
+4. **✗ Rechazar** — descarta (disponible carga manual)
+
+### Si las fuentes automáticas fallan
+
+Usar **pestaña "Carga manual"**: seleccionar grupo → ingresar marcador → Guardar.
+
+Alternativa gratuita a Vercel Cron: [cron-job.org](https://cron-job.org) enviando POST a `/api/cron/update-live-results` con header `Authorization: Bearer <CRON_SECRET>`.
 
 ---
 

@@ -35,7 +35,11 @@ export async function GET() {
       source,
       autoApply,
       lastRunAt: lastCronRun?.createdAt ?? null,
-      lastRunMessage: lastCronRun?.message ?? null,
+      lastRunMessage: lastCronRun?.message ?? (
+      isEnabled
+        ? 'Automatización activada. Usa "Actualizar ahora" para ejecutar manualmente o configura Vercel Cron.'
+        : 'Automatización desactivada. Para activar, configura LIVE_RESULTS_ENABLED=true en Vercel.'
+    ),
     },
     pendingMatches: pendingMatches.map((m) => ({
       id: m.id,

@@ -1,4 +1,10 @@
 {
   "buildCommand": "prisma db push --accept-data-loss && npm run db:seed && next build",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cron/update-live-results",
+      "schedule": "*/10 * * * *"
+    }
+  ]
 }

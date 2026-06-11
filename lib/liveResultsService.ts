@@ -40,56 +40,216 @@ export interface CronRunSummary {
   timestamp: string
 }
 
+// ─── Team matching helpers ───────────────────────────────────────────────────
+
+interface CandidateMatch {
+  id: string
+  matchNumber: number
+  team1: { displayName: string; fifaCode: string; isoCode: string; shortName: string; aliases: string }
+  team2: { displayName: string; fifaCode: string; isoCode: string; shortName: string; aliases: string }
+  kickoffUtc: Date
+}
+
+function norm(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]/g, '')
+}
+
+function teamNames(t: CandidateMatch['team1']): string[] {
+  const names = [t.displayName, t.shortName, t.fifaCode, t.isoCode]
+  try { names.push(...(JSON.parse(t.aliases) as string[])) } catch {}
+  return names.map(norm).filter(Boolean)
+}
+
+function matchScore(espnName: string, espnAbbr: string, team: CandidateMatch['team1']): number {
+  const n = norm(espnName)
+  const a = norm(espnAbbr)
+  const names = teamNames(team)
+  if (names.includes(a)) return 3
+  if (names.includes(n)) return 2
+  // partial: does espn abbreviation appear in any team name token?
+  if (names.some((x) => x.startsWith(a) || a.startsWith(x.slice(0, 3)))) return 1
+  return 0
+}
+
+interface EspnCompetitor {
+  homeAway: string
+  score: string
+  team: { name: string; abbreviation: string }
+}
+
+/**
+ * Match ESPN event competitors to our candidate matches.
+ * Returns the candidate match and which competitor is team1/team2,
+ * or null if confidence is too low.
+ */
+function resolveMatch(
+  competitors: EspnCompetitor[],
+  candidates: CandidateMatch[]
+): { match: CandidateMatch; g1: number; g2: number; confidence: Confidence } | null {
+  if (competitors.length !== 2) return null
+
+  const [compA, compB] = competitors
+  const nameA = compA.team?.name ?? ''
+  const abbrA = compA.team?.abbreviation ?? ''
+  const nameB = compB.team?.name ?? ''
+  const abbrB = compB.team?.abbreviation ?? ''
+
+  for (const cand of candidates) {
+    // Try compA=team1, compB=team2
+    const s1 = matchScore(nameA, abbrA, cand.team1) + matchScore(nameB, abbrB, cand.team2)
+    // Try compA=team2, compB=team1 (swapped)
+    const s2 = matchScore(nameA, abbrA, cand.team2) + matchScore(nameB, abbrB, cand.team1)
+
+    const best = Math.max(s1, s2)
+    if (best < 2) continue // need at least one strong match
+
+    const swapped = s2 > s1
+    const g_a = parseInt(compA.score ?? '0', 10)
+    const g_b = parseInt(compB.score ?? '0', 10)
+    const g1 = swapped ? g_b : g_a
+    const g2 = swapped ? g_a : g_b
+    const confidence: Confidence = best >= 4 ? 'HIGH' : 'MEDIUM'
+
+    return { match: cand, g1, g2, confidence }
+  }
+  return null
+}
+
 // ─── Source adapters ────────────────────────────────────────────────────────
 
+function toVetDateStr(d: Date): string {
+  return d.toLocaleDateString('sv-SE', { timeZone: 'America/Caracas' })
+}
+
 /**
- * Source A: FIFA.com public match results
- * NOTE: FIFA may block automated access. Use only for reading public data.
- * Returns null if unavailable or results can't be parsed reliably.
+ * Source A: ESPN public scoreboard API (no auth required)
+ * Endpoint: https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=YYYYMMDD
  */
-async function fetchFromFifa(matchNumbers: number[]): Promise<DetectedResult[]> {
-  // FIFA's public results endpoint — structure may change without notice
-  // This is a stub: when FIFA provides a reliable JSON endpoint, implement here.
-  // For now, returns empty to avoid false positives.
-  try {
-    // Example (not guaranteed to work): FIFA tournament API
-    // const url = `https://api.fifa.com/api/v3/calendar/matches?...`
-    // const res = await fetch(url, { next: { revalidate: 0 } })
-    // const data = await res.json()
-    // ... parse and match to matchNumbers
-    void matchNumbers // suppress unused warning
-    return []
-  } catch {
-    return []
+async function fetchFromEspn(candidates: CandidateMatch[]): Promise<DetectedResult[]> {
+  const results: DetectedResult[] = []
+  const now = new Date()
+
+  // Check today and yesterday in VET timezone
+  const dates = [
+    toVetDateStr(now),
+    toVetDateStr(new Date(now.getTime() - 24 * 60 * 60 * 1000)),
+  ]
+
+  for (const date of dates) {
+    const dateStr = date.replace(/-/g, '') // YYYYMMDD
+    const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${dateStr}`
+
+    let data: Record<string, unknown>
+    try {
+      const res = await fetch(url, {
+        cache: 'no-store',
+        signal: AbortSignal.timeout(12_000),
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible)' },
+      })
+      if (!res.ok) continue
+      data = await res.json() as Record<string, unknown>
+    } catch {
+      continue
+    }
+
+    const events = (data.events as unknown[]) ?? []
+
+    for (const rawEvent of events) {
+      const event = rawEvent as Record<string, unknown>
+      const comp = ((event.competitions as unknown[])?.[0] ?? {}) as Record<string, unknown>
+      const status = (comp.status as Record<string, unknown>)?.type as Record<string, unknown> | undefined
+      if (!status?.completed) continue // only finished
+
+      const competitors = (comp.competitors as EspnCompetitor[]) ?? []
+      const resolved = resolveMatch(competitors, candidates)
+      if (!resolved) continue
+
+      // Avoid duplicates (same matchNumber from two date pages)
+      if (results.some((r) => r.matchNumber === resolved.match.matchNumber)) continue
+
+      const { g1, g2, confidence } = resolved
+      const result: MatchResult = g1 > g2 ? 'G1' : g1 < g2 ? 'G2' : 'E'
+
+      results.push({
+        matchNumber: resolved.match.matchNumber,
+        team1Goals: g1,
+        team2Goals: g2,
+        result,
+        source: 'espn',
+        confidence,
+        rawData: JSON.stringify({
+          competitors: competitors.map((c) => ({
+            team: c.team?.abbreviation,
+            score: c.score,
+            homeAway: c.homeAway,
+          })),
+          statusName: status.name,
+        }),
+      })
+    }
   }
+
+  return results
 }
 
 /**
- * Source B: Google Sports Search
- * Google shows match scores in search results. Structure is not guaranteed.
- * Returns empty if parsing fails.
+ * Source B: api-football.com (free tier — requires LIVE_RESULTS_API_KEY)
+ * Falls back to empty if no API key configured.
  */
-async function fetchFromGoogleSports(_matchNumbers: number[]): Promise<DetectedResult[]> {
-  // Google search results for football scores are rendered server-side
-  // and may block automated requests. This is a reserved stub.
-  return []
-}
-
-/**
- * Source C: Open Football Data (public APIs)
- * api-football.com free tier, football-data.org free tier, etc.
- * These often require free registration but no cost.
- * Configure via LIVE_RESULTS_API_KEY env var.
- */
-async function fetchFromOpenApi(_matchNumbers: number[]): Promise<DetectedResult[]> {
+async function fetchFromApiFootball(candidates: CandidateMatch[]): Promise<DetectedResult[]> {
   const apiKey = process.env.LIVE_RESULTS_API_KEY
   if (!apiKey) return []
 
   try {
-    // Placeholder: implement with api-football.com v3 free tier
-    // GET https://v3.football.api-sports.io/fixtures?...
-    // Headers: { 'x-apisports-key': apiKey }
-    return []
+    // World Cup 2026 league ID in api-football = 1 (FIFA World Cup)
+    const today = toVetDateStr(new Date())
+    const url = `https://v3.football.api-sports.io/fixtures?league=1&season=2026&date=${today}&status=FT`
+    const res = await fetch(url, {
+      headers: { 'x-apisports-key': apiKey },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(10_000),
+    })
+    if (!res.ok) return []
+    const data = await res.json() as { response?: unknown[] }
+    const fixtures = data.response ?? []
+    const results: DetectedResult[] = []
+
+    for (const rawF of fixtures) {
+      const f = rawF as Record<string, unknown>
+      const teams = f.teams as Record<string, unknown>
+      const goals = f.goals as Record<string, unknown>
+      const home = (teams?.home as Record<string, unknown>) ?? {}
+      const away = (teams?.away as Record<string, unknown>) ?? {}
+      const nameH = (home.name as string) ?? ''
+      const nameA = (away.name as string) ?? ''
+      const g1 = (goals?.home as number) ?? 0
+      const g2 = (goals?.away as number) ?? 0
+
+      const resolved = resolveMatch(
+        [
+          { homeAway: 'home', score: String(g1), team: { name: nameH, abbreviation: nameH.slice(0, 3).toUpperCase() } },
+          { homeAway: 'away', score: String(g2), team: { name: nameA, abbreviation: nameA.slice(0, 3).toUpperCase() } },
+        ],
+        candidates
+      )
+      if (!resolved || results.some((r) => r.matchNumber === resolved.match.matchNumber)) continue
+
+      const result: MatchResult = resolved.g1 > resolved.g2 ? 'G1' : resolved.g1 < resolved.g2 ? 'G2' : 'E'
+      results.push({
+        matchNumber: resolved.match.matchNumber,
+        team1Goals: resolved.g1,
+        team2Goals: resolved.g2,
+        result,
+        source: 'api-football',
+        confidence: 'HIGH',
+        rawData: JSON.stringify({ nameH, nameA, g1, g2 }),
+      })
+    }
+    return results
   } catch {
     return []
   }
@@ -288,20 +448,23 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
       return summary
     }
 
-    const matchNumbers = candidateMatches.map((m) => m.matchNumber)
+    // Cast to CandidateMatch (DB result has same shape after include)
+    const candidates = candidateMatches as unknown as CandidateMatch[]
 
-    // Fetch from all available sources
-    const [fifaResults, googleResults, apiResults] = await Promise.allSettled([
-      fetchFromFifa(matchNumbers),
-      fetchFromGoogleSports(matchNumbers),
-      fetchFromOpenApi(matchNumbers),
+    // Fetch from all available sources (ESPN always; api-football if API key present)
+    const [espnResults, apiFootballResults] = await Promise.allSettled([
+      fetchFromEspn(candidates),
+      fetchFromApiFootball(candidates),
     ])
 
     const allDetected: DetectedResult[] = [
-      ...(fifaResults.status === 'fulfilled' ? fifaResults.value : []),
-      ...(googleResults.status === 'fulfilled' ? googleResults.value : []),
-      ...(apiResults.status === 'fulfilled' ? apiResults.value : []),
+      ...(espnResults.status === 'fulfilled' ? espnResults.value : []),
+      ...(apiFootballResults.status === 'fulfilled' ? apiFootballResults.value : []),
     ]
+
+    if (espnResults.status === 'rejected') {
+      summary.errors.push(`ESPN: ${espnResults.reason}`)
+    }
 
     const aggregated = aggregateResults(allDetected)
     summary.resultsDetected = aggregated.length
