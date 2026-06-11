@@ -36,7 +36,7 @@ model Setting {
   poolStatus                      String   @default("OPEN")
   poolName                        String   @default("Quiniela Mundial 2026 - Fase de Grupos")
   poolPhase                       String   @default("GROUP_STAGE")
-  nextPhaseLabel                  String   @default("Eliminación Directa")
+  nextPhaseLabel                  String   @default("Octavos · Cuartos · Semifinales · Final")
 
   createdAt                       DateTime @default(now())
   updatedAt                       DateTime @updatedAt

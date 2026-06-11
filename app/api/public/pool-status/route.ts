@@ -28,7 +28,7 @@ export async function GET() {
       status: isRegistrationOpen() ? 'OPEN' : 'CLOSED',
       poolName: 'Quiniela Mundial 2026 - Fase de Grupos',
       poolPhase: 'GROUP_STAGE',
-      nextPhaseLabel: 'Eliminación Directa',
+      nextPhaseLabel: 'Octavos · Cuartos · Semifinales · Final',
       registrationOpen: isRegistrationOpen(),
     } satisfies PublicPoolInfo)
   }

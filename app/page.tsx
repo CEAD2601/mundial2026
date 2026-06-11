@@ -165,7 +165,7 @@ export default function Home() {
     status: isRegistrationOpen() ? 'OPEN' : 'CLOSED',
     poolName: 'Quiniela Mundial 2026 - Fase de Grupos',
     poolPhase: 'GROUP_STAGE',
-    nextPhaseLabel: 'Eliminación Directa',
+    nextPhaseLabel: 'Octavos · Cuartos · Semifinales · Final',
     registrationOpen: isRegistrationOpen(),
   })
 
@@ -351,11 +351,11 @@ export default function Home() {
                   {poolInfo.nextPhaseLabel}
                 </p>
                 <p className="text-white/60 text-xs">
-                  Muy pronto abriremos una nueva quiniela para la siguiente fase del Mundial.
+                  Cuando est{'é'}n definidos los clasificados, abriremos una nueva quiniela para las fases eliminatorias del Mundial.
                 </p>
                 <div className="mt-3 inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-white/70 text-xs">
                   <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                  En espera — Próximamente
+                  En espera — Pr{'ó'}ximamente
                 </div>
               </div>
             </div>

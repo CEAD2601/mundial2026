@@ -30,7 +30,7 @@ export async function GET() {
     effectiveStatus,
     poolName:       settings?.poolName       ?? 'Quiniela Mundial 2026 - Fase de Grupos',
     poolPhase:      settings?.poolPhase      ?? 'GROUP_STAGE',
-    nextPhaseLabel: settings?.nextPhaseLabel ?? 'Eliminación Directa',
+    nextPhaseLabel: settings?.nextPhaseLabel ?? 'Octavos · Cuartos · Semifinales · Final',
     registrationOpen: effectiveStatus === 'OPEN',
     deadlinePassed: !isRegistrationOpen(),
   })

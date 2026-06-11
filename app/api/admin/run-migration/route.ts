@@ -27,7 +27,7 @@ export async function POST() {
   await run('poolPhase column', () =>
     sql`ALTER TABLE "Setting" ADD COLUMN IF NOT EXISTS "poolPhase" TEXT NOT NULL DEFAULT 'GROUP_STAGE'`)
   await run('nextPhaseLabel column', () =>
-    sql`ALTER TABLE "Setting" ADD COLUMN IF NOT EXISTS "nextPhaseLabel" TEXT NOT NULL DEFAULT 'Eliminación Directa'`)
+    sql`ALTER TABLE "Setting" ADD COLUMN IF NOT EXISTS "nextPhaseLabel" TEXT NOT NULL DEFAULT 'Octavos · Cuartos · Semifinales · Final'`)
 
   return NextResponse.json({ ok: true, results })
 }
