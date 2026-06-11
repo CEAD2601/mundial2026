@@ -180,7 +180,7 @@ function MatchDayCard({ match, now }: { match: DailyMatch; now: Date }) {
         {/* Toggle — always shown since inscriptions are closed */}
         <div className="mt-3 pt-3 border-t border-slate-100">
           <button
-            onClick={() => { if (!expanded) track('MATCH_PREDICTIONS_OPENED', '/ranking', { matchId: match.matchId }); setExpanded(v => !v) }}
+            onClick={() => { if (!expanded) track('MATCH_PREDICTIONS_OPENED', '/ranking', { matchId: match.id }); setExpanded(v => !v) }}
             className={`w-full flex items-center justify-center gap-2 text-sm font-semibold py-1.5 rounded-lg transition-colors ${
               isFinished ? 'text-green-700 hover:bg-green-50' : 'text-blue-700 hover:bg-blue-50'
             }`}
