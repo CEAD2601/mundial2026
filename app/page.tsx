@@ -6,6 +6,10 @@ import Image from 'next/image'
 import { Trophy, Users, Clock, Star, ChevronDown, ChevronUp, Zap, Shield, BarChart2, MessageCircle } from 'lucide-react'
 import { getWhatsAppShareUrl, getInviteMessage } from '@/lib/share'
 import { getPublicAppUrl } from '@/lib/app-url'
+import type { PrizePoolStats } from '@/lib/prizes'
+import { DEFAULT_PRIZE_SETTINGS, calculatePrizePool } from '@/lib/prizes'
+
+const EMPTY_POOL: PrizePoolStats = calculatePrizePool({ verifiedPaymentsCount: 0, ...DEFAULT_PRIZE_SETTINGS })
 
 const TOURNAMENT_START = new Date('2026-06-11T19:00:00Z') // June 11 3PM VET = 7PM UTC
 
@@ -153,6 +157,14 @@ function AnimatedNumber({ target, suffix = '' }: { target: number; suffix?: stri
 export default function Home() {
   // Use NEXT_PUBLIC_APP_URL — never window.location.origin (returns Vercel preview URLs)
   const whatsappUrl = getWhatsAppShareUrl(getInviteMessage())
+
+  const [pool, setPool] = useState<PrizePoolStats>(EMPTY_POOL)
+  useEffect(() => {
+    fetch('/api/public/prize-stats')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setPool(data) })
+      .catch(() => {/* keep empty-pool fallback */})
+  }, [])
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -447,18 +459,26 @@ export default function Home() {
               <div className="absolute inset-0 opacity-10"
                 style={{ backgroundImage: 'url(/assets/hero/football-pattern.svg)', backgroundSize: '100px' }} />
               <div className="relative">
-                <p className="text-green-200 text-sm mb-2">Pozo estimado · 20 participantes</p>
-                <p className="text-5xl font-extrabold text-white drop-shadow">$400 <span className="text-2xl font-bold text-green-200">USD</span></p>
-                <p className="text-green-300 text-sm mt-1">292.000 Bs <span className="text-xs">(tasa fija 730 Bs/USD)</span></p>
-                <p className="text-green-400 text-xs mt-1">20 participantes × $20 USD = $400 USD</p>
+                <p className="text-green-200 text-sm mb-2">
+                  Pozo acumulado {'·'} {pool.verifiedPaymentsCount} pago{pool.verifiedPaymentsCount !== 1 ? 's' : ''} verificado{pool.verifiedPaymentsCount !== 1 ? 's' : ''}
+                </p>
+                <p className="text-5xl font-extrabold text-white drop-shadow">
+                  ${pool.totalPoolUsd.toLocaleString('en-US')} <span className="text-2xl font-bold text-green-200">USD</span>
+                </p>
+                <p className="text-green-300 text-sm mt-1">
+                  {pool.totalPoolVes.toLocaleString('es-VE')} Bs <span className="text-xs">(tasa fija {pool.fixedExchangeRate} Bs/USD)</span>
+                </p>
+                <p className="text-green-400 text-xs mt-1">
+                  {pool.verifiedPaymentsCount} pagos verificados {'×'} ${pool.entryPriceUsd} USD {'='} ${pool.totalPoolUsd.toLocaleString('en-US')} USD
+                </p>
               </div>
             </div>
             {/* Prize rows */}
             <div className="divide-y divide-slate-100">
               {[
-                { medal: '🥇', pos: '1er Lugar', pct: 65, usd: 260, ves: 189800, color: 'from-yellow-50 to-amber-50', badge: 'bg-yellow-100 text-yellow-800' },
-                { medal: '🥈', pos: '2do Lugar', pct: 20, usd: 80,  ves: 58400,  color: 'from-slate-50 to-slate-50',  badge: 'bg-slate-100 text-slate-600' },
-                { medal: '🏛️', pos: 'Organización', pct: 15, usd: 60, ves: 43800, color: '', badge: 'bg-blue-50 text-blue-600' },
+                { medal: '🥇', pos: '1er Lugar',    pct: pool.firstPrizePercent,   usd: pool.firstPrizeUsd,   ves: pool.firstPrizeVes,   color: 'from-yellow-50 to-amber-50', badge: 'bg-yellow-100 text-yellow-800' },
+                { medal: '🥈', pos: '2do Lugar',    pct: pool.secondPrizePercent,  usd: pool.secondPrizeUsd,  ves: pool.secondPrizeVes,  color: 'from-slate-50 to-slate-50',  badge: 'bg-slate-100 text-slate-600' },
+                { medal: '\u{1F3DB}\u{FE0F}', pos: 'Organizaci\u{F3}n', pct: pool.organizationPercent, usd: pool.organizationUsd, ves: pool.organizationVes, color: '', badge: 'bg-blue-50 text-blue-600' },
               ].map((row) => (
                 <div key={row.pos} className={`flex items-center justify-between px-6 py-5 bg-gradient-to-r ${row.color} hover:bg-opacity-80 transition-colors`}>
                   <div className="flex items-center gap-3">
@@ -468,7 +488,7 @@ export default function Home() {
                   <div className="flex items-center gap-3">
                     <span className={`text-sm font-bold px-3 py-1 rounded-full ${row.badge}`}>{row.pct}%</span>
                     <div className="text-right">
-                      <div className="font-extrabold text-lg text-slate-800">${row.usd} USD</div>
+                      <div className="font-extrabold text-lg text-slate-800">${row.usd.toLocaleString('en-US')} USD</div>
                       <div className="text-xs text-slate-500">{row.ves.toLocaleString('es-VE')} Bs</div>
                     </div>
                   </div>
@@ -476,7 +496,7 @@ export default function Home() {
               ))}
             </div>
             <p className="text-center text-xs text-slate-400 p-4">
-              El pozo real depende del total de participantes con pago verificado. · Tasa fija usada: 730 Bs/USD
+              El pozo se actualiza autom{'á'}ticamente seg{'ú'}n los pagos verificados por el administrador. {'·'} Tasa fija: {pool.fixedExchangeRate} Bs/USD
             </p>
           </div>
         </section>

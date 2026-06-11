@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import { calculatePrizePool, DEFAULT_PRIZE_SETTINGS, fmtVes } from '@/lib/prizes'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,24 +33,25 @@ export default async function AdminDashboard() {
     }),
   ])
 
-  const entryUsd = settings?.entryPriceUsd ?? 20
-  const fixedRate = settings?.fixedExchangeRate ?? 730
+  const pool = calculatePrizePool({
+    verifiedPaymentsCount: verifiedPayments,
+    entryPriceUsd:       settings?.entryPriceUsd       ?? DEFAULT_PRIZE_SETTINGS.entryPriceUsd,
+    fixedExchangeRate:   settings?.fixedExchangeRate    ?? DEFAULT_PRIZE_SETTINGS.fixedExchangeRate,
+    firstPrizePercent:   settings?.firstPrizePercent    ?? DEFAULT_PRIZE_SETTINGS.firstPrizePercent,
+    secondPrizePercent:  settings?.secondPrizePercent   ?? DEFAULT_PRIZE_SETTINGS.secondPrizePercent,
+    organizationPercent: settings?.organizationPercent  ?? DEFAULT_PRIZE_SETTINGS.organizationPercent,
+  })
+
+  const entryUsd = pool.entryPriceUsd
+  const fixedRate = pool.fixedExchangeRate
   const entryVes = Math.round(entryUsd * fixedRate)
-
-  const totalRaisedUsd = verifiedPayments * entryUsd
-  const totalRaisedVes = totalRaisedUsd * fixedRate
-
-  const p1Pct = settings?.firstPrizePercent ?? 65
-  const p2Pct = settings?.secondPrizePercent ?? 20
-  const orgPct = settings?.organizationPercent ?? 15
-
-  const prize1Usd = (totalRaisedUsd * p1Pct) / 100
-  const prize2Usd = (totalRaisedUsd * p2Pct) / 100
-  const orgUsd = (totalRaisedUsd * orgPct) / 100
+  const totalRaisedUsd = pool.totalPoolUsd
+  const totalRaisedVes = pool.totalPoolVes
+  const prize1Usd = pool.firstPrizeUsd
+  const prize2Usd = pool.secondPrizeUsd
+  const orgUsd = pool.organizationUsd
 
   const leader = topRanking[0]
-
-  const fmtVes = (n: number) => n.toLocaleString('es-VE', { maximumFractionDigits: 0 })
 
   return (
     <div className="p-4 sm:p-6">
@@ -87,9 +89,9 @@ export default async function AdminDashboard() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-center">
           {[
             { label: 'Total recaudado', usd: totalRaisedUsd, ves: totalRaisedVes, badge: null },
-            { label: `1er premio (${p1Pct}%)`, usd: prize1Usd, ves: prize1Usd * fixedRate, badge: '🥇' },
-            { label: `2do premio (${p2Pct}%)`, usd: prize2Usd, ves: prize2Usd * fixedRate, badge: '🥈' },
-            { label: `Organización (${orgPct}%)`, usd: orgUsd, ves: orgUsd * fixedRate, badge: '🏛️' },
+            { label: `1er premio (${pool.firstPrizePercent}%)`, usd: prize1Usd, ves: prize1Usd * fixedRate, badge: '🥇' },
+            { label: `2do premio (${pool.secondPrizePercent}%)`, usd: prize2Usd, ves: prize2Usd * fixedRate, badge: '🥈' },
+            { label: `Organización (${pool.organizationPercent}%)`, usd: orgUsd, ves: orgUsd * fixedRate, badge: '🏛️' },
           ].map((row) => (
             <div key={row.label} className="bg-white/20 rounded-xl p-3">
               <div className="text-xs text-yellow-100 mb-1">{row.badge} {row.label}</div>
