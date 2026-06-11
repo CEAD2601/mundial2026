@@ -13,19 +13,29 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const data = updateResultSchema.parse(body)
 
-    const actualResult = data.team1Goals > data.team2Goals ? 'G1' : data.team1Goals < data.team2Goals ? 'G2' : 'E'
+    const match = await prisma.match.findUnique({
+      where: { id: data.matchId },
+      include: { team1: true, team2: true },
+    })
+    if (!match) return NextResponse.json({ error: 'Partido no encontrado' }, { status: 404 })
+
+    const actualResult: 'G1' | 'E' | 'G2' =
+      data.team1Goals > data.team2Goals ? 'G1' :
+      data.team1Goals < data.team2Goals ? 'G2' : 'E'
 
     await prisma.match.update({
       where: { id: data.matchId },
       data: {
         team1Goals: data.team1Goals,
         team2Goals: data.team2Goals,
-        result: actualResult as 'G1' | 'E' | 'G2',
+        result: actualResult,
         status: 'FINISHED',
         resultUpdatedAt: new Date(),
+        resultSource: 'manual',
       },
     })
 
+    // Calculate points for every prediction on this match
     const predictions = await prisma.prediction.findMany({
       where: { matchId: data.matchId },
     })
@@ -38,7 +48,6 @@ export async function POST(req: NextRequest) {
       const goalDifferenceError =
         Math.abs(pred.predictedTeam1Goals - data.team1Goals) +
         Math.abs(pred.predictedTeam2Goals - data.team2Goals)
-
       const points = isExactScore ? 3 : isCorrectResult ? 1 : 0
 
       await prisma.prediction.update({
@@ -47,12 +56,29 @@ export async function POST(req: NextRequest) {
       })
     }
 
+    // Recalculate stats for all affected participants
     const participantIds = [...new Set(predictions.map((p) => p.participantId))]
     for (const participantId of participantIds) {
-      await recalculateParticipantRanking(participantId)
+      await recalculateParticipantStats(participantId)
     }
 
-    return NextResponse.json({ success: true, result: actualResult })
+    // Update ranking positions for everyone (saves previousPosition too)
+    await updateRankingPositions()
+
+    // Audit log
+    const resultLabel =
+      actualResult === 'G1' ? `Gana ${match.team1.shortName}` :
+      actualResult === 'G2' ? `Gana ${match.team2.shortName}` : 'Empate'
+    await prisma.auditLog.create({
+      data: {
+        action: `Resultado: ${match.team1.displayName} ${data.team1Goals}-${data.team2Goals} ${match.team2.displayName} (${resultLabel}) · Partido #${match.matchNumber}`,
+        entityType: 'Match',
+        entityId: data.matchId,
+        newValue: `${data.team1Goals}-${data.team2Goals}`,
+      },
+    }).catch(() => {})
+
+    return NextResponse.json({ success: true, result: actualResult, matchNumber: match.matchNumber })
   } catch (err: unknown) {
     if (err instanceof z.ZodError) {
       return NextResponse.json({ error: 'Datos inválidos', details: err.issues }, { status: 400 })
@@ -62,12 +88,11 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function recalculateParticipantRanking(participantId: string) {
+async function recalculateParticipantStats(participantId: string) {
   const predictions = await prisma.prediction.findMany({
     where: { participantId },
     include: { match: true },
   })
-
   const played = predictions.filter((p) => p.match.status === 'FINISHED')
   const exactScores = played.filter((p) => p.isExactScore === true).length
   const correctResults = played.filter((p) => p.isCorrectResult === true && !p.isExactScore).length
@@ -79,29 +104,25 @@ async function recalculateParticipantRanking(participantId: string) {
 
   await prisma.rankingSnapshot.upsert({
     where: { participantId },
-    update: {
-      totalPoints,
-      exactScores,
-      correctResults,
-      wrongPredictions,
-      pendingPredictions: pending,
-      playedMatches: played.length,
-      totalGoalDiffError,
-      effectivenessPercent: effectiveness,
-    },
-    create: {
-      participantId,
-      totalPoints,
-      exactScores,
-      correctResults,
-      wrongPredictions,
-      pendingPredictions: pending,
-      playedMatches: played.length,
-      totalGoalDiffError,
-      effectivenessPercent: effectiveness,
-      currentPosition: 0,
-    },
+    update: { totalPoints, exactScores, correctResults, wrongPredictions, pendingPredictions: pending, playedMatches: played.length, totalGoalDiffError, effectivenessPercent: effectiveness },
+    create: { participantId, totalPoints, exactScores, correctResults, wrongPredictions, pendingPredictions: pending, playedMatches: played.length, totalGoalDiffError, effectivenessPercent: effectiveness, currentPosition: 0 },
   })
+}
+
+async function updateRankingPositions() {
+  const snapshots = await prisma.rankingSnapshot.findMany({
+    orderBy: [{ totalPoints: 'desc' }, { exactScores: 'desc' }, { correctResults: 'desc' }, { totalGoalDiffError: 'asc' }],
+  })
+  for (let i = 0; i < snapshots.length; i++) {
+    const newPos = i + 1
+    await prisma.rankingSnapshot.update({
+      where: { id: snapshots[i].id },
+      data: {
+        previousPosition: snapshots[i].currentPosition > 0 ? snapshots[i].currentPosition : newPos,
+        currentPosition: newPos,
+      },
+    })
+  }
 }
 
 export async function GET() {

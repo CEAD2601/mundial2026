@@ -117,13 +117,27 @@ export default function ResultadosAdminPage() {
   const saveResult = async (matchId: string) => {
     const s = scores[matchId]
     if (s.g1 === '' || s.g2 === '') return
+    const match = matches.find(m => m.id === matchId)
+    const label = match
+      ? `${match.team1.flagEmoji} ${match.team1.displayName} ${s.g1} — ${s.g2} ${match.team2.displayName} ${match.team2.flagEmoji}`
+      : `${s.g1} — ${s.g2}`
+    const confirmed = window.confirm(
+      `¿Confirmar resultado?\n\n${label}\n\nEsto actualizará los puntos y el ranking de todos los participantes.`
+    )
+    if (!confirmed) return
     setSaving(matchId)
     const res = await fetch('/api/results', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ matchId, team1Goals: parseInt(s.g1), team2Goals: parseInt(s.g2) }),
     })
-    if (res.ok) await loadMatches()
+    if (res.ok) {
+      await loadMatches()
+      alert('✅ Resultado guardado. Ranking actualizado automáticamente.')
+    } else {
+      const data = await res.json().catch(() => ({}))
+      alert('❌ Error: ' + (data.error ?? 'No se pudo guardar el resultado'))
+    }
     setSaving(null)
   }
 
