@@ -4,8 +4,9 @@ import { useState, useEffect, useRef, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { formatMatchDate, formatMatchTime } from '@/lib/timezone'
-import { AlertCircle, Save, ArrowRight, CheckCircle, Minus, Plus } from 'lucide-react'
+import { AlertCircle, Save, ArrowRight, CheckCircle, Minus, Plus, Lock } from 'lucide-react'
 import TeamFlag from '@/components/TeamFlag'
+import { isRegistrationOpen } from '@/lib/deadline'
 
 interface Team {
   id: string
@@ -178,6 +179,7 @@ export default function QuinielaPage({ params }: { params: Promise<{ code: strin
   const [error, setError] = useState('')
   const [participantName, setParticipantName] = useState('')
   const [isLocked, setIsLocked] = useState(false)
+  const [isConfirmed, setIsConfirmed] = useState(false) // true = voluntarily confirmed
   const [activeGroup, setActiveGroup] = useState('A')
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [highlightMatchId, setHighlightMatchId] = useState<string | null>(null)
@@ -225,7 +227,9 @@ export default function QuinielaPage({ params }: { params: Promise<{ code: strin
       const predData = await predRes.json()
       const matchData = await matchRes.json()
       setMatches(matchData.matches ?? [])
-      setIsLocked(predData.isComplete)
+      setIsConfirmed(predData.isComplete)
+      // Lock if confirmed OR if the deadline has passed
+      setIsLocked(predData.isComplete || !isRegistrationOpen())
       const existingPicks: Picks = {}
       for (const pred of (predData.predictions ?? [])) {
         existingPicks[pred.matchId] = {
@@ -433,10 +437,30 @@ export default function QuinielaPage({ params }: { params: Promise<{ code: strin
 
       {isLocked && (
         <div className="max-w-2xl mx-auto px-4 mt-4">
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2 text-amber-800 text-sm">
-            <CheckCircle size={16} />
-            <span>Tu quiniela est{'á'} confirmada y bloqueada. <Link href={`/mi-quiniela/${code}`} className="underline font-medium">Ver mi quiniela →</Link></span>
-          </div>
+          {isConfirmed ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2 text-amber-800 text-sm">
+              <CheckCircle size={16} className="shrink-0" />
+              <span>Tu quiniela est{'á'} confirmada y bloqueada. <Link href={`/mi-quiniela/${code}`} className="underline font-medium">Ver mi quiniela →</Link></span>
+            </div>
+          ) : (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm">
+              <div className="flex items-start gap-2 text-red-800 mb-2">
+                <Lock size={16} className="shrink-0 mt-0.5" />
+                <span className="font-bold">Esta quiniela qued{'ó'} incompleta antes del cierre de inscripciones.</span>
+              </div>
+              <p className="text-red-700 text-xs ml-6">
+                El plazo para completar pronósticos ya terminó. Puedes ver tu quiniela pero no puedes editarla.
+              </p>
+              <div className="ml-6 mt-2 flex gap-2">
+                <Link href={`/mi-quiniela/${code}`} className="text-xs bg-red-100 hover:bg-red-200 text-red-800 font-semibold px-3 py-1.5 rounded-lg inline-flex items-center gap-1 transition-colors">
+                  Ver mi quiniela →
+                </Link>
+                <Link href="/ranking" className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-lg inline-flex items-center gap-1 transition-colors">
+                  🏆 Ver ranking
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

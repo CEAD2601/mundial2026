@@ -9,6 +9,7 @@ import { getPublicAppUrl } from '@/lib/app-url'
 import type { PrizePoolStats } from '@/lib/prizes'
 import { DEFAULT_PRIZE_SETTINGS, calculatePrizePool } from '@/lib/prizes'
 import { REGISTRATION_DEADLINE, isRegistrationOpen } from '@/lib/deadline'
+import type { PublicPoolInfo, PoolStatus } from '@/lib/pool-status'
 
 const EMPTY_POOL: PrizePoolStats = calculatePrizePool({ verifiedPaymentsCount: 0, ...DEFAULT_PRIZE_SETTINGS })
 
@@ -160,21 +161,39 @@ export default function Home() {
   const whatsappUrl = getWhatsAppShareUrl(getInviteMessage())
 
   const [pool, setPool] = useState<PrizePoolStats>(EMPTY_POOL)
+  const [poolInfo, setPoolInfo] = useState<PublicPoolInfo>({
+    status: isRegistrationOpen() ? 'OPEN' : 'CLOSED',
+    poolName: 'Quiniela Mundial 2026 - Fase de Grupos',
+    poolPhase: 'GROUP_STAGE',
+    nextPhaseLabel: 'Eliminación Directa',
+    registrationOpen: isRegistrationOpen(),
+  })
+
   useEffect(() => {
     fetch('/api/public/prize-stats')
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data) setPool(data) })
-      .catch(() => {/* keep empty-pool fallback */})
+      .catch(() => {})
+    fetch('/api/public/pool-status')
+      .then(r => r.ok ? r.json() : null)
+      .then((data: PublicPoolInfo | null) => { if (data) setPoolInfo(data) })
+      .catch(() => {})
   }, [])
 
-  // Registration open/closed — re-evaluated every minute so the UI updates at deadline
-  const [registrationOpen, setRegistrationOpen] = useState(() => isRegistrationOpen())
+  // Flip to CLOSED client-side at the exact deadline
   useEffect(() => {
     const msUntilClose = REGISTRATION_DEADLINE.getTime() - Date.now()
-    if (msUntilClose <= 0) { setRegistrationOpen(false); return }
-    const t = setTimeout(() => setRegistrationOpen(false), msUntilClose)
+    if (msUntilClose <= 0) {
+      setPoolInfo(prev => prev.status === 'OPEN' ? { ...prev, status: 'CLOSED' as PoolStatus, registrationOpen: false } : prev)
+      return
+    }
+    const t = setTimeout(() => {
+      setPoolInfo(prev => prev.status === 'OPEN' ? { ...prev, status: 'CLOSED' as PoolStatus, registrationOpen: false } : prev)
+    }, msUntilClose)
     return () => clearTimeout(t)
   }, [])
+
+  const registrationOpen = poolInfo.registrationOpen
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -293,32 +312,51 @@ export default function Home() {
             </div>
           ) : (
             /* ── INSCRIPCIONES CERRADAS ── */
-            <div className="w-full max-w-md mx-auto">
+            <div className="w-full max-w-lg mx-auto">
+              {/* Status message */}
               <div className="bg-white/15 backdrop-blur-sm border border-white/30 rounded-2xl px-6 py-4 mb-4 text-center">
-                <p className="text-white font-bold text-lg mb-1">{'🔒'} Inscripciones cerradas</p>
+                <p className="text-white font-bold text-lg mb-1">
+                  {poolInfo.status === 'WAITING_NEXT_ROUND' ? '⏳' : '🔒'}{' '}
+                  {poolInfo.status === 'WAITING_NEXT_ROUND'
+                    ? 'Fase de grupos cerrada'
+                    : 'Inscripciones cerradas'}
+                </p>
                 <p className="text-white/80 text-sm">
-                  Las inscripciones ya cerraron. Sigue el ranking y los resultados del Mundial.
+                  {poolInfo.status === 'WAITING_NEXT_ROUND'
+                    ? 'La quiniela de fase de grupos ya cerró. Próximamente abriremos la quiniela de la siguiente fase.'
+                    : 'La quiniela de fase de grupos ya cerró. Ahora puedes seguir el ranking, resultados y posiciones en vivo.'}
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Link
-                  href="/ranking"
-                  className="bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-extrabold px-8 py-4 rounded-2xl text-base transition-all inline-flex items-center justify-center gap-2 w-full sm:w-auto shadow-xl"
-                >
+
+              {/* Action buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
+                <Link href="/ranking"
+                  className="bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-extrabold px-6 py-3.5 rounded-2xl text-sm transition-all inline-flex items-center justify-center gap-2 shadow-xl">
                   {'🏆'} Ver ranking
                 </Link>
-                <Link
-                  href="/resultados"
-                  className="bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white font-semibold px-7 py-4 rounded-2xl text-base transition-all inline-flex items-center justify-center gap-2 w-full sm:w-auto"
-                >
+                <Link href="/resultados"
+                  className="bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white font-semibold px-6 py-3.5 rounded-2xl text-sm transition-all inline-flex items-center justify-center gap-2">
                   {'⚽'} Ver resultados
                 </Link>
-                <Link
-                  href="/mi-quiniela"
-                  className="bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white font-semibold px-7 py-4 rounded-2xl text-base transition-all inline-flex items-center justify-center gap-2 w-full sm:w-auto"
-                >
+                <Link href="/mi-quiniela"
+                  className="bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white font-semibold px-6 py-3.5 rounded-2xl text-sm transition-all inline-flex items-center justify-center gap-2">
                   Ver mi quiniela
                 </Link>
+              </div>
+
+              {/* Próxima quiniela card */}
+              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-4 text-center">
+                <p className="text-yellow-300 text-xs font-bold uppercase tracking-widest mb-1">{'🔜'} Próxima quiniela</p>
+                <p className="text-white font-bold text-base mb-1">
+                  {poolInfo.nextPhaseLabel}
+                </p>
+                <p className="text-white/60 text-xs">
+                  Muy pronto abriremos una nueva quiniela para la siguiente fase del Mundial.
+                </p>
+                <div className="mt-3 inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-white/70 text-xs">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                  En espera — Próximamente
+                </div>
               </div>
             </div>
           )}
@@ -478,12 +516,21 @@ export default function Home() {
 
           {/* CTA under steps */}
           <div className="text-center mt-8">
-            <Link
-              href="/registro"
-              className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-3.5 rounded-2xl transition-all shadow-lg hover:shadow-green-500/25 hover:-translate-y-0.5 text-sm"
-            >
-              ⚽ Empezar ahora · 20 USD
-            </Link>
+            {registrationOpen ? (
+              <Link href="/registro"
+                className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-3.5 rounded-2xl transition-all shadow-lg hover:shadow-green-500/25 hover:-translate-y-0.5 text-sm">
+                ⚽ Empezar ahora · 20 USD
+              </Link>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Link href="/ranking" className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-3.5 rounded-2xl transition-all shadow-lg text-sm">
+                  🏆 Ver ranking en vivo
+                </Link>
+                <Link href="/resultados" className="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-8 py-3.5 rounded-2xl transition-all text-sm">
+                  ⚽ Ver resultados
+                </Link>
+              </div>
+            )}
           </div>
         </section>
 
@@ -773,16 +820,40 @@ export default function Home() {
           <div className="absolute inset-0 opacity-[0.05]"
             style={{ backgroundImage: 'url(/assets/hero/football-pattern.svg)', backgroundSize: '120px' }} />
           <div className="relative">
-            <div className="text-5xl mb-4">🏆</div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold mb-3">¡El torneo comienza el 11 de junio!</h2>
-            <p className="text-green-100 mb-8 max-w-md mx-auto">Regístrate ahora y no pierdas la oportunidad de ganar el pozo acumulado.</p>
-            <Link
-              href="/registro"
-              className="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-extrabold px-10 py-4 rounded-2xl text-lg transition-all shadow-xl hover:shadow-yellow-400/40 hover:shadow-2xl hover:-translate-y-1"
-            >
-              ⚽ Crear mi quiniela — 20 USD
-            </Link>
-            <p className="text-green-200 text-xs mt-4">Pago M{'ó'}vil Banesco · Zelle · 20 USD / 14.600 Bs · Tasa fija 730 Bs/USD</p>
+            {registrationOpen ? (
+              <>
+                <div className="text-5xl mb-4">🏆</div>
+                <h2 className="text-2xl sm:text-3xl font-extrabold mb-3">¡El torneo comienza el 11 de junio!</h2>
+                <p className="text-green-100 mb-8 max-w-md mx-auto">Regístrate ahora y no pierdas la oportunidad de ganar el pozo acumulado.</p>
+                <Link href="/registro"
+                  className="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-extrabold px-10 py-4 rounded-2xl text-lg transition-all shadow-xl hover:shadow-yellow-400/40 hover:shadow-2xl hover:-translate-y-1">
+                  ⚽ Crear mi quiniela — 20 USD
+                </Link>
+                <p className="text-green-200 text-xs mt-4">Pago M{'ó'}vil Banesco · Zelle · 20 USD / 14.600 Bs · Tasa fija 730 Bs/USD</p>
+              </>
+            ) : (
+              <>
+                <div className="text-5xl mb-4">⚽</div>
+                <h2 className="text-2xl sm:text-3xl font-extrabold mb-3">Fase de grupos en curso</h2>
+                <p className="text-green-100 mb-4 max-w-md mx-auto">
+                  Ya no se aceptan nuevas quinielas para esta fase. Sigue el ranking en vivo y prepar{'á'}te para la pr{'ó'}xima ronda.
+                </p>
+                <div className="inline-flex items-center gap-2 bg-white/15 border border-white/30 rounded-xl px-5 py-2.5 text-sm text-white/80 mb-6">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                  Pr{'ó'}xima quiniela: <strong className="text-yellow-300 ml-1">{poolInfo.nextPhaseLabel}</strong> — En espera
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Link href="/ranking"
+                    className="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-extrabold px-8 py-4 rounded-2xl text-base transition-all shadow-xl hover:-translate-y-1">
+                    🏆 Ver ranking fase de grupos
+                  </Link>
+                  <Link href="/resultados"
+                    className="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 border border-white/30 text-white font-semibold px-8 py-4 rounded-2xl text-base transition-all">
+                    ⚽ Ver resultados
+                  </Link>
+                </div>
+              </>
+            )}
           </div>
         </section>
 

@@ -1804,6 +1804,10 @@ export namespace Prisma {
     fixedExchangeRate: number | null
     useFixedExchangeRate: boolean | null
     tiebreakerRules: string | null
+    poolStatus: string | null
+    poolName: string | null
+    poolPhase: string | null
+    nextPhaseLabel: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -1829,6 +1833,10 @@ export namespace Prisma {
     fixedExchangeRate: number | null
     useFixedExchangeRate: boolean | null
     tiebreakerRules: string | null
+    poolStatus: string | null
+    poolName: string | null
+    poolPhase: string | null
+    nextPhaseLabel: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -1854,6 +1862,10 @@ export namespace Prisma {
     fixedExchangeRate: number
     useFixedExchangeRate: number
     tiebreakerRules: number
+    poolStatus: number
+    poolName: number
+    poolPhase: number
+    nextPhaseLabel: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -1899,6 +1911,10 @@ export namespace Prisma {
     fixedExchangeRate?: true
     useFixedExchangeRate?: true
     tiebreakerRules?: true
+    poolStatus?: true
+    poolName?: true
+    poolPhase?: true
+    nextPhaseLabel?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -1924,6 +1940,10 @@ export namespace Prisma {
     fixedExchangeRate?: true
     useFixedExchangeRate?: true
     tiebreakerRules?: true
+    poolStatus?: true
+    poolName?: true
+    poolPhase?: true
+    nextPhaseLabel?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -1949,6 +1969,10 @@ export namespace Prisma {
     fixedExchangeRate?: true
     useFixedExchangeRate?: true
     tiebreakerRules?: true
+    poolStatus?: true
+    poolName?: true
+    poolPhase?: true
+    nextPhaseLabel?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -2061,6 +2085,10 @@ export namespace Prisma {
     fixedExchangeRate: number
     useFixedExchangeRate: boolean
     tiebreakerRules: string
+    poolStatus: string
+    poolName: string
+    poolPhase: string
+    nextPhaseLabel: string
     createdAt: Date
     updatedAt: Date
     _count: SettingCountAggregateOutputType | null
@@ -2105,6 +2133,10 @@ export namespace Prisma {
     fixedExchangeRate?: boolean
     useFixedExchangeRate?: boolean
     tiebreakerRules?: boolean
+    poolStatus?: boolean
+    poolName?: boolean
+    poolPhase?: boolean
+    nextPhaseLabel?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["setting"]>
@@ -2130,6 +2162,10 @@ export namespace Prisma {
     fixedExchangeRate?: boolean
     useFixedExchangeRate?: boolean
     tiebreakerRules?: boolean
+    poolStatus?: boolean
+    poolName?: boolean
+    poolPhase?: boolean
+    nextPhaseLabel?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["setting"]>
@@ -2155,6 +2191,10 @@ export namespace Prisma {
     fixedExchangeRate?: boolean
     useFixedExchangeRate?: boolean
     tiebreakerRules?: boolean
+    poolStatus?: boolean
+    poolName?: boolean
+    poolPhase?: boolean
+    nextPhaseLabel?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["setting"]>
@@ -2180,11 +2220,15 @@ export namespace Prisma {
     fixedExchangeRate?: boolean
     useFixedExchangeRate?: boolean
     tiebreakerRules?: boolean
+    poolStatus?: boolean
+    poolName?: boolean
+    poolPhase?: boolean
+    nextPhaseLabel?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type SettingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "appName" | "entryPriceUsd" | "paymentPhone" | "paymentNationalId" | "paymentBank" | "zelleEmail" | "exchangeRateCurrency" | "manualExchangeRate" | "manualExchangeRateDate" | "firstPrizePercent" | "secondPrizePercent" | "organizationPercent" | "deadline" | "rankingVisible" | "showOnlyPaidParticipants" | "allowPublicPredictionViewAfterDeadline" | "fixedExchangeRate" | "useFixedExchangeRate" | "tiebreakerRules" | "createdAt" | "updatedAt", ExtArgs["result"]["setting"]>
+  export type SettingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "appName" | "entryPriceUsd" | "paymentPhone" | "paymentNationalId" | "paymentBank" | "zelleEmail" | "exchangeRateCurrency" | "manualExchangeRate" | "manualExchangeRateDate" | "firstPrizePercent" | "secondPrizePercent" | "organizationPercent" | "deadline" | "rankingVisible" | "showOnlyPaidParticipants" | "allowPublicPredictionViewAfterDeadline" | "fixedExchangeRate" | "useFixedExchangeRate" | "tiebreakerRules" | "poolStatus" | "poolName" | "poolPhase" | "nextPhaseLabel" | "createdAt" | "updatedAt", ExtArgs["result"]["setting"]>
 
   export type $SettingPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Setting"
@@ -2210,6 +2254,10 @@ export namespace Prisma {
       fixedExchangeRate: number
       useFixedExchangeRate: boolean
       tiebreakerRules: string
+      poolStatus: string
+      poolName: string
+      poolPhase: string
+      nextPhaseLabel: string
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["setting"]>
@@ -2655,6 +2703,10 @@ export namespace Prisma {
     readonly fixedExchangeRate: FieldRef<"Setting", 'Float'>
     readonly useFixedExchangeRate: FieldRef<"Setting", 'Boolean'>
     readonly tiebreakerRules: FieldRef<"Setting", 'String'>
+    readonly poolStatus: FieldRef<"Setting", 'String'>
+    readonly poolName: FieldRef<"Setting", 'String'>
+    readonly poolPhase: FieldRef<"Setting", 'String'>
+    readonly nextPhaseLabel: FieldRef<"Setting", 'String'>
     readonly createdAt: FieldRef<"Setting", 'DateTime'>
     readonly updatedAt: FieldRef<"Setting", 'DateTime'>
   }
@@ -12715,6 +12767,10 @@ export namespace Prisma {
     fixedExchangeRate: 'fixedExchangeRate',
     useFixedExchangeRate: 'useFixedExchangeRate',
     tiebreakerRules: 'tiebreakerRules',
+    poolStatus: 'poolStatus',
+    poolName: 'poolName',
+    poolPhase: 'poolPhase',
+    nextPhaseLabel: 'nextPhaseLabel',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -13053,6 +13109,10 @@ export namespace Prisma {
     fixedExchangeRate?: FloatFilter<"Setting"> | number
     useFixedExchangeRate?: BoolFilter<"Setting"> | boolean
     tiebreakerRules?: StringFilter<"Setting"> | string
+    poolStatus?: StringFilter<"Setting"> | string
+    poolName?: StringFilter<"Setting"> | string
+    poolPhase?: StringFilter<"Setting"> | string
+    nextPhaseLabel?: StringFilter<"Setting"> | string
     createdAt?: DateTimeFilter<"Setting"> | Date | string
     updatedAt?: DateTimeFilter<"Setting"> | Date | string
   }
@@ -13078,6 +13138,10 @@ export namespace Prisma {
     fixedExchangeRate?: SortOrder
     useFixedExchangeRate?: SortOrder
     tiebreakerRules?: SortOrder
+    poolStatus?: SortOrder
+    poolName?: SortOrder
+    poolPhase?: SortOrder
+    nextPhaseLabel?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -13106,6 +13170,10 @@ export namespace Prisma {
     fixedExchangeRate?: FloatFilter<"Setting"> | number
     useFixedExchangeRate?: BoolFilter<"Setting"> | boolean
     tiebreakerRules?: StringFilter<"Setting"> | string
+    poolStatus?: StringFilter<"Setting"> | string
+    poolName?: StringFilter<"Setting"> | string
+    poolPhase?: StringFilter<"Setting"> | string
+    nextPhaseLabel?: StringFilter<"Setting"> | string
     createdAt?: DateTimeFilter<"Setting"> | Date | string
     updatedAt?: DateTimeFilter<"Setting"> | Date | string
   }, "id">
@@ -13131,6 +13199,10 @@ export namespace Prisma {
     fixedExchangeRate?: SortOrder
     useFixedExchangeRate?: SortOrder
     tiebreakerRules?: SortOrder
+    poolStatus?: SortOrder
+    poolName?: SortOrder
+    poolPhase?: SortOrder
+    nextPhaseLabel?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: SettingCountOrderByAggregateInput
@@ -13164,6 +13236,10 @@ export namespace Prisma {
     fixedExchangeRate?: FloatWithAggregatesFilter<"Setting"> | number
     useFixedExchangeRate?: BoolWithAggregatesFilter<"Setting"> | boolean
     tiebreakerRules?: StringWithAggregatesFilter<"Setting"> | string
+    poolStatus?: StringWithAggregatesFilter<"Setting"> | string
+    poolName?: StringWithAggregatesFilter<"Setting"> | string
+    poolPhase?: StringWithAggregatesFilter<"Setting"> | string
+    nextPhaseLabel?: StringWithAggregatesFilter<"Setting"> | string
     createdAt?: DateTimeWithAggregatesFilter<"Setting"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Setting"> | Date | string
   }
@@ -13992,6 +14068,10 @@ export namespace Prisma {
     fixedExchangeRate?: number
     useFixedExchangeRate?: boolean
     tiebreakerRules?: string
+    poolStatus?: string
+    poolName?: string
+    poolPhase?: string
+    nextPhaseLabel?: string
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -14017,6 +14097,10 @@ export namespace Prisma {
     fixedExchangeRate?: number
     useFixedExchangeRate?: boolean
     tiebreakerRules?: string
+    poolStatus?: string
+    poolName?: string
+    poolPhase?: string
+    nextPhaseLabel?: string
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -14042,6 +14126,10 @@ export namespace Prisma {
     fixedExchangeRate?: FloatFieldUpdateOperationsInput | number
     useFixedExchangeRate?: BoolFieldUpdateOperationsInput | boolean
     tiebreakerRules?: StringFieldUpdateOperationsInput | string
+    poolStatus?: StringFieldUpdateOperationsInput | string
+    poolName?: StringFieldUpdateOperationsInput | string
+    poolPhase?: StringFieldUpdateOperationsInput | string
+    nextPhaseLabel?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -14067,6 +14155,10 @@ export namespace Prisma {
     fixedExchangeRate?: FloatFieldUpdateOperationsInput | number
     useFixedExchangeRate?: BoolFieldUpdateOperationsInput | boolean
     tiebreakerRules?: StringFieldUpdateOperationsInput | string
+    poolStatus?: StringFieldUpdateOperationsInput | string
+    poolName?: StringFieldUpdateOperationsInput | string
+    poolPhase?: StringFieldUpdateOperationsInput | string
+    nextPhaseLabel?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -14092,6 +14184,10 @@ export namespace Prisma {
     fixedExchangeRate?: number
     useFixedExchangeRate?: boolean
     tiebreakerRules?: string
+    poolStatus?: string
+    poolName?: string
+    poolPhase?: string
+    nextPhaseLabel?: string
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -14117,6 +14213,10 @@ export namespace Prisma {
     fixedExchangeRate?: FloatFieldUpdateOperationsInput | number
     useFixedExchangeRate?: BoolFieldUpdateOperationsInput | boolean
     tiebreakerRules?: StringFieldUpdateOperationsInput | string
+    poolStatus?: StringFieldUpdateOperationsInput | string
+    poolName?: StringFieldUpdateOperationsInput | string
+    poolPhase?: StringFieldUpdateOperationsInput | string
+    nextPhaseLabel?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -14142,6 +14242,10 @@ export namespace Prisma {
     fixedExchangeRate?: FloatFieldUpdateOperationsInput | number
     useFixedExchangeRate?: BoolFieldUpdateOperationsInput | boolean
     tiebreakerRules?: StringFieldUpdateOperationsInput | string
+    poolStatus?: StringFieldUpdateOperationsInput | string
+    poolName?: StringFieldUpdateOperationsInput | string
+    poolPhase?: StringFieldUpdateOperationsInput | string
+    nextPhaseLabel?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -15178,6 +15282,10 @@ export namespace Prisma {
     fixedExchangeRate?: SortOrder
     useFixedExchangeRate?: SortOrder
     tiebreakerRules?: SortOrder
+    poolStatus?: SortOrder
+    poolName?: SortOrder
+    poolPhase?: SortOrder
+    nextPhaseLabel?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -15212,6 +15320,10 @@ export namespace Prisma {
     fixedExchangeRate?: SortOrder
     useFixedExchangeRate?: SortOrder
     tiebreakerRules?: SortOrder
+    poolStatus?: SortOrder
+    poolName?: SortOrder
+    poolPhase?: SortOrder
+    nextPhaseLabel?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -15237,6 +15349,10 @@ export namespace Prisma {
     fixedExchangeRate?: SortOrder
     useFixedExchangeRate?: SortOrder
     tiebreakerRules?: SortOrder
+    poolStatus?: SortOrder
+    poolName?: SortOrder
+    poolPhase?: SortOrder
+    nextPhaseLabel?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
