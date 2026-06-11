@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { FlagIcon } from '@/components/TeamFlag'
-import { ChevronDown, ChevronUp, Eye, EyeOff, Calendar, LayoutGrid, List } from 'lucide-react'
+import { ChevronDown, ChevronUp, Calendar, LayoutGrid, List } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -34,7 +34,6 @@ interface Team {
 
 interface PredEntry {
   participantName: string
-  participationCode: string
   predictedTeam1Goals: number
   predictedTeam2Goals: number
   points: number | null
@@ -177,29 +176,24 @@ function MatchDayCard({ match, now }: { match: DailyMatch; now: Date }) {
           </div>
         </div>
 
-        {/* Toggle */}
+        {/* Toggle — always shown since inscriptions are closed */}
         <div className="mt-3 pt-3 border-t border-slate-100">
-          {isStarted ? (
-            <button
-              onClick={() => setExpanded(v => !v)}
-              className={`w-full flex items-center justify-center gap-2 text-sm font-semibold py-1.5 rounded-lg transition-colors ${
-                isFinished ? 'text-green-700 hover:bg-green-50' : 'text-blue-700 hover:bg-blue-50'
-              }`}
-            >
-              {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-              {expanded ? 'Ocultar pronósticos' : isFinished ? `🏆 Ver puntos (${match.predictions.length})` : `👁 Ver pronósticos (${match.predictions.length})`}
-            </button>
-          ) : (
-            <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400 py-1 select-none">
-              <EyeOff size={12} />
-              Pronósticos visibles al iniciar el partido
-            </div>
-          )}
+          <button
+            onClick={() => setExpanded(v => !v)}
+            className={`w-full flex items-center justify-center gap-2 text-sm font-semibold py-1.5 rounded-lg transition-colors ${
+              isFinished ? 'text-green-700 hover:bg-green-50' : 'text-blue-700 hover:bg-blue-50'
+            }`}
+          >
+            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            {expanded ? 'Ocultar pronósticos' : isFinished
+              ? `🏆 Ver puntos (${match.predictions.length})`
+              : `👁 Ver pronósticos (${match.predictions.length})`}
+          </button>
         </div>
       </div>
 
       {/* Predictions panel */}
-      {expanded && isStarted && (
+      {expanded && (
         <div className="border-t border-slate-100 px-4 pb-4">
           {match.predictions.length === 0 ? (
             <p className="text-center text-slate-400 text-sm py-4">Sin pronósticos verificados</p>
@@ -208,13 +202,10 @@ function MatchDayCard({ match, now }: { match: DailyMatch; now: Date }) {
               {match.predictions.map((p, i) => {
                 const badge = ptsLabel(p.points, p.isExactScore, p.isCorrectResult)
                 return (
-                  <div key={p.participationCode} className={`rounded-xl px-3 py-2 flex items-center justify-between gap-2 ${ptsBadgeClass(p)}`}>
+                  <div key={i} className={`rounded-xl px-3 py-2 flex items-center justify-between gap-2 ${ptsBadgeClass(p)}`}>
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-slate-400 text-xs font-mono w-5 text-right shrink-0">{i + 1}</span>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-slate-800 text-sm truncate">{p.participantName}</p>
-                        <p className="text-xs text-slate-400 font-mono">{p.participationCode}</p>
-                      </div>
+                      <p className="font-semibold text-slate-800 text-sm truncate">{p.participantName}</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <div className="bg-slate-700 text-white text-sm font-bold rounded-lg px-2.5 py-1 tabular-nums">
@@ -231,7 +222,7 @@ function MatchDayCard({ match, now }: { match: DailyMatch; now: Date }) {
           )}
           {!isFinished && (
             <p className="text-xs text-slate-400 text-center mt-2">
-              Los puntos se asignarán cuando el árbitro pite el final.
+              Puntos pendientes hasta que se cargue el resultado final.
             </p>
           )}
         </div>
@@ -263,10 +254,9 @@ function ParticipantGrid({ rows, matches }: { rows: ParticipantGridRow[]; matche
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={row.code} className={`border-b border-slate-50 ${i < 3 ? 'bg-yellow-50/40' : 'hover:bg-slate-50'}`}>
+            <tr key={row.name} className={`border-b border-slate-50 ${i < 3 ? 'bg-yellow-50/40' : 'hover:bg-slate-50'}`}>
               <td className="px-3 py-2.5 sticky left-0 bg-white z-10">
                 <p className="font-semibold text-slate-800 text-sm truncate max-w-[130px]">{row.name}</p>
-                <p className="text-xs text-slate-400 font-mono">{row.code}</p>
               </td>
               {startedMatches.map(m => {
                 const pred = row.preds[m.id]
@@ -300,12 +290,9 @@ function ParticipantGrid({ rows, matches }: { rows: ParticipantGridRow[]; matche
       {/* Mobile cards */}
       <div className="sm:hidden space-y-2">
         {rows.map((row, i) => (
-          <div key={row.code} className={`rounded-xl border p-3 ${i < 3 ? 'border-yellow-200 bg-yellow-50/40' : 'border-slate-100 bg-white'}`}>
+          <div key={row.name} className={`rounded-xl border p-3 ${i < 3 ? 'border-yellow-200 bg-yellow-50/40' : 'border-slate-100 bg-white'}`}>
             <div className="flex items-center justify-between mb-2">
-              <div>
-                <p className="font-semibold text-slate-800 text-sm">{row.name}</p>
-                <p className="text-xs text-slate-400 font-mono">{row.code}</p>
-              </div>
+              <p className="font-semibold text-slate-800 text-sm">{row.name}</p>
               <div className="text-right">
                 <p className="text-xs text-slate-400">Pts hoy</p>
                 <p className={`font-bold text-lg ${row.dayPts > 0 ? 'text-green-600' : 'text-slate-400'}`}>{row.dayPts}</p>
@@ -499,8 +486,8 @@ export default function RankingPage() {
                   <span>🎯 <strong>+3</strong> exacto</span>
                   <span>✅ <strong>+1</strong> correcto</span>
                   <span>❌ <strong>0</strong> incorrecto</span>
-                  {startedMatchCount < dayMatches.length && (
-                    <span className="text-slate-400">· <Eye size={10} className="inline" /> Pronósticos visibles desde que inicia cada partido</span>
+                  {(summary?.pendingMatches ?? 0) + (summary?.inPlayMatches ?? 0) > 0 && (
+                    <span className="text-slate-400">· Puntos pendientes hasta que se cargue el resultado final</span>
                   )}
                 </div>
               )}

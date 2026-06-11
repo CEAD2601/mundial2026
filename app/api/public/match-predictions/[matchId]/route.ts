@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { formatParticipantDisplayName } from '@/lib/formatParticipantName'
 
 export const dynamic = 'force-dynamic'
+
+// Pool statuses where ALL predictions are visible (inscriptions closed)
+const VISIBLE_STATUSES = new Set(['CLOSED', 'IN_PROGRESS', 'WAITING_NEXT_ROUND', 'FINISHED'])
 
 export async function GET(
   _req: NextRequest,
@@ -9,17 +13,21 @@ export async function GET(
 ) {
   const { matchId } = await params
 
-  const match = await prisma.match.findUnique({
-    where: { id: matchId },
-    include: { team1: true, team2: true },
-  })
+  const [match, settings] = await Promise.all([
+    prisma.match.findUnique({ where: { id: matchId }, include: { team1: true, team2: true } }),
+    prisma.setting.findFirst({ select: { poolStatus: true } }),
+  ])
   if (!match) return NextResponse.json({ error: 'Partido no encontrado' }, { status: 404 })
 
-  // Predictions are only visible once the match has kicked off
-  if (new Date() < new Date(match.kickoffUtc)) {
+  const poolStatus = settings?.poolStatus ?? 'OPEN'
+  const inscriptionsClosed = VISIBLE_STATUSES.has(poolStatus)
+  const kickoffPassed = new Date() >= new Date(match.kickoffUtc)
+  const predictionsVisible = inscriptionsClosed || kickoffPassed
+
+  if (!predictionsVisible) {
     return NextResponse.json({
       available: false,
-      message: 'Los pronósticos estarán disponibles cuando comience el partido.',
+      message: 'Los pronósticos estarán disponibles tras el cierre de inscripciones.',
       kickoffUtc: match.kickoffUtc,
     })
   }
@@ -29,21 +37,20 @@ export async function GET(
   const predictions = await prisma.prediction.findMany({
     where: {
       matchId,
-      participant: {
-        payment: { paymentStatus: 'VERIFIED' },
-      },
+      participant: { payment: { paymentStatus: 'VERIFIED' } },
     },
     include: {
-      participant: {
-        select: { fullName: true, participationCode: true },
-      },
+      participant: { select: { fullName: true } },
     },
-    orderBy: isFinished ? [{ points: 'desc' }, { goalDifferenceError: 'asc' }] : [{ createdAt: 'asc' }],
+    orderBy: isFinished
+      ? [{ points: 'desc' }, { goalDifferenceError: 'asc' }]
+      : [{ createdAt: 'asc' }],
   })
 
   return NextResponse.json({
     available: true,
     isFinished,
+    inscriptionsClosed,
     match: {
       id: match.id,
       matchNumber: match.matchNumber,
@@ -57,8 +64,7 @@ export async function GET(
       result: match.result,
     },
     predictions: predictions.map((p) => ({
-      participantName: p.participant.fullName,
-      participationCode: p.participant.participationCode,
+      participantName: formatParticipantDisplayName(p.participant.fullName),
       predictedTeam1Goals: p.predictedTeam1Goals,
       predictedTeam2Goals: p.predictedTeam2Goals,
       points: isFinished ? p.points : null,

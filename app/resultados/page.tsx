@@ -27,7 +27,6 @@ interface Match {
 
 interface PredictionEntry {
   participantName: string
-  participationCode: string
   predictedTeam1Goals: number
   predictedTeam2Goals: number
   points: number | null
@@ -67,9 +66,9 @@ function PredictionsList({ matchId, isStarted }: { matchId: string; isStarted: b
 
   if (!isStarted) {
     return (
-      <div className="mt-3 bg-slate-50 rounded-xl p-4 flex items-center gap-2 text-slate-500 text-sm">
-        <EyeOff size={15} className="shrink-0" />
-        Los pronósticos estar{'á'}n disponibles cuando comience el partido.
+      <div className="mt-3 bg-blue-50 rounded-xl p-4 flex items-center gap-2 text-blue-700 text-sm">
+        <Eye size={15} className="shrink-0" />
+        Las inscripciones cerraron. Cargando pronósticos…
       </div>
     )
   }
@@ -107,7 +106,7 @@ function PredictionsList({ matchId, isStarted }: { matchId: string; isStarted: b
             const badge = pointsBadge(p.points, p.isExactScore, p.isCorrectResult)
             return (
               <div
-                key={p.participationCode}
+                key={`${p.participantName}-${i}`}
                 className={`rounded-xl px-3 py-2.5 flex items-center justify-between gap-2 ${
                   p.isExactScore ? 'bg-green-50 border border-green-200' :
                   p.isCorrectResult ? 'bg-emerald-50 border border-emerald-100' :
@@ -117,10 +116,7 @@ function PredictionsList({ matchId, isStarted }: { matchId: string; isStarted: b
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-slate-400 text-xs font-mono shrink-0 w-5 text-right">{i + 1}</span>
-                  <div className="min-w-0">
-                    <p className="font-semibold text-slate-800 text-sm truncate">{p.participantName}</p>
-                    <p className="text-xs text-slate-400 font-mono">{p.participationCode}</p>
-                  </div>
+                  <p className="font-semibold text-slate-800 text-sm truncate">{p.participantName}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <div className="bg-slate-700 text-white text-sm font-bold rounded-lg px-3 py-1 tabular-nums">
@@ -214,27 +210,21 @@ function MatchCard({ match, now }: { match: Match; now: Date }) {
 
         {/* Toggle predictions */}
         <div className="mt-3 pt-3 border-t border-slate-100">
-          {isStarted ? (
-            <button
-              onClick={() => setExpanded(v => !v)}
-              className={`w-full flex items-center justify-center gap-2 text-sm font-semibold py-1.5 rounded-lg transition-colors ${
-                isFinished ? 'text-green-700 hover:bg-green-50' : 'text-blue-700 hover:bg-blue-50'
-              }`}
-            >
-              {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-              {expanded ? 'Ocultar' : isFinished ? '🏆 Ver puntos obtenidos' : '👁 Ver pronósticos del partido'}
-            </button>
-          ) : (
-            <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400 py-1 select-none">
-              <EyeOff size={12} /> Pronósticos disponibles al iniciar
-            </div>
-          )}
+          <button
+            onClick={() => setExpanded(v => !v)}
+            className={`w-full flex items-center justify-center gap-2 text-sm font-semibold py-1.5 rounded-lg transition-colors ${
+              isFinished ? 'text-green-700 hover:bg-green-50' : 'text-blue-700 hover:bg-blue-50'
+            }`}
+          >
+            {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+            {expanded ? 'Ocultar' : isFinished ? '🏆 Ver puntos obtenidos' : '👁 Ver pronósticos'}
+          </button>
         </div>
       </div>
 
-      {expanded && isStarted && (
+      {expanded && (
         <div className="px-4 pb-4 border-t border-slate-100">
-          <PredictionsList matchId={match.id} isStarted={isStarted} />
+          <PredictionsList matchId={match.id} isStarted={true} />
         </div>
       )}
     </div>
@@ -335,7 +325,7 @@ export default function ResultadosPage() {
           <span>🎯 <strong>+3</strong> marcador exacto</span>
           <span>✅ <strong>+1</strong> resultado correcto</span>
           <span>❌ <strong>0</strong> incorrecto</span>
-          <span className="text-slate-400">· Pronósticos visibles desde que empieza cada partido</span>
+          <span className="text-slate-400">· Puntos pendientes hasta que se cargue el resultado final</span>
         </div>
 
         {/* Match list */}

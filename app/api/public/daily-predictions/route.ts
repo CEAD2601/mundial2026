@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { formatParticipantDisplayName } from '@/lib/formatParticipantName'
 
 export const dynamic = 'force-dynamic'
+
+const VISIBLE_STATUSES = new Set(['CLOSED', 'IN_PROGRESS', 'WAITING_NEXT_ROUND', 'FINISHED'])
 
 // Venezuela = UTC-4, no DST — stable offset
 function toVetDateStr(date: Date): string {
@@ -19,10 +22,13 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const requestedDate = searchParams.get('date') ?? toVetDateStr(new Date())
 
-  const allMatches = await prisma.match.findMany({
-    include: { team1: true, team2: true },
-    orderBy: { kickoffUtc: 'asc' },
-  })
+  const [allMatches, settings] = await Promise.all([
+    prisma.match.findMany({ include: { team1: true, team2: true }, orderBy: { kickoffUtc: 'asc' } }),
+    prisma.setting.findFirst({ select: { poolStatus: true } }),
+  ])
+
+  const poolStatus = settings?.poolStatus ?? 'OPEN'
+  const inscriptionsClosed = VISIBLE_STATUSES.has(poolStatus)
 
   // Group by VET date for the date selector
   const dateGroups: Record<string, typeof allMatches> = {}
@@ -58,7 +64,9 @@ export async function GET(req: NextRequest) {
   // Build match objects with predictions
   const matchesOut = dayMatches.map((m) => {
     const kickoff = new Date(m.kickoffUtc)
-    const isStarted = now >= kickoff
+    const kickoffPassed = now >= kickoff
+    // Show predictions if inscriptions closed OR kickoff already happened
+    const predictionsAvailable = inscriptionsClosed || kickoffPassed
     const isFinished = m.status === 'FINISHED'
     const mp = predByMatch[m.id] ?? []
 
@@ -77,10 +85,9 @@ export async function GET(req: NextRequest) {
       team2Goals: m.team2Goals,
       team1: { displayName: m.team1.displayName, flagEmoji: m.team1.flagEmoji, shortName: m.team1.shortName, isoCode: m.team1.isoCode },
       team2: { displayName: m.team2.displayName, flagEmoji: m.team2.flagEmoji, shortName: m.team2.shortName, isoCode: m.team2.isoCode },
-      predictionsAvailable: isStarted,
-      predictions: isStarted ? sorted.map((p) => ({
-        participantName: p.participant.fullName,
-        participationCode: p.participant.participationCode,
+      predictionsAvailable,
+      predictions: predictionsAvailable ? sorted.map((p) => ({
+        participantName: formatParticipantDisplayName(p.participant.fullName),
         predictedTeam1Goals: p.predictedTeam1Goals,
         predictedTeam2Goals: p.predictedTeam2Goals,
         points: isFinished ? p.points : null,
@@ -107,15 +114,15 @@ export async function GET(req: NextRequest) {
   }
   const dayLeaders = Object.values(dayPts).sort((a, b) => b.pts - a.pts || b.exactCount - a.exactCount)
 
-  // Cross-reference grid: participants × matches (only started matches)
+  // Cross-reference grid: participants × matches (only where predictions visible)
   const startedMatchIds = matchesOut.filter((m) => m.predictionsAvailable).map((m) => m.id)
-  const gridMap: Record<string, { name: string; code: string; preds: Record<string, { g1: number; g2: number; pts: number | null; exact: boolean | null; correct: boolean | null }>; dayPts: number }> = {}
+  const gridMap: Record<string, { name: string; preds: Record<string, { g1: number; g2: number; pts: number | null; exact: boolean | null; correct: boolean | null }>; dayPts: number }> = {}
 
   for (const match of matchesOut) {
     if (!match.predictionsAvailable) continue
     for (const p of match.predictions) {
-      const k = p.participationCode
-      if (!gridMap[k]) gridMap[k] = { name: p.participantName, code: k, preds: {}, dayPts: 0 }
+      const k = p.participantName // already formatted, use as key
+      if (!gridMap[k]) gridMap[k] = { name: p.participantName, preds: {}, dayPts: 0 }
       gridMap[k].preds[match.id] = {
         g1: p.predictedTeam1Goals,
         g2: p.predictedTeam2Goals,
@@ -141,6 +148,7 @@ export async function GET(req: NextRequest) {
       pendingMatches: pending.length,
       leaderOfDay: dayLeaders[0] ?? null,
     },
-    participantGrid,
+    participantGrid: participantGrid.map(({ name, preds, dayPts }) => ({ name, preds, dayPts })),
+    inscriptionsClosed,
   })
 }
