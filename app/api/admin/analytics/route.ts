@@ -10,6 +10,13 @@ export async function GET() {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
+  // If the table doesn't exist yet, return 500 so the frontend can show the migration prompt
+  try {
+    await prisma.analyticsEvent.count()
+  } catch {
+    return NextResponse.json({ error: 'table_missing' }, { status: 500 })
+  }
+
   const now = new Date()
   const todayStart = new Date(now)
   todayStart.setHours(0, 0, 0, 0)

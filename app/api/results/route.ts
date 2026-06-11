@@ -111,8 +111,22 @@ async function recalculateParticipantStats(participantId: string) {
 
 async function updateRankingPositions() {
   const snapshots = await prisma.rankingSnapshot.findMany({
+    include: { participant: { select: { createdAt: true, id: true } } },
     orderBy: [{ totalPoints: 'desc' }, { exactScores: 'desc' }, { correctResults: 'desc' }, { totalGoalDiffError: 'asc' }],
   })
+
+  // Final tiebreaker: registration date (oldest first), then stable id
+  snapshots.sort((a, b) => {
+    if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints
+    if (b.exactScores !== a.exactScores) return b.exactScores - a.exactScores
+    if (b.correctResults !== a.correctResults) return b.correctResults - a.correctResults
+    if (a.totalGoalDiffError !== b.totalGoalDiffError) return a.totalGoalDiffError - b.totalGoalDiffError
+    const dateA = a.participant.createdAt.getTime()
+    const dateB = b.participant.createdAt.getTime()
+    if (dateA !== dateB) return dateA - dateB
+    return a.participant.id < b.participant.id ? -1 : 1
+  })
+
   for (let i = 0; i < snapshots.length; i++) {
     const newPos = i + 1
     await prisma.rankingSnapshot.update({

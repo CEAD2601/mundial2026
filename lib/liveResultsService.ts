@@ -162,7 +162,16 @@ async function fetchFromEspn(candidates: CandidateMatch[]): Promise<DetectedResu
       const event = rawEvent as Record<string, unknown>
       const comp = ((event.competitions as unknown[])?.[0] ?? {}) as Record<string, unknown>
       const status = (comp.status as Record<string, unknown>)?.type as Record<string, unknown> | undefined
-      if (!status?.completed) continue // only finished
+
+      // Require the match to be explicitly completed AND in post-game state.
+      // "completed: true" alone is not enough — also require state === 'post'
+      // AND the status name must indicate a final result (not halftime, etc.)
+      const isCompleted = status?.completed === true
+      const isPostState = (status?.state as string | undefined) === 'post'
+      const statusName = String(status?.name ?? '').toUpperCase()
+      const isFinalStatus = ['STATUS_FINAL', 'STATUS_FULL_TIME', 'STATUS_FT'].some(s => statusName.includes(s.replace('STATUS_', '')))
+        || statusName.includes('FINAL')
+      if (!isCompleted || !isPostState) continue // only confirmed finished matches
 
       const competitors = (comp.competitors as EspnCompetitor[]) ?? []
       const resolved = resolveMatch(competitors, candidates)
@@ -405,8 +414,11 @@ async function recalculateParticipantRanking(participantId: string) {
  * and updates the database or queues for admin review.
  */
 export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
+  const liveEnabled = ['true', '1', 'yes', 'on'].includes(
+    String(process.env.LIVE_RESULTS_ENABLED ?? '').toLowerCase().trim()
+  )
   const summary: CronRunSummary = {
-    enabled: process.env.LIVE_RESULTS_ENABLED === 'true',
+    enabled: liveEnabled,
     matchesChecked: 0,
     resultsDetected: 0,
     resultsAutoApplied: 0,
@@ -431,10 +443,14 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
     const now = new Date()
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
 
+    // Only check matches that kicked off at least 115 minutes ago
+    // (90 min play + ~25 min buffer for extra time/stoppage)
+    const minFinishTime = new Date(now.getTime() - 115 * 60 * 1000)
+
     const candidateMatches = await prisma.match.findMany({
       where: {
         status: { in: ['SCHEDULED', 'IN_PROGRESS'] },
-        kickoffUtc: { gte: oneDayAgo },
+        kickoffUtc: { gte: oneDayAgo, lte: minFinishTime },
       },
       include: { team1: true, team2: true },
     })
@@ -469,7 +485,9 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
     const aggregated = aggregateResults(allDetected)
     summary.resultsDetected = aggregated.length
 
-    const autoApply = process.env.LIVE_RESULTS_AUTO_APPLY === 'true'
+    const autoApply = ['true', '1', 'yes', 'on'].includes(
+      String(process.env.LIVE_RESULTS_AUTO_APPLY ?? '').toLowerCase().trim()
+    )
 
     for (const detected of aggregated) {
       const match = candidateMatches.find((m) => m.matchNumber === detected.matchNumber)

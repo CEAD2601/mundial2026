@@ -28,7 +28,10 @@ export async function GET(req: NextRequest) {
   ])
 
   const poolStatus = settings?.poolStatus ?? 'OPEN'
-  const inscriptionsClosed = VISIBLE_STATUSES.has(poolStatus)
+  const now = new Date()
+  // Show all predictions if pool status says closed, OR registration deadline has passed
+  const REGISTRATION_DEADLINE = new Date('2026-06-11T19:00:00.000Z')
+  const inscriptionsClosed = VISIBLE_STATUSES.has(poolStatus) || now >= REGISTRATION_DEADLINE
 
   // Group by VET date for the date selector
   const dateGroups: Record<string, typeof allMatches> = {}
@@ -40,7 +43,6 @@ export async function GET(req: NextRequest) {
   const availableDates = Object.keys(dateGroups).sort()
 
   const dayMatches = dateGroups[requestedDate] ?? []
-  const now = new Date()
   const matchIds = dayMatches.map((m) => m.id)
 
   const predictions = matchIds.length > 0
@@ -103,11 +105,11 @@ export async function GET(req: NextRequest) {
   const pending = dayMatches.filter((m) => new Date(m.kickoffUtc) > now)
 
   // Points per participant for today's finished matches
-  const dayPts: Record<string, { name: string; code: string; pts: number; exactCount: number }> = {}
+  const dayPts: Record<string, { name: string; pts: number; exactCount: number }> = {}
   for (const m of finished) {
     for (const p of (predByMatch[m.id] ?? [])) {
-      const k = p.participant.participationCode
-      if (!dayPts[k]) dayPts[k] = { name: p.participant.fullName, code: k, pts: 0, exactCount: 0 }
+      const k = p.participant.fullName
+      if (!dayPts[k]) dayPts[k] = { name: formatParticipantDisplayName(p.participant.fullName), pts: 0, exactCount: 0 }
       dayPts[k].pts += p.points
       if (p.isExactScore) dayPts[k].exactCount += 1
     }

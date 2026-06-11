@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const search = searchParams.get('search') ?? ''
   const page = parseInt(searchParams.get('page') ?? '1')
-  const limit = 20
+  const limit = Math.min(parseInt(searchParams.get('limit') ?? '20'), 500)
   const skip = (page - 1) * limit
 
   const where: Prisma.ParticipantWhereInput = search

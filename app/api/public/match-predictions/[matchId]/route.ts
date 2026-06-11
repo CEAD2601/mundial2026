@@ -20,7 +20,8 @@ export async function GET(
   if (!match) return NextResponse.json({ error: 'Partido no encontrado' }, { status: 404 })
 
   const poolStatus = settings?.poolStatus ?? 'OPEN'
-  const inscriptionsClosed = VISIBLE_STATUSES.has(poolStatus)
+  const REGISTRATION_DEADLINE = new Date('2026-06-11T19:00:00.000Z')
+  const inscriptionsClosed = VISIBLE_STATUSES.has(poolStatus) || new Date() >= REGISTRATION_DEADLINE
   const kickoffPassed = new Date() >= new Date(match.kickoffUtc)
   const predictionsVisible = inscriptionsClosed || kickoffPassed
 

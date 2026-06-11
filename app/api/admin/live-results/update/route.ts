@@ -17,7 +17,10 @@ export async function POST() {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
-  if (process.env.LIVE_RESULTS_ENABLED !== 'true') {
+  const liveEnabled = ['true', '1', 'yes', 'on'].includes(
+    String(process.env.LIVE_RESULTS_ENABLED ?? '').toLowerCase().trim()
+  )
+  if (!liveEnabled) {
     return NextResponse.json(
       { error: 'La automatización está desactivada. Configura LIVE_RESULTS_ENABLED=true en Vercel.' },
       { status: 503 }

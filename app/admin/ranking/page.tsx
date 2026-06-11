@@ -4,8 +4,14 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
 interface RankingEntry {
-  currentPosition: number
+  position: number
   previousPosition: number | null
+  movement: number
+  participantId: string
+  participationCode: string
+  fullName: string
+  displayName: string
+  city: string | null
   totalPoints: number
   exactScores: number
   correctResults: number
@@ -14,13 +20,7 @@ interface RankingEntry {
   playedMatches: number
   effectivenessPercent: number
   totalGoalDiffError: number
-  updatedAt: string
-  participant: {
-    id: string
-    fullName: string
-    participationCode: string
-    payment: { paymentStatus: string } | null
-  }
+  paymentStatus: string
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -29,7 +29,12 @@ const STATUS_COLORS: Record<string, string> = {
   VERIFIED: 'bg-green-100 text-green-700',
   REJECTED: 'bg-red-100 text-red-700',
 }
-const STATUS_LABELS: Record<string, string> = { PENDING: 'Sin pago', IN_REVIEW: 'En revisión', VERIFIED: 'Verificado', REJECTED: 'Rechazado' }
+const STATUS_LABELS: Record<string, string> = {
+  PENDING: 'Sin pago',
+  IN_REVIEW: 'En revisión',
+  VERIFIED: 'Verificado',
+  REJECTED: 'Rechazado',
+}
 
 export default function RankingAdminPage() {
   const [ranking, setRanking] = useState<RankingEntry[]>([])
@@ -42,10 +47,14 @@ export default function RankingAdminPage() {
 
   const loadRanking = async () => {
     setLoading(true)
-    const res = await fetch('/api/ranking?admin=true')
-    if (res.ok) {
-      const data = await res.json()
-      setRanking(data.ranking ?? [])
+    try {
+      const res = await fetch('/api/ranking?admin=true')
+      if (res.ok) {
+        const data = await res.json()
+        setRanking(data.ranking ?? [])
+      }
+    } catch {
+      // silently fail — table will show empty state
     }
     setLoading(false)
   }
@@ -57,20 +66,32 @@ export default function RankingAdminPage() {
     setRecalculating(false)
   }
 
+  const filtered = ranking.filter((r) => {
+    if (filterVerified && r.paymentStatus !== 'VERIFIED') return false
+    if (search) {
+      const q = search.toLowerCase()
+      return (
+        (r.fullName ?? '').toLowerCase().includes(q) ||
+        (r.participationCode ?? '').toLowerCase().includes(q)
+      )
+    }
+    return true
+  })
+
   const exportCsv = () => {
     const header = 'Pos,Nombre,Código,Pago,Pts,Exactos,Acertados,Fallos,Pendientes,Partidos,Efectividad%'
     const rows = filtered.map((r) => [
-      r.currentPosition,
-      `"${r.participant.fullName}"`,
-      r.participant.participationCode,
-      r.participant.payment?.paymentStatus ?? 'PENDING',
+      r.position,
+      `"${r.fullName}"`,
+      r.participationCode,
+      r.paymentStatus,
       r.totalPoints,
       r.exactScores,
       r.correctResults,
       r.wrongPredictions,
       r.pendingPredictions,
       r.playedMatches,
-      r.effectivenessPercent.toFixed(1),
+      (r.effectivenessPercent ?? 0).toFixed(1),
     ].join(','))
     const csv = [header, ...rows].join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
@@ -79,21 +100,10 @@ export default function RankingAdminPage() {
     URL.revokeObjectURL(url)
   }
 
-  const filtered = ranking
-    .filter((r) => {
-      if (filterVerified && r.participant.payment?.paymentStatus !== 'VERIFIED') return false
-      if (search) {
-        const q = search.toLowerCase()
-        return r.participant.fullName.toLowerCase().includes(q) || r.participant.participationCode.toLowerCase().includes(q)
-      }
-      return true
-    })
-
-  const posChange = (cur: number, prev: number | null) => {
+  const posChange = (movement: number, prev: number | null) => {
     if (prev === null) return null
-    const diff = prev - cur
-    if (diff > 0) return { label: `↑${diff}`, cls: 'text-green-600' }
-    if (diff < 0) return { label: `↓${Math.abs(diff)}`, cls: 'text-red-500' }
+    if (movement > 0) return { label: `↑${movement}`, cls: 'text-green-600' }
+    if (movement < 0) return { label: `↓${Math.abs(movement)}`, cls: 'text-red-500' }
     return { label: '—', cls: 'text-slate-300' }
   }
 
@@ -123,7 +133,7 @@ export default function RankingAdminPage() {
         <div className="flex gap-3 flex-wrap items-center">
           <input
             type="text"
-            placeholder="Buscar participante..."
+            placeholder="Buscar participante o código..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="flex-1 min-w-40 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -146,7 +156,10 @@ export default function RankingAdminPage() {
           <div className="p-8 text-center text-slate-400">Cargando...</div>
         ) : filtered.length === 0 ? (
           <div className="p-8 text-center text-slate-400">
-            No hay datos de ranking aún. Carga resultados y recalcula.
+            <p>No hay datos de ranking aún.</p>
+            <button onClick={recalculate} className="mt-3 bg-blue-600 text-white text-sm px-4 py-2 rounded-lg">
+              Recalcular ranking
+            </button>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -157,44 +170,50 @@ export default function RankingAdminPage() {
                   <th className="text-left px-4 py-3 text-slate-500 font-medium">Participante</th>
                   <th className="text-left px-3 py-3 text-slate-500 font-medium">Pago</th>
                   <th className="text-center px-3 py-3 text-slate-500 font-medium">Pts</th>
-                  <th className="text-center px-3 py-3 text-slate-500 font-medium">★ Exactos</th>
-                  <th className="text-center px-3 py-3 text-slate-500 font-medium">✓ Acertados</th>
-                  <th className="text-center px-3 py-3 text-slate-500 font-medium">✗ Fallos</th>
+                  <th className="text-center px-3 py-3 text-slate-500 font-medium">🎯 Exactos</th>
+                  <th className="text-center px-3 py-3 text-slate-500 font-medium">✅ Acert.</th>
+                  <th className="text-center px-3 py-3 text-slate-500 font-medium">❌ Fallos</th>
                   <th className="text-center px-3 py-3 text-slate-500 font-medium">Efectividad</th>
-                  <th className="text-center px-3 py-3 text-slate-500 font-medium">Cambio</th>
-                  <th className="text-left px-3 py-3 text-slate-500 font-medium">Acciones</th>
+                  <th className="text-center px-3 py-3 text-slate-500 font-medium">Δ</th>
+                  <th className="text-left px-3 py-3 text-slate-500 font-medium">Ver</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((r, i) => {
-                  const change = posChange(r.currentPosition, r.previousPosition)
-                  const payStatus = r.participant.payment?.paymentStatus ?? 'PENDING'
+                  const change = posChange(r.movement, r.previousPosition)
                   return (
-                    <tr key={r.participant.id} className={`border-b border-slate-50 hover:bg-slate-50 ${i === 0 ? 'bg-yellow-50/50' : ''}`}>
+                    <tr key={r.participantId} className={`border-b border-slate-50 hover:bg-slate-50 ${i === 0 ? 'bg-yellow-50/50' : ''}`}>
                       <td className="px-3 py-3 text-center">
                         <span className={`font-extrabold text-lg ${i === 0 ? 'text-yellow-500' : i === 1 ? 'text-slate-400' : i === 2 ? 'text-amber-600' : 'text-slate-600'}`}>
-                          {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : r.currentPosition}
+                          {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : r.position}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="font-medium text-slate-800">{r.participant.fullName}</div>
-                        <div className="text-xs text-slate-400 font-mono">{r.participant.participationCode}</div>
+                        <div className="font-medium text-slate-800">{r.fullName}</div>
+                        <div className="text-xs text-slate-400 font-mono">{r.participationCode}</div>
+                        {r.city && <div className="text-xs text-slate-300">{r.city}</div>}
                       </td>
                       <td className="px-3 py-3">
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLORS[payStatus]}`}>
-                          {STATUS_LABELS[payStatus]}
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLORS[r.paymentStatus] ?? STATUS_COLORS.PENDING}`}>
+                          {STATUS_LABELS[r.paymentStatus] ?? 'Sin pago'}
                         </span>
                       </td>
                       <td className="px-3 py-3 text-center font-extrabold text-green-700 text-base">{r.totalPoints}</td>
                       <td className="px-3 py-3 text-center text-yellow-600 font-semibold">{r.exactScores}</td>
                       <td className="px-3 py-3 text-center text-green-600">{r.correctResults}</td>
                       <td className="px-3 py-3 text-center text-red-500">{r.wrongPredictions}</td>
-                      <td className="px-3 py-3 text-center text-slate-600">{r.effectivenessPercent.toFixed(1)}%</td>
+                      <td className="px-3 py-3 text-center text-slate-600">{(r.effectivenessPercent ?? 0).toFixed(1)}%</td>
                       <td className="px-3 py-3 text-center text-xs font-semibold">
-                        {change ? <span className={change.cls}>{change.label}</span> : <span className="text-slate-300">—</span>}
+                        {change
+                          ? <span className={change.cls}>{change.label}</span>
+                          : <span className="text-slate-300">—</span>}
                       </td>
                       <td className="px-3 py-3">
-                        <Link href={`/mi-quiniela/${r.participant.participationCode}`} target="_blank" className="text-xs text-blue-600 hover:underline">
+                        <Link
+                          href={`/mi-quiniela/${r.participationCode}`}
+                          target="_blank"
+                          className="text-xs text-blue-600 hover:underline"
+                        >
                           Ver →
                         </Link>
                       </td>

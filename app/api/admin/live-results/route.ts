@@ -9,6 +9,10 @@ import { prisma } from '@/lib/prisma'
 import { confirmAutoResult, rejectAutoResult, applyResultToDb } from '@/lib/liveResultsService'
 import { z } from 'zod'
 
+function parseBoolean(value: string | undefined): boolean {
+  return ['true', '1', 'yes', 'on'].includes(String(value ?? '').toLowerCase().trim())
+}
+
 export async function GET() {
   const [pendingMatches, recentLogs] = await Promise.all([
     prisma.match.findMany({
@@ -22,9 +26,9 @@ export async function GET() {
     }),
   ])
 
-  const isEnabled = process.env.LIVE_RESULTS_ENABLED === 'true'
-  const source = process.env.LIVE_RESULTS_SOURCE ?? 'public_web'
-  const autoApply = process.env.LIVE_RESULTS_AUTO_APPLY === 'true'
+  const isEnabled = parseBoolean(process.env.LIVE_RESULTS_ENABLED)
+  const source = process.env.LIVE_RESULTS_SOURCE?.trim() || 'public_web'
+  const autoApply = parseBoolean(process.env.LIVE_RESULTS_AUTO_APPLY)
 
   const lastCronRun = recentLogs.find((l) => l.type === 'CRON_RUN')
   const recentErrors = recentLogs.filter((l) => l.type === 'ERROR').slice(0, 5)

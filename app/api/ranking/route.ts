@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { formatParticipantDisplayName } from '@/lib/formatParticipantName'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -12,13 +13,27 @@ export async function GET(req: NextRequest) {
         include: { payment: true },
       },
     },
-    // Tiebreakers: 1) total points, 2) exact scores, 3) correct results, 4) least goal diff error
+    // Primary sort: sports criteria. Secondary tiebreaker (createdAt) applied in JS below.
     orderBy: [
       { totalPoints: 'desc' },
       { exactScores: 'desc' },
       { correctResults: 'desc' },
       { totalGoalDiffError: 'asc' },
     ],
+  })
+
+  // Final tiebreaker: registration date (oldest first), then id (stable)
+  snapshots.sort((a, b) => {
+    if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints
+    if (b.exactScores !== a.exactScores) return b.exactScores - a.exactScores
+    if (b.correctResults !== a.correctResults) return b.correctResults - a.correctResults
+    if (a.totalGoalDiffError !== b.totalGoalDiffError) return a.totalGoalDiffError - b.totalGoalDiffError
+    // Sports tie: oldest registration wins
+    const dateA = a.participant.createdAt.getTime()
+    const dateB = b.participant.createdAt.getTime()
+    if (dateA !== dateB) return dateA - dateB
+    // Last resort: id string comparison (stable)
+    return a.participant.id < b.participant.id ? -1 : 1
   })
 
   // Admin sees all; public respects showOnlyPaidParticipants setting
@@ -28,28 +43,23 @@ export async function GET(req: NextRequest) {
       : snapshots
 
   const result = filtered.map((s, i) => ({
-    currentPosition: i + 1,
+    position: i + 1,
     previousPosition: s.previousPosition,
     movement: s.previousPosition ? s.previousPosition - (i + 1) : 0,
     participantId: s.participantId,
+    participationCode: s.participant.participationCode,
     fullName: s.participant.fullName,
+    displayName: formatParticipantDisplayName(s.participant.fullName),
     city: s.participant.city,
     totalPoints: s.totalPoints,
     exactScores: s.exactScores,
     correctResults: s.correctResults,
-    wrongPredictions: s.wrongPredictions,
+    wrongPredictions: s.wrongPredictions ?? 0,
     pendingPredictions: s.pendingPredictions,
     playedMatches: s.playedMatches,
-    totalGoalDiffError: s.totalGoalDiffError,
-    effectivenessPercent: s.effectivenessPercent,
-    updatedAt: s.updatedAt,
-    paymentStatus: s.participant.payment?.paymentStatus,
-    participant: {
-      id: s.participant.id,
-      fullName: s.participant.fullName,
-      participationCode: s.participant.participationCode,
-      payment: s.participant.payment,
-    },
+    totalGoalDiffError: s.totalGoalDiffError ?? 0,
+    effectivenessPercent: s.effectivenessPercent ?? 0,
+    paymentStatus: s.participant.payment?.paymentStatus ?? 'PENDING',
   }))
 
   return NextResponse.json({ ranking: result })
