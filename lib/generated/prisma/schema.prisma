@@ -36,7 +36,7 @@ model Setting {
   poolStatus     String @default("OPEN")
   poolName       String @default("Quiniela Mundial 2026 - Fase de Grupos")
   poolPhase      String @default("GROUP_STAGE")
-  nextPhaseLabel String @default("Eliminación Directa")
+  nextPhaseLabel String @default("Octavos · Cuartos · Semifinales · Final")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -225,4 +225,25 @@ model AuditLog {
   oldValue   String?
   newValue   String?
   createdAt  DateTime @default(now())
+}
+
+model AnalyticsEvent {
+  id            String   @id @default(cuid())
+  eventType     String // PAGE_VIEW | RANKING_VIEW | MY_QUINIELA_VIEW | MATCH_PREDICTIONS_OPENED | RESULTS_VIEW | PARTICIPANT_LOOKUP | ADMIN_LOGIN | WHATSAPP_SHARE_CLICK | BACKUP_DOWNLOADED
+  path          String
+  visitorId     String? // anonymous browser-generated UUID
+  participantId String?
+  matchId       String?
+  country       String?
+  region        String?
+  city          String?
+  deviceType    String? // Mobile | Tablet | Desktop
+  browser       String? // Chrome | Safari | Firefox | Edge | Otro
+  ipHash        String? // SHA-256 of IP, truncated to 16 hex chars
+  metadata      String? // JSON blob for extra context
+  createdAt     DateTime @default(now())
+
+  @@index([eventType])
+  @@index([createdAt])
+  @@index([visitorId])
 }
