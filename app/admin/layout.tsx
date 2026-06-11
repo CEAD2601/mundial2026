@@ -18,6 +18,7 @@ const NAV = [
   { href: '/admin/pools',         icon: '\u{1F3B1}', label: 'Quiniela' },
   { href: '/admin/backups',       icon: '\u{1F4BE}', label: 'Backups' },
   { href: '/admin/configuracion', icon: '\u{2699}\u{FE0F}', label: 'Configuración' },
+  { href: '/admin/analytics',     icon: '\u{1F4CA}', label: 'Analíticas' },
 ]
 
 function NavLinks({ onSelect }: { onSelect?: () => void }) {
@@ -77,9 +78,20 @@ function LogoutButton({ onLogout }: { onLogout?: () => void }) {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [authChecked, setAuthChecked] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
 
-  // Close drawer whenever route changes
+  // Check admin session on mount and on every route change
+  useEffect(() => {
+    // /admin/login doesn't need auth
+    if (pathname === '/admin/login') { setAuthChecked(true); return }
+    fetch('/api/admin/auth/check')
+      .then(r => { if (!r.ok) router.replace('/admin/login') })
+      .catch(() => router.replace('/admin/login'))
+      .finally(() => setAuthChecked(true))
+  }, [pathname, router])
+
   useEffect(() => { setDrawerOpen(false) }, [pathname])
 
   // Prevent body scroll while drawer is open
@@ -87,6 +99,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     document.body.style.overflow = drawerOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [drawerOpen])
+
+  // Don't render admin chrome until auth is verified (prevents flash)
+  if (!authChecked) {
+    return <div className="min-h-screen bg-slate-900 flex items-center justify-center"><span className="text-slate-400 text-sm">Verificando acceso...</span></div>
+  }
 
   return (
     <div className="min-h-screen bg-slate-100">

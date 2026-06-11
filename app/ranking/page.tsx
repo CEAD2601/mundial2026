@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { track } from '@/lib/analytics'
 import { FlagIcon } from '@/components/TeamFlag'
 import { ChevronDown, ChevronUp, Calendar, LayoutGrid, List } from 'lucide-react'
 
@@ -13,6 +14,7 @@ interface RankingEntry {
   movement: number
   participantId: string
   fullName: string
+  displayName: string  // formatted: first name + first surname
   city: string | null
   totalPoints: number
   exactScores: number
@@ -61,12 +63,11 @@ interface DaySummary {
   finishedMatches: number
   inPlayMatches: number
   pendingMatches: number
-  leaderOfDay: { name: string; code: string; pts: number; exactCount: number } | null
+  leaderOfDay: { name: string; pts: number; exactCount: number } | null
 }
 
 interface ParticipantGridRow {
   name: string
-  code: string
   preds: Record<string, { g1: number; g2: number; pts: number | null; exact: boolean | null; correct: boolean | null }>
   dayPts: number
 }
@@ -179,7 +180,7 @@ function MatchDayCard({ match, now }: { match: DailyMatch; now: Date }) {
         {/* Toggle — always shown since inscriptions are closed */}
         <div className="mt-3 pt-3 border-t border-slate-100">
           <button
-            onClick={() => setExpanded(v => !v)}
+            onClick={() => { if (!expanded) track('MATCH_PREDICTIONS_OPENED', '/ranking', { matchId: match.matchId }); setExpanded(v => !v) }}
             className={`w-full flex items-center justify-center gap-2 text-sm font-semibold py-1.5 rounded-lg transition-colors ${
               isFinished ? 'text-green-700 hover:bg-green-50' : 'text-blue-700 hover:bg-blue-50'
             }`}
@@ -347,6 +348,7 @@ export default function RankingPage() {
 
   // Initial load
   useEffect(() => {
+    track('RANKING_VIEW', '/ranking')
     // Ranking
     fetch('/api/ranking')
       .then(r => r.json())
@@ -451,7 +453,7 @@ export default function RankingPage() {
                     )}
                     {summary.leaderOfDay && summary.finishedMatches > 0 && (
                       <span className="text-yellow-700 font-medium">
-                        🌟 Líder del día: <span className="font-bold">{summary.leaderOfDay.name.split(' ')[0]}</span> ({summary.leaderOfDay.pts} pts)
+                        🌟 Líder del día: <span className="font-bold">{summary.leaderOfDay.name}</span> ({summary.leaderOfDay.pts} pts)
                       </span>
                     )}
                   </div>
@@ -542,7 +544,7 @@ export default function RankingPage() {
                         <div key={entry.participantId} className="flex flex-col items-center">
                           <div className="text-2xl mb-1">{podiumMedals[i]}</div>
                           <div className="text-center mb-2">
-                            <p className="font-bold text-slate-800 text-sm leading-tight">{entry.fullName.split(' ')[0]}</p>
+                            <p className="font-bold text-slate-800 text-sm leading-tight">{entry.displayName}</p>
                             <p className="text-xs text-slate-500">{entry.totalPoints} pts</p>
                             <p className="text-xs text-green-600">🎯 {entry.exactScores}</p>
                           </div>
@@ -586,11 +588,9 @@ export default function RankingPage() {
                       <span className="font-bold text-slate-700 text-sm">
                         {entry.position <= 3 ? ['🥇','🥈','🥉'][entry.position - 1] : entry.position}
                       </span>
-                      <div className="mt-0.5"><MovementIcon movement={entry.movement} /></div>
                     </div>
                     <div className="col-span-4">
-                      <p className="font-semibold text-slate-800 text-sm leading-tight">{entry.fullName}</p>
-                      {entry.city && <p className="text-xs text-slate-400">{entry.city}</p>}
+                      <p className="font-semibold text-slate-800 text-sm leading-tight">{entry.displayName}</p>
                     </div>
                     <div className="col-span-2 text-center">
                       <span className="font-bold text-green-600 text-base">{entry.totalPoints}</span>

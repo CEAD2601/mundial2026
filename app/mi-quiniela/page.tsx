@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { track } from '@/lib/analytics'
 
 export default function MiQuinielaSearchPage() {
   const router = useRouter()
@@ -54,6 +55,7 @@ export default function MiQuinielaSearchPage() {
       }
 
       if (participationCode) {
+        track('PARTICIPANT_LOOKUP', '/mi-quiniela')
         router.push(`/mi-quiniela/${participationCode}`)
       } else {
         setError('No encontramos una quiniela con esos datos. Verifica la información o crea una nueva participación.')
@@ -126,11 +128,16 @@ export default function MiQuinielaSearchPage() {
               </button>
             </form>
 
-            <div className="mt-6 pt-5 border-t border-slate-100 text-center">
+            <div className="mt-6 pt-5 border-t border-slate-100 text-center space-y-3">
               <p className="text-sm text-slate-500">
                 ¿Aún no tienes quiniela?{' '}
                 <Link href="/registro" className="text-green-600 font-semibold hover:underline">
                   Crear una ahora
+                </Link>
+              </p>
+              <p className="text-xs text-slate-300">
+                <Link href="/admin/login" className="hover:text-slate-400 transition-colors">
+                  Administrador
                 </Link>
               </p>
             </div>

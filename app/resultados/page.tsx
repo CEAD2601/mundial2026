@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { track } from '@/lib/analytics'
 import { FlagIcon } from '@/components/TeamFlag'
 import { ChevronDown, ChevronUp, Eye, EyeOff, Clock } from 'lucide-react'
 
@@ -239,6 +240,7 @@ export default function ResultadosPage() {
   const [now, setNow] = useState(() => new Date())
 
   useEffect(() => {
+    track('RESULTS_VIEW', '/resultados')
     fetch('/api/results')
       .then(r => r.json())
       .then(data => setMatches(data.matches ?? []))
