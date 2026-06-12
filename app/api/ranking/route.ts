@@ -46,7 +46,10 @@ export async function GET(req: NextRequest) {
   const result = filtered.map((s, i) => ({
     position: i + 1,
     previousPosition: s.previousPosition,
-    movement: s.previousPosition ? s.previousPosition - (i + 1) : 0,
+    // Both previousPosition and currentPosition are stored over all participants — consistent
+    movement: (s.previousPosition && s.previousPosition > 0 && s.currentPosition && s.currentPosition > 0)
+      ? s.previousPosition - s.currentPosition
+      : 0,
     participantId: s.participantId,
     participationCode: s.participant.participationCode,
     fullName: s.participant.fullName,

@@ -66,6 +66,19 @@ export default function RankingAdminPage() {
     setRecalculating(false)
   }
 
+  const [fixing, setFixing] = useState(false)
+  const [fixMsg, setFixMsg] = useState('')
+  const fixPositions = async () => {
+    if (!confirm('Esto sincronizará previousPosition = currentPosition para todos los participantes (el movimiento quedará en 0 temporalmente). ¿Continuar?')) return
+    setFixing(true)
+    setFixMsg('')
+    const res = await fetch('/api/admin/ranking/fix-positions', { method: 'POST' })
+    const data = await res.json()
+    setFixMsg(data.message ?? (res.ok ? 'Posiciones corregidas.' : 'Error.'))
+    await loadRanking()
+    setFixing(false)
+  }
+
   const filtered = ranking.filter((r) => {
     if (filterVerified && r.paymentStatus !== 'VERIFIED') return false
     if (search) {
@@ -125,8 +138,19 @@ export default function RankingAdminPage() {
           >
             {recalculating ? '⏳ Recalculando...' : '🔄 Recalcular ranking'}
           </button>
+          <button
+            onClick={fixPositions}
+            disabled={fixing}
+            className="bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+            title="Sincroniza previousPosition=currentPosition. Úsalo cuando los indicadores ↑/↓ muestren datos incorrectos."
+          >
+            {fixing ? '⏳ Corrigiendo...' : '🔧 Corregir posiciones'}
+          </button>
         </div>
       </div>
+      {fixMsg && (
+        <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg text-sm text-orange-800">{fixMsg}</div>
+      )}
 
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-100 mb-4 p-4">
