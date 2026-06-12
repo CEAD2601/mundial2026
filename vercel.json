@@ -4,7 +4,7 @@
   "crons": [
     {
       "path": "/api/cron/update-live-results",
-      "schedule": "*/10 * * * *"
+      "schedule": "0 4 * * *"
     }
   ]
 }
