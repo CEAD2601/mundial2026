@@ -42,6 +42,12 @@ export async function GET() {
     select: { id: true, kickoffUtc: true, matchNumber: true },
   })
 
+  // 2a. Stored DB snapshots (previousPosition / currentPosition)
+  const storedSnapshots = await prisma.rankingSnapshot.findMany({
+    select: { participantId: true, previousPosition: true, currentPosition: true },
+  })
+  const storedMap = new Map(storedSnapshots.map((s) => [s.participantId, s]))
+
   // 2. All complete participants with payment
   const participants = await prisma.participant.findMany({
     where: { isComplete: true },
@@ -122,6 +128,7 @@ export async function GET() {
     const pPrev = allPredictions.filter(
       (pr) => pr.participantId === s.id && prevMatchIds.has(pr.matchId)
     )
+    const participantFull = filteredParticipants.find((p) => p.id === s.id)
     return {
       name: s.fullName,
       id: s.id,
@@ -129,6 +136,9 @@ export async function GET() {
       prevPos,
       movement,
       display: movement === null ? '—' : movement > 0 ? `↑${movement}` : movement < 0 ? `↓${Math.abs(movement)}` : '—',
+      registrationTiebreakerUsed: (participantFull?.submittedAt ?? participantFull?.createdAt)?.toISOString(),
+      submittedAt: participantFull?.submittedAt?.toISOString() ?? null,
+      createdAt: participantFull?.createdAt?.toISOString() ?? null,
       currStats: {
         totalPoints: s.totalPoints,
         exactScores: s.exactScores,
@@ -145,6 +155,7 @@ export async function GET() {
       },
       registrationDate: (s.submittedAt ?? s.createdAt).toISOString(),
       isPaid: participants.find((p) => p.id === s.id)?.payment?.paymentStatus === 'VERIFIED',
+      storedDB: storedMap.get(s.id) ?? null,
     }
   })
 
