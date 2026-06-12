@@ -254,9 +254,12 @@ function aggregateResults(allResults: DetectedResult[]): DetectedResult[] {
       (r) => `${r.team1Goals}-${r.team2Goals}` === firstScore
     )
 
+    // A single-source result keeps its original confidence if it was HIGH.
+    // Only downgrade to MEDIUM if the individual source itself was uncertain.
     const confidence: Confidence =
-      allAgree && results.length >= 2 ? 'HIGH'
-      : results.length === 1          ? 'MEDIUM'
+      allAgree && results.length >= 2               ? 'HIGH'
+      : results.length === 1 && results[0].confidence === 'HIGH' ? 'HIGH'
+      : results.length === 1                        ? 'MEDIUM'
       : 'LOW'
 
     aggregated.push({

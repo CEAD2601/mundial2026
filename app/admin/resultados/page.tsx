@@ -443,8 +443,8 @@ export default function ResultadosAdminPage() {
             )}
             {liveStatus && liveStatus.enabled && (
               <div className="mt-4 bg-green-50 border border-green-200 rounded-xl p-3 text-sm text-green-800 space-y-1">
-                <p>✅ <strong>Automatización activada.</strong> Los resultados se consultan desde fuentes públicas y quedan <strong>pendientes de revisión</strong> antes de actualizar el ranking.</p>
-                <p className="text-green-700">ℹ️ Solo se crean pendientes cuando se detecta un <strong>resultado final</strong> (estado post-partido). Los marcadores en vivo no se aplican al ranking.</p>
+                <p>✅ <strong>Automatización activada.</strong> Los resultados finales confiables se aplican automáticamente y actualizan el ranking. Solo los resultados dudosos quedan pendientes de revisión.</p>
+                <p className="text-green-700">ℹ️ Los resultados finales con confianza alta se aplican automáticamente. Los resultados con confianza media o baja requieren revisión. El cron corre cada 10 minutos.</p>
               </div>
             )}
 
