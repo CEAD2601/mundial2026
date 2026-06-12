@@ -561,21 +561,20 @@ export default function RankingPage() {
               )}
 
               {/* Scoring legend */}
-              <div className="bg-white rounded-xl border border-slate-100 p-3 mb-3 flex gap-4 text-xs text-slate-600">
-                <span>🎯 <strong>3 pts</strong> exacto</span>
-                <span>✅ <strong>1 pt</strong> correcto</span>
-                <span>❌ <strong>0 pts</strong> incorrecto</span>
+              <div className="bg-white rounded-xl border border-slate-100 p-3 mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+                <span>🎯 Exacto = <strong>3 pts</strong></span>
+                <span>✅ Correcto = <strong>1 pt</strong></span>
+                <span>❌ Fallo = <strong>0 pts</strong></span>
               </div>
 
-              {/* Table */}
+              {/* Table — cols: 2 pos+mov | 4 name | 2 pts | 2 exactos | 2 correctos */}
               <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
                 <div className="bg-slate-50 border-b border-slate-100 px-3 py-2 grid grid-cols-12 text-xs font-medium text-slate-400">
                   <div className="col-span-2 text-center"># Mov.</div>
-                  <div className="col-span-3">Participante</div>
+                  <div className="col-span-4">Participante</div>
                   <div className="col-span-2 text-center">Pts</div>
-                  <div className="col-span-2 text-center">🎯</div>
-                  <div className="col-span-2 text-center">✅</div>
-                  <div className="col-span-1 text-center">Δ⚽</div>
+                  <div className="col-span-2 text-center" title="Puntos por marcador exacto (×3)">🎯 Exac.</div>
+                  <div className="col-span-2 text-center" title="Puntos por resultado correcto (×1)">✅ Corr.</div>
                 </div>
                 {ranking.map((entry) => (
                   <div
@@ -596,26 +595,35 @@ export default function RankingPage() {
                             : <span className="text-slate-300 text-xs">—</span>
                       ) : null}
                     </div>
-                    <div className="col-span-3">
+                    <div className="col-span-4">
                       <p className="font-semibold text-slate-800 text-sm leading-tight">{entry.displayName}</p>
                     </div>
                     <div className="col-span-2 text-center">
                       <span className="font-bold text-green-600 text-base">{entry.totalPoints}</span>
                     </div>
-                    <div className="col-span-2 text-center text-sm text-slate-600">{entry.exactScores}</div>
-                    <div className="col-span-2 text-center text-sm text-slate-600">{entry.correctResults}</div>
-                    <div className="col-span-1 text-center text-xs text-slate-400">{entry.totalGoalDiffError}</div>
+                    {/* Points from exact scores (×3) */}
+                    <div className="col-span-2 text-center">
+                      <span className="text-sm font-semibold text-slate-700">{entry.exactScores * 3}</span>
+                      {entry.exactScores > 0 && (
+                        <span className="text-xs text-slate-400 ml-0.5">×{entry.exactScores}</span>
+                      )}
+                    </div>
+                    {/* Points from correct results (×1) */}
+                    <div className="col-span-2 text-center">
+                      <span className="text-sm text-slate-600">{entry.correctResults}</span>
+                    </div>
                   </div>
                 ))}
               </div>
 
               {/* Tiebreaker note */}
               <div className="mt-3 bg-slate-100 rounded-xl p-3">
-                <p className="text-xs text-slate-500 font-medium mb-1">Criterios de desempate:</p>
+                <p className="text-xs text-slate-500 font-medium mb-1">Criterios de desempate (en caso de empate en puntos):</p>
                 <ol className="text-xs text-slate-400 space-y-0.5 list-decimal list-inside">
                   <li>Mayor cantidad de marcadores exactos (🎯)</li>
                   <li>Mayor cantidad de resultados correctos (✅)</li>
-                  <li>Menor error acumulado de goles (Δ⚽)</li>
+                  <li>Menor diferencia acumulada de goles ⚽ (no suma puntos, solo desempata)</li>
+                  <li>Fecha de registro más antigua</li>
                 </ol>
               </div>
 
