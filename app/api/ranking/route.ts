@@ -23,17 +23,16 @@ export async function GET(req: NextRequest) {
     ],
   })
 
-  // Final tiebreaker: registration date (oldest first), then id (stable)
+  // Final tiebreaker: oldest submission/registration wins, then stable id
+  // submittedAt is set when participant submits quiniela (more reliable than createdAt for batch imports)
   snapshots.sort((a, b) => {
     if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints
     if (b.exactScores !== a.exactScores) return b.exactScores - a.exactScores
     if (b.correctResults !== a.correctResults) return b.correctResults - a.correctResults
     if (a.totalGoalDiffError !== b.totalGoalDiffError) return a.totalGoalDiffError - b.totalGoalDiffError
-    // Sports tie: oldest registration wins
-    const dateA = a.participant.createdAt.getTime()
-    const dateB = b.participant.createdAt.getTime()
+    const dateA = (a.participant.submittedAt ?? a.participant.createdAt).getTime()
+    const dateB = (b.participant.submittedAt ?? b.participant.createdAt).getTime()
     if (dateA !== dateB) return dateA - dateB
-    // Last resort: id string comparison (stable)
     return a.participant.id < b.participant.id ? -1 : 1
   })
 
@@ -82,15 +81,15 @@ export async function POST() {
 
   // After all stats are updated, sort and save currentPosition for each
   const all = await prisma.rankingSnapshot.findMany({
-    include: { participant: { select: { createdAt: true, id: true } } },
+    include: { participant: { select: { submittedAt: true, createdAt: true, id: true } } },
   })
   all.sort((a, b) => {
     if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints
     if (b.exactScores !== a.exactScores) return b.exactScores - a.exactScores
     if (b.correctResults !== a.correctResults) return b.correctResults - a.correctResults
     if (a.totalGoalDiffError !== b.totalGoalDiffError) return a.totalGoalDiffError - b.totalGoalDiffError
-    const dateA = a.participant.createdAt.getTime()
-    const dateB = b.participant.createdAt.getTime()
+    const dateA = (a.participant.submittedAt ?? a.participant.createdAt).getTime()
+    const dateB = (b.participant.submittedAt ?? b.participant.createdAt).getTime()
     if (dateA !== dateB) return dateA - dateB
     return a.participant.id < b.participant.id ? -1 : 1
   })

@@ -281,7 +281,13 @@ type SnapshotWithParticipant = {
   correctResults: number
   totalGoalDiffError: number
   currentPosition: number
-  participant: { createdAt: Date; id: string }
+  participant: { submittedAt: Date | null; createdAt: Date; id: string }
+}
+
+// submittedAt is set when the participant submits their quiniela — more reliable than createdAt
+// (createdAt can be identical for batch-imported participants)
+function registrationDate(p: SnapshotWithParticipant['participant']): number {
+  return (p.submittedAt ?? p.createdAt).getTime()
 }
 
 function sortedByRanking(snapshots: SnapshotWithParticipant[]): SnapshotWithParticipant[] {
@@ -290,8 +296,8 @@ function sortedByRanking(snapshots: SnapshotWithParticipant[]): SnapshotWithPart
     if (b.exactScores !== a.exactScores) return b.exactScores - a.exactScores
     if (b.correctResults !== a.correctResults) return b.correctResults - a.correctResults
     if (a.totalGoalDiffError !== b.totalGoalDiffError) return a.totalGoalDiffError - b.totalGoalDiffError
-    const dateA = a.participant.createdAt.getTime()
-    const dateB = b.participant.createdAt.getTime()
+    const dateA = registrationDate(a.participant)
+    const dateB = registrationDate(b.participant)
     if (dateA !== dateB) return dateA - dateB
     return a.participant.id < b.participant.id ? -1 : 1
   })
@@ -303,7 +309,7 @@ function sortedByRanking(snapshots: SnapshotWithParticipant[]): SnapshotWithPart
  */
 async function saveCurrentPositionsAsPrevious(): Promise<void> {
   const all = await prisma.rankingSnapshot.findMany({
-    include: { participant: { select: { createdAt: true, id: true } } },
+    include: { participant: { select: { submittedAt: true, createdAt: true, id: true } } },
   })
   if (all.length === 0) return
 
@@ -323,7 +329,7 @@ async function saveCurrentPositionsAsPrevious(): Promise<void> {
  */
 async function updateCurrentPositions(): Promise<void> {
   const all = await prisma.rankingSnapshot.findMany({
-    include: { participant: { select: { createdAt: true, id: true } } },
+    include: { participant: { select: { submittedAt: true, createdAt: true, id: true } } },
   })
   if (all.length === 0) return
 
