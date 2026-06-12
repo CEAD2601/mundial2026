@@ -4,12 +4,9 @@ import { formatParticipantDisplayName } from '@/lib/formatParticipantName'
 import { recalculateParticipantRanking } from '@/lib/liveResultsService'
 
 // ─── Shared ranking sort comparator ─────────────────────────────────────────
-// Tiebreaker: submittedAt (when participant submitted quiniela) ?? createdAt ASC, then id ASC.
-// submittedAt is set when participant submits their quiniela — more reliable than createdAt
-// for batch-imported participants who may all share the same createdAt timestamp.
+// Tiebreaker: createdAt ASC (account creation date), then id ASC.
 type SortableParticipant = {
   id: string
-  submittedAt: Date | null
   createdAt: Date
   totalPoints: number
   exactScores: number
@@ -22,9 +19,7 @@ function rankingComparator(a: SortableParticipant, b: SortableParticipant): numb
   if (b.exactScores !== a.exactScores) return b.exactScores - a.exactScores
   if (b.correctResults !== a.correctResults) return b.correctResults - a.correctResults
   if (a.totalGoalDiffError !== b.totalGoalDiffError) return a.totalGoalDiffError - b.totalGoalDiffError
-  const dateA = (a.submittedAt ?? a.createdAt).getTime()
-  const dateB = (b.submittedAt ?? b.createdAt).getTime()
-  if (dateA !== dateB) return dateA - dateB
+  if (a.createdAt.getTime() !== b.createdAt.getTime()) return a.createdAt.getTime() - b.createdAt.getTime()
   return a.id < b.id ? -1 : 1
 }
 
@@ -49,8 +44,8 @@ export async function GET(req: NextRequest) {
   // Sort all participants by ranking criteria using current snapshot stats
   snapshots.sort((a, b) =>
     rankingComparator(
-      { id: a.participant.id, submittedAt: a.participant.submittedAt, createdAt: a.participant.createdAt, totalPoints: a.totalPoints, exactScores: a.exactScores, correctResults: a.correctResults, totalGoalDiffError: a.totalGoalDiffError },
-      { id: b.participant.id, submittedAt: b.participant.submittedAt, createdAt: b.participant.createdAt, totalPoints: b.totalPoints, exactScores: b.exactScores, correctResults: b.correctResults, totalGoalDiffError: b.totalGoalDiffError }
+      { id: a.participant.id, createdAt: a.participant.createdAt, totalPoints: a.totalPoints, exactScores: a.exactScores, correctResults: a.correctResults, totalGoalDiffError: a.totalGoalDiffError },
+      { id: b.participant.id, createdAt: b.participant.createdAt, totalPoints: b.totalPoints, exactScores: b.exactScores, correctResults: b.correctResults, totalGoalDiffError: b.totalGoalDiffError }
     )
   )
 
@@ -95,7 +90,6 @@ export async function GET(req: NextRequest) {
       const preds = prevPredictions.filter((pr) => pr.participantId === s.participantId)
       return {
         id: s.participant.id,
-        submittedAt: s.participant.submittedAt,
         createdAt: s.participant.createdAt,
         totalPoints: preds.reduce((sum, pr) => sum + pr.points, 0),
         exactScores: preds.filter((pr) => pr.isExactScore === true).length,
@@ -165,12 +159,12 @@ export async function POST() {
 
   // Update stored currentPosition for reference (snapshot used by applyResultToDb)
   const all = await prisma.rankingSnapshot.findMany({
-    include: { participant: { select: { submittedAt: true, createdAt: true, id: true } } },
+    include: { participant: { select: { createdAt: true, id: true } } },
   })
   all.sort((a, b) =>
     rankingComparator(
-      { id: a.participant.id, submittedAt: a.participant.submittedAt, createdAt: a.participant.createdAt, totalPoints: a.totalPoints, exactScores: a.exactScores, correctResults: a.correctResults, totalGoalDiffError: a.totalGoalDiffError },
-      { id: b.participant.id, submittedAt: b.participant.submittedAt, createdAt: b.participant.createdAt, totalPoints: b.totalPoints, exactScores: b.exactScores, correctResults: b.correctResults, totalGoalDiffError: b.totalGoalDiffError }
+      { id: a.participant.id, createdAt: a.participant.createdAt, totalPoints: a.totalPoints, exactScores: a.exactScores, correctResults: a.correctResults, totalGoalDiffError: a.totalGoalDiffError },
+      { id: b.participant.id, createdAt: b.participant.createdAt, totalPoints: b.totalPoints, exactScores: b.exactScores, correctResults: b.correctResults, totalGoalDiffError: b.totalGoalDiffError }
     )
   )
   for (let i = 0; i < all.length; i++) {

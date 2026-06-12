@@ -10,7 +10,6 @@ import { prisma } from '@/lib/prisma'
 type SortableParticipant = {
   id: string
   fullName: string
-  submittedAt: Date | null
   createdAt: Date
   totalPoints: number
   exactScores: number
@@ -23,9 +22,7 @@ function rankingComparator(a: SortableParticipant, b: SortableParticipant): numb
   if (b.exactScores !== a.exactScores) return b.exactScores - a.exactScores
   if (b.correctResults !== a.correctResults) return b.correctResults - a.correctResults
   if (a.totalGoalDiffError !== b.totalGoalDiffError) return a.totalGoalDiffError - b.totalGoalDiffError
-  const dateA = (a.submittedAt ?? a.createdAt).getTime()
-  const dateB = (b.submittedAt ?? b.createdAt).getTime()
-  if (dateA !== dateB) return dateA - dateB
+  if (a.createdAt.getTime() !== b.createdAt.getTime()) return a.createdAt.getTime() - b.createdAt.getTime()
   return a.id < b.id ? -1 : 1
 }
 
@@ -54,7 +51,6 @@ export async function GET() {
     select: {
       id: true,
       fullName: true,
-      submittedAt: true,
       createdAt: true,
       payment: { select: { paymentStatus: true } },
     },
@@ -91,7 +87,6 @@ export async function GET() {
       return {
         id: p.id,
         fullName: p.fullName,
-        submittedAt: p.submittedAt,
         createdAt: p.createdAt,
         totalPoints: preds.reduce((s, pr) => s + pr.points, 0),
         exactScores: preds.filter((pr) => pr.isExactScore === true).length,

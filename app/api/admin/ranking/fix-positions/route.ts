@@ -26,16 +26,14 @@ export async function POST() {
 
   // 2. Sort all snapshots by ranking criteria
   const all = await prisma.rankingSnapshot.findMany({
-    include: { participant: { select: { submittedAt: true, createdAt: true, id: true } } },
+    include: { participant: { select: { createdAt: true, id: true } } },
   })
   all.sort((a, b) => {
     if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints
     if (b.exactScores !== a.exactScores) return b.exactScores - a.exactScores
     if (b.correctResults !== a.correctResults) return b.correctResults - a.correctResults
     if (a.totalGoalDiffError !== b.totalGoalDiffError) return a.totalGoalDiffError - b.totalGoalDiffError
-    const dateA = (a.participant.submittedAt ?? a.participant.createdAt).getTime()
-    const dateB = (b.participant.submittedAt ?? b.participant.createdAt).getTime()
-    if (dateA !== dateB) return dateA - dateB
+    if (a.participant.createdAt.getTime() !== b.participant.createdAt.getTime()) return a.participant.createdAt.getTime() - b.participant.createdAt.getTime()
     return a.participant.id < b.participant.id ? -1 : 1
   })
 
