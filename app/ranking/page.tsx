@@ -604,9 +604,6 @@ export default function RankingPage() {
                     {/* Points from exact scores (×3) */}
                     <div className="col-span-2 text-center">
                       <span className="text-sm font-semibold text-slate-700">{entry.exactScores * 3}</span>
-                      {entry.exactScores > 0 && (
-                        <span className="text-xs text-slate-400 ml-0.5">×{entry.exactScores}</span>
-                      )}
                     </div>
                     {/* Points from correct results (×1) */}
                     <div className="col-span-2 text-center">

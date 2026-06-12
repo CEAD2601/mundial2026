@@ -4,8 +4,9 @@ import { formatParticipantDisplayName } from '@/lib/formatParticipantName'
 import { recalculateParticipantRanking } from '@/lib/liveResultsService'
 
 // ─── Shared ranking sort comparator ─────────────────────────────────────────
-// Used both for display ordering and movement calculation.
-// Tiebreaker: submittedAt (when participant submitted quiniela) ?? createdAt, then id.
+// Tiebreaker: submittedAt (when participant submitted quiniela) ?? createdAt ASC, then id ASC.
+// submittedAt is set when participant submits their quiniela — more reliable than createdAt
+// for batch-imported participants who may all share the same createdAt timestamp.
 type SortableParticipant = {
   id: string
   submittedAt: Date | null
@@ -27,103 +28,25 @@ function rankingComparator(a: SortableParticipant, b: SortableParticipant): numb
   return a.id < b.id ? -1 : 1
 }
 
-// ─── Dynamic movement calculation ───────────────────────────────────────────
-// Computes ranking positions BEFORE the last finished match and compares with current.
-// Does NOT rely on stored previousPosition/currentPosition — always computed fresh.
-// This is robust against snapshot corruption or missing history.
-async function computeMovementMap(): Promise<Map<string, { prevPos: number; movement: number }>> {
-  const empty = new Map<string, { prevPos: number; movement: number }>()
-
-  // Get all finished matches in chronological order
-  const finishedMatches = await prisma.match.findMany({
-    where: { status: 'FINISHED' },
-    orderBy: { kickoffUtc: 'asc' },
-    select: { id: true },
-  })
-
-  if (finishedMatches.length < 2) return empty
-
-  // Get all participants with their registration dates
-  const participants = await prisma.participant.findMany({
-    where: { isComplete: true },
-    select: { id: true, submittedAt: true, createdAt: true },
-  })
-
-  // Get all predictions for finished matches (points already calculated by applyResultToDb)
-  const predictions = await prisma.prediction.findMany({
-    where: { matchId: { in: finishedMatches.map((m) => m.id) } },
-    select: {
-      participantId: true,
-      matchId: true,
-      points: true,
-      isExactScore: true,
-      isCorrectResult: true,
-      goalDifferenceError: true,
-    },
-  })
-
-  // Helper: compute position map for a given set of match IDs
-  function positionsFor(matchIds: Set<string>): Map<string, number> {
-    const stats: SortableParticipant[] = participants.map((p) => {
-      const preds = predictions.filter(
-        (pr) => pr.participantId === p.id && matchIds.has(pr.matchId)
-      )
-      return {
-        id: p.id,
-        submittedAt: p.submittedAt,
-        createdAt: p.createdAt,
-        totalPoints: preds.reduce((sum, pr) => sum + pr.points, 0),
-        exactScores: preds.filter((pr) => pr.isExactScore === true).length,
-        correctResults: preds.filter(
-          (pr) => pr.isCorrectResult === true && pr.isExactScore !== true
-        ).length,
-        totalGoalDiffError: preds.reduce(
-          (sum, pr) => sum + (pr.goalDifferenceError ?? 0),
-          0
-        ),
-      }
-    })
-    stats.sort(rankingComparator)
-    const map = new Map<string, number>()
-    stats.forEach((s, i) => map.set(s.id, i + 1))
-    return map
-  }
-
-  const allMatchIds = new Set(finishedMatches.map((m) => m.id))
-  const prevMatchIds = new Set(finishedMatches.slice(0, -1).map((m) => m.id))
-
-  const prevPositions = positionsFor(prevMatchIds)
-  const currPositions = positionsFor(allMatchIds)
-
-  const movementMap = new Map<string, { prevPos: number; movement: number }>()
-  for (const p of participants) {
-    const prevPos = prevPositions.get(p.id) ?? 0
-    const currPos = currPositions.get(p.id) ?? 0
-    if (prevPos > 0 && currPos > 0) {
-      movementMap.set(p.id, { prevPos, movement: prevPos - currPos })
-    }
-  }
-  return movementMap
-}
-
 // ─── GET /api/ranking ────────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const isAdmin = searchParams.get('admin') === 'true'
 
-  const [settings, snapshots, movementMap] = await Promise.all([
+  // Fetch everything in parallel
+  const [settings, snapshots, finishedMatches] = await Promise.all([
     prisma.setting.findFirst(),
     prisma.rankingSnapshot.findMany({
-      include: {
-        participant: {
-          include: { payment: true },
-        },
-      },
+      include: { participant: { include: { payment: true } } },
     }),
-    computeMovementMap(),
+    prisma.match.findMany({
+      where: { status: 'FINISHED' },
+      orderBy: { kickoffUtc: 'asc' },
+      select: { id: true },
+    }),
   ])
 
-  // Sort all participants by ranking criteria
+  // Sort all participants by ranking criteria using current snapshot stats
   snapshots.sort((a, b) =>
     rankingComparator(
       { id: a.participant.id, submittedAt: a.participant.submittedAt, createdAt: a.participant.createdAt, totalPoints: a.totalPoints, exactScores: a.exactScores, correctResults: a.correctResults, totalGoalDiffError: a.totalGoalDiffError },
@@ -137,12 +60,78 @@ export async function GET(req: NextRequest) {
       ? snapshots.filter((s) => s.participant.payment?.paymentStatus === 'VERIFIED')
       : snapshots
 
+  // ─── Movement calculation ──────────────────────────────────────────────────
+  // Computed over the SAME filtered/sorted set that is displayed.
+  // previousPosition = position using all-but-last finished match stats.
+  // currentPosition  = i+1 from the display order above (consistent).
+  // movement = previousPosition - currentPosition
+  //
+  // This ensures movement and displayed positions are always consistent:
+  // if display says Carlos is #4, currPos used in movement is also 4.
+  const movementMap = new Map<string, { prevPos: number; movement: number }>()
+
+  if (finishedMatches.length >= 2) {
+    const prevMatchIds = new Set(finishedMatches.slice(0, -1).map((m) => m.id))
+    const filteredIds = filtered.map((s) => s.participantId)
+
+    // Fetch predictions for previous matches for the displayed participants only
+    const prevPredictions = await prisma.prediction.findMany({
+      where: {
+        matchId: { in: Array.from(prevMatchIds) },
+        participantId: { in: filteredIds },
+      },
+      select: {
+        participantId: true,
+        matchId: true,
+        points: true,
+        isExactScore: true,
+        isCorrectResult: true,
+        goalDifferenceError: true,
+      },
+    })
+
+    // Build a SortableParticipant for each displayed participant using ONLY previous match stats
+    const prevStats: SortableParticipant[] = filtered.map((s) => {
+      const preds = prevPredictions.filter((pr) => pr.participantId === s.participantId)
+      return {
+        id: s.participant.id,
+        submittedAt: s.participant.submittedAt,
+        createdAt: s.participant.createdAt,
+        totalPoints: preds.reduce((sum, pr) => sum + pr.points, 0),
+        exactScores: preds.filter((pr) => pr.isExactScore === true).length,
+        correctResults: preds.filter(
+          (pr) => pr.isCorrectResult === true && pr.isExactScore !== true
+        ).length,
+        totalGoalDiffError: preds.reduce(
+          (sum, pr) => sum + (pr.goalDifferenceError ?? 0),
+          0
+        ),
+      }
+    })
+
+    // Sort by same criteria to get previousPosition
+    prevStats.sort(rankingComparator)
+
+    const prevPosMap = new Map<string, number>()
+    prevStats.forEach((s, i) => prevPosMap.set(s.id, i + 1))
+
+    // Movement = previousPosition - currentPosition (i+1 in display order)
+    filtered.forEach((s, i) => {
+      const currPos = i + 1
+      const prevPos = prevPosMap.get(s.participantId)
+      if (prevPos !== undefined) {
+        movementMap.set(s.participantId, { prevPos, movement: prevPos - currPos })
+      }
+    })
+  }
+
+  // ─── Build response ────────────────────────────────────────────────────────
   const result = filtered.map((s, i) => {
     const mov = movementMap.get(s.participantId)
     return {
       position: i + 1,
-      previousPosition: mov ? mov.prevPos : null,
-      movement: mov ? mov.movement : 0,
+      previousPosition: mov?.prevPos ?? null,
+      movement: mov?.movement ?? 0,
       participantId: s.participantId,
       participationCode: s.participant.participationCode,
       fullName: s.participant.fullName,
@@ -174,7 +163,7 @@ export async function POST() {
     await recalculateParticipantRanking(p.id)
   }
 
-  // Update stored currentPosition for reference (used by applyResultToDb snapshot logic)
+  // Update stored currentPosition for reference (snapshot used by applyResultToDb)
   const all = await prisma.rankingSnapshot.findMany({
     include: { participant: { select: { submittedAt: true, createdAt: true, id: true } } },
   })
