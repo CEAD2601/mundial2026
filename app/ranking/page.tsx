@@ -451,9 +451,9 @@ export default function RankingPage() {
                         🕐 <span className="font-bold">{summary.pendingMatches}</span> por jugar
                       </span>
                     )}
-                    {summary.leaderOfDay && summary.finishedMatches > 0 && (
+                    {ranking.length > 0 && (
                       <span className="text-yellow-700 font-medium">
-                        🌟 Líder del día: <span className="font-bold">{summary.leaderOfDay.name}</span> ({summary.leaderOfDay.pts} pts)
+                        🏆 Líder general: <span className="font-bold">{ranking[0].displayName}</span> ({ranking[0].totalPoints} pts)
                       </span>
                     )}
                   </div>
