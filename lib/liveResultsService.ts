@@ -4,13 +4,10 @@
  * Fetches real match results from public online sources and updates
  * the database. By default this service is DISABLED (LIVE_RESULTS_ENABLED=false).
  *
- * IMPORTANT LIMITATIONS:
- * - Public web scraping is inherently fragile: page structure changes break parsers.
- * - If a source fails or returns ambiguous data, results are NOT applied.
- * - LOW/MEDIUM confidence results are queued for admin review, never auto-applied.
- * - HIGH confidence results are auto-applied only if LIVE_RESULTS_AUTO_APPLY=true.
- * - Manual admin entry always takes precedence and is always available.
- * - No paid APIs are required — this module works entirely with public sources.
+ * CONFIDENCE RULES:
+ * - HIGH confidence results are ALWAYS auto-applied (final status + strong team match).
+ * - MEDIUM / LOW confidence results are queued for admin review.
+ * - Manual admin entry always takes precedence and is never overwritten.
  */
 
 import { prisma } from './prisma'
@@ -70,7 +67,6 @@ function matchScore(espnName: string, espnAbbr: string, team: CandidateMatch['te
   const names = teamNames(team)
   if (names.includes(a)) return 3
   if (names.includes(n)) return 2
-  // partial: does espn abbreviation appear in any team name token?
   if (names.some((x) => x.startsWith(a) || a.startsWith(x.slice(0, 3)))) return 1
   return 0
 }
@@ -81,11 +77,6 @@ interface EspnCompetitor {
   team: { name: string; abbreviation: string }
 }
 
-/**
- * Match ESPN event competitors to our candidate matches.
- * Returns the candidate match and which competitor is team1/team2,
- * or null if confidence is too low.
- */
 function resolveMatch(
   competitors: EspnCompetitor[],
   candidates: CandidateMatch[]
@@ -99,13 +90,11 @@ function resolveMatch(
   const abbrB = compB.team?.abbreviation ?? ''
 
   for (const cand of candidates) {
-    // Try compA=team1, compB=team2
     const s1 = matchScore(nameA, abbrA, cand.team1) + matchScore(nameB, abbrB, cand.team2)
-    // Try compA=team2, compB=team1 (swapped)
     const s2 = matchScore(nameA, abbrA, cand.team2) + matchScore(nameB, abbrB, cand.team1)
 
     const best = Math.max(s1, s2)
-    if (best < 2) continue // need at least one strong match
+    if (best < 2) continue
 
     const swapped = s2 > s1
     const g_a = parseInt(compA.score ?? '0', 10)
@@ -125,22 +114,17 @@ function toVetDateStr(d: Date): string {
   return d.toLocaleDateString('sv-SE', { timeZone: 'America/Caracas' })
 }
 
-/**
- * Source A: ESPN public scoreboard API (no auth required)
- * Endpoint: https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=YYYYMMDD
- */
 async function fetchFromEspn(candidates: CandidateMatch[]): Promise<DetectedResult[]> {
   const results: DetectedResult[] = []
   const now = new Date()
 
-  // Check today and yesterday in VET timezone
   const dates = [
     toVetDateStr(now),
     toVetDateStr(new Date(now.getTime() - 24 * 60 * 60 * 1000)),
   ]
 
   for (const date of dates) {
-    const dateStr = date.replace(/-/g, '') // YYYYMMDD
+    const dateStr = date.replace(/-/g, '')
     const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${dateStr}`
 
     let data: Record<string, unknown>
@@ -163,21 +147,14 @@ async function fetchFromEspn(candidates: CandidateMatch[]): Promise<DetectedResu
       const comp = ((event.competitions as unknown[])?.[0] ?? {}) as Record<string, unknown>
       const status = (comp.status as Record<string, unknown>)?.type as Record<string, unknown> | undefined
 
-      // Require the match to be explicitly completed AND in post-game state.
-      // "completed: true" alone is not enough — also require state === 'post'
-      // AND the status name must indicate a final result (not halftime, etc.)
       const isCompleted = status?.completed === true
       const isPostState = (status?.state as string | undefined) === 'post'
-      const statusName = String(status?.name ?? '').toUpperCase()
-      const isFinalStatus = ['STATUS_FINAL', 'STATUS_FULL_TIME', 'STATUS_FT'].some(s => statusName.includes(s.replace('STATUS_', '')))
-        || statusName.includes('FINAL')
-      if (!isCompleted || !isPostState) continue // only confirmed finished matches
+      if (!isCompleted || !isPostState) continue
 
       const competitors = (comp.competitors as EspnCompetitor[]) ?? []
       const resolved = resolveMatch(competitors, candidates)
       if (!resolved) continue
 
-      // Avoid duplicates (same matchNumber from two date pages)
       if (results.some((r) => r.matchNumber === resolved.match.matchNumber)) continue
 
       const { g1, g2, confidence } = resolved
@@ -196,7 +173,7 @@ async function fetchFromEspn(candidates: CandidateMatch[]): Promise<DetectedResu
             score: c.score,
             homeAway: c.homeAway,
           })),
-          statusName: status.name,
+          statusName: status?.name,
         }),
       })
     }
@@ -205,16 +182,11 @@ async function fetchFromEspn(candidates: CandidateMatch[]): Promise<DetectedResu
   return results
 }
 
-/**
- * Source B: api-football.com (free tier — requires LIVE_RESULTS_API_KEY)
- * Falls back to empty if no API key configured.
- */
 async function fetchFromApiFootball(candidates: CandidateMatch[]): Promise<DetectedResult[]> {
   const apiKey = process.env.LIVE_RESULTS_API_KEY
   if (!apiKey) return []
 
   try {
-    // World Cup 2026 league ID in api-football = 1 (FIFA World Cup)
     const today = toVetDateStr(new Date())
     const url = `https://v3.football.api-sports.io/fixtures?league=1&season=2026&date=${today}&status=FT`
     const res = await fetch(url, {
@@ -266,12 +238,6 @@ async function fetchFromApiFootball(candidates: CandidateMatch[]): Promise<Detec
 
 // ─── Aggregation & Confidence ───────────────────────────────────────────────
 
-/**
- * Aggregate results from multiple sources.
- * If 2+ sources agree → HIGH confidence
- * If only 1 source      → MEDIUM confidence
- * If sources disagree   → LOW confidence (flag for review)
- */
 function aggregateResults(allResults: DetectedResult[]): DetectedResult[] {
   const byMatch = new Map<number, DetectedResult[]>()
   for (const r of allResults) {
@@ -283,7 +249,6 @@ function aggregateResults(allResults: DetectedResult[]): DetectedResult[] {
   for (const [matchNumber, results] of byMatch.entries()) {
     if (results.length === 0) continue
 
-    // Check if all sources agree on the score
     const firstScore = `${results[0].team1Goals}-${results[0].team2Goals}`
     const allAgree = results.every(
       (r) => `${r.team1Goals}-${r.team2Goals}` === firstScore
@@ -307,6 +272,70 @@ function aggregateResults(allResults: DetectedResult[]): DetectedResult[] {
   return aggregated
 }
 
+// ─── Ranking position helpers ───────────────────────────────────────────────
+
+type SnapshotWithParticipant = {
+  participantId: string
+  totalPoints: number
+  exactScores: number
+  correctResults: number
+  totalGoalDiffError: number
+  currentPosition: number
+  participant: { createdAt: Date; id: string }
+}
+
+function sortedByRanking(snapshots: SnapshotWithParticipant[]): SnapshotWithParticipant[] {
+  return [...snapshots].sort((a, b) => {
+    if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints
+    if (b.exactScores !== a.exactScores) return b.exactScores - a.exactScores
+    if (b.correctResults !== a.correctResults) return b.correctResults - a.correctResults
+    if (a.totalGoalDiffError !== b.totalGoalDiffError) return a.totalGoalDiffError - b.totalGoalDiffError
+    const dateA = a.participant.createdAt.getTime()
+    const dateB = b.participant.createdAt.getTime()
+    if (dateA !== dateB) return dateA - dateB
+    return a.participant.id < b.participant.id ? -1 : 1
+  })
+}
+
+/**
+ * Saves the current computed positions as previousPosition (snapshot before a result is applied).
+ * Also sets currentPosition to match so both are in sync before the update.
+ */
+async function saveCurrentPositionsAsPrevious(): Promise<void> {
+  const all = await prisma.rankingSnapshot.findMany({
+    include: { participant: { select: { createdAt: true, id: true } } },
+  })
+  if (all.length === 0) return
+
+  const sorted = sortedByRanking(all as SnapshotWithParticipant[])
+  for (let i = 0; i < sorted.length; i++) {
+    const pos = i + 1
+    await prisma.rankingSnapshot.update({
+      where: { participantId: sorted[i].participantId },
+      data: { previousPosition: pos, currentPosition: pos },
+    })
+  }
+}
+
+/**
+ * Recomputes positions from current stats and saves as currentPosition.
+ * Called after stats have been recalculated for the affected participants.
+ */
+async function updateCurrentPositions(): Promise<void> {
+  const all = await prisma.rankingSnapshot.findMany({
+    include: { participant: { select: { createdAt: true, id: true } } },
+  })
+  if (all.length === 0) return
+
+  const sorted = sortedByRanking(all as SnapshotWithParticipant[])
+  for (let i = 0; i < sorted.length; i++) {
+    await prisma.rankingSnapshot.update({
+      where: { participantId: sorted[i].participantId },
+      data: { currentPosition: i + 1 },
+    })
+  }
+}
+
 // ─── Database helpers ───────────────────────────────────────────────────────
 
 async function applyResultToDb(
@@ -318,6 +347,10 @@ async function applyResultToDb(
   const result: MatchResult =
     team1Goals > team2Goals ? 'G1' : team1Goals < team2Goals ? 'G2' : 'E'
 
+  // 1. Capture current positions as "previous" before anything changes
+  await saveCurrentPositionsAsPrevious()
+
+  // 2. Update the match
   await prisma.match.update({
     where: { id: matchId },
     data: {
@@ -331,7 +364,7 @@ async function applyResultToDb(
     },
   })
 
-  // Recalculate predictions for this match
+  // 3. Recalculate predictions for this match
   const predictions = await prisma.prediction.findMany({ where: { matchId } })
   for (const pred of predictions) {
     const isExactScore =
@@ -349,11 +382,14 @@ async function applyResultToDb(
     })
   }
 
-  // Recalculate ranking for each affected participant
+  // 4. Recalculate ranking stats for each affected participant
   const participantIds = [...new Set(predictions.map((p) => p.participantId))]
   for (const participantId of participantIds) {
     await recalculateParticipantRanking(participantId)
   }
+
+  // 5. Update current positions (movement = previousPosition - currentPosition)
+  await updateCurrentPositions()
 }
 
 async function recalculateParticipantRanking(participantId: string) {
@@ -408,11 +444,6 @@ async function recalculateParticipantRanking(participantId: string) {
 
 // ─── Main exported function ─────────────────────────────────────────────────
 
-/**
- * Main entry point called by the cron job.
- * Fetches results from all enabled public sources, evaluates confidence,
- * and updates the database or queues for admin review.
- */
 export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
   const liveEnabled = ['true', '1', 'yes', 'on'].includes(
     String(process.env.LIVE_RESULTS_ENABLED ?? '').toLowerCase().trim()
@@ -439,12 +470,8 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
   })
 
   try {
-    // Find matches that are scheduled/in-progress for today and yesterday
     const now = new Date()
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
-
-    // Only check matches that kicked off at least 115 minutes ago
-    // (90 min play + ~25 min buffer for extra time/stoppage)
     const minFinishTime = new Date(now.getTime() - 115 * 60 * 1000)
 
     const candidateMatches = await prisma.match.findMany({
@@ -464,10 +491,8 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
       return summary
     }
 
-    // Cast to CandidateMatch (DB result has same shape after include)
     const candidates = candidateMatches as unknown as CandidateMatch[]
 
-    // Fetch from all available sources (ESPN always; api-football if API key present)
     const [espnResults, apiFootballResults] = await Promise.allSettled([
       fetchFromEspn(candidates),
       fetchFromApiFootball(candidates),
@@ -485,13 +510,33 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
     const aggregated = aggregateResults(allDetected)
     summary.resultsDetected = aggregated.length
 
-    const autoApply = ['true', '1', 'yes', 'on'].includes(
-      String(process.env.LIVE_RESULTS_AUTO_APPLY ?? '').toLowerCase().trim()
-    )
-
     for (const detected of aggregated) {
       const match = candidateMatches.find((m) => m.matchNumber === detected.matchNumber)
       if (!match) continue
+
+      // Skip if a manual result is already confirmed for this match
+      if (match.status === 'FINISHED' && match.result !== null) {
+        const detectedResult: MatchResult =
+          detected.team1Goals > detected.team2Goals ? 'G1'
+          : detected.team1Goals < detected.team2Goals ? 'G2' : 'E'
+
+        if (detectedResult !== match.result ||
+            detected.team1Goals !== match.team1Goals ||
+            detected.team2Goals !== match.team2Goals) {
+          await prisma.liveResultsLog.create({
+            data: {
+              type: 'RESULT_DETECTED',
+              message: `CONFLICTO: Partido #${match.matchNumber} ya tiene resultado ${match.team1Goals}-${match.team2Goals} pero se detectó ${detected.team1Goals}-${detected.team2Goals}`,
+              matchId: match.id,
+              source: detected.source,
+              confidence: detected.confidence,
+              detectedGoals1: detected.team1Goals,
+              detectedGoals2: detected.team2Goals,
+            },
+          })
+        }
+        continue
+      }
 
       await prisma.liveResultsLog.create({
         data: {
@@ -506,8 +551,8 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
         },
       })
 
-      if (detected.confidence === 'HIGH' && autoApply) {
-        // Auto-apply high-confidence results
+      if (detected.confidence === 'HIGH') {
+        // HIGH confidence final results are ALWAYS auto-applied
         try {
           await applyResultToDb(
             match.id,
@@ -520,7 +565,7 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
           await prisma.liveResultsLog.create({
             data: {
               type: 'RESULT_CONFIRMED',
-              message: `Auto-aplicado: Partido #${detected.matchNumber} ${detected.team1Goals}-${detected.team2Goals}`,
+              message: `AUTO_RESULT_APPLIED: Partido #${detected.matchNumber} ${detected.team1Goals}-${detected.team2Goals}. Ranking recalculado.`,
               matchId: match.id,
               source: detected.source,
               confidence: detected.confidence,
@@ -532,9 +577,16 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
         } catch (err) {
           const msg = err instanceof Error ? err.message : 'Error desconocido'
           summary.errors.push(`Partido #${detected.matchNumber}: ${msg}`)
+          await prisma.liveResultsLog.create({
+            data: {
+              type: 'ERROR',
+              message: `Error al auto-aplicar partido #${detected.matchNumber}: ${msg}`,
+              matchId: match.id,
+            },
+          })
         }
       } else {
-        // Queue for admin review
+        // MEDIUM / LOW → queue for admin review
         await prisma.match.update({
           where: { id: match.id },
           data: {
@@ -548,6 +600,18 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
           },
         })
         summary.resultsPendingReview++
+
+        await prisma.liveResultsLog.create({
+          data: {
+            type: 'RESULT_DETECTED',
+            message: `AUTO_RESULT_PENDING: Partido #${detected.matchNumber} requiere revisión (confianza ${detected.confidence})`,
+            matchId: match.id,
+            source: detected.source,
+            confidence: detected.confidence,
+            detectedGoals1: detected.team1Goals,
+            detectedGoals2: detected.team2Goals,
+          },
+        })
       }
     }
   } catch (err) {
@@ -561,17 +625,13 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
   await prisma.liveResultsLog.create({
     data: {
       type: 'CRON_RUN',
-      message: `Cron completado: ${summary.resultsDetected} detectados, ${summary.resultsAutoApplied} aplicados, ${summary.resultsPendingReview} pendientes`,
+      message: `Cron completado: ${summary.resultsDetected} detectados, ${summary.resultsAutoApplied} aplicados automáticamente, ${summary.resultsPendingReview} pendientes de revisión`,
     },
   })
 
   return summary
 }
 
-/**
- * Admin action: confirm a pending auto-detected result.
- * Applies the auto-detected score, recalculates ranking.
- */
 export async function confirmAutoResult(matchId: string): Promise<void> {
   const match = await prisma.match.findUnique({ where: { id: matchId } })
   if (!match) throw new Error('Partido no encontrado')
@@ -596,10 +656,6 @@ export async function confirmAutoResult(matchId: string): Promise<void> {
   })
 }
 
-/**
- * Admin action: reject a pending auto-detected result.
- * Clears the auto-detection, does not change the match status.
- */
 export async function rejectAutoResult(matchId: string): Promise<void> {
   await prisma.match.update({
     where: { id: matchId },

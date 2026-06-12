@@ -570,8 +570,8 @@ export default function RankingPage() {
               {/* Table */}
               <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
                 <div className="bg-slate-50 border-b border-slate-100 px-3 py-2 grid grid-cols-12 text-xs font-medium text-slate-400">
-                  <div className="col-span-1 text-center">#</div>
-                  <div className="col-span-4">Participante</div>
+                  <div className="col-span-2 text-center"># Mov.</div>
+                  <div className="col-span-3">Participante</div>
                   <div className="col-span-2 text-center">Pts</div>
                   <div className="col-span-2 text-center">🎯</div>
                   <div className="col-span-2 text-center">✅</div>
@@ -584,12 +584,19 @@ export default function RankingPage() {
                       entry.position <= 3 ? 'bg-yellow-50' : 'hover:bg-slate-50'
                     }`}
                   >
-                    <div className="col-span-1 text-center">
+                    <div className="col-span-2 text-center flex flex-col items-center leading-none gap-0.5">
                       <span className="font-bold text-slate-700 text-sm">
                         {entry.position <= 3 ? ['🥇','🥈','🥉'][entry.position - 1] : entry.position}
                       </span>
+                      {entry.previousPosition != null && entry.previousPosition !== 0 ? (
+                        entry.movement > 0
+                          ? <span className="text-green-600 text-xs font-medium">↑{entry.movement}</span>
+                          : entry.movement < 0
+                            ? <span className="text-red-500 text-xs font-medium">↓{Math.abs(entry.movement)}</span>
+                            : <span className="text-slate-300 text-xs">—</span>
+                      ) : null}
                     </div>
-                    <div className="col-span-4">
+                    <div className="col-span-3">
                       <p className="font-semibold text-slate-800 text-sm leading-tight">{entry.displayName}</p>
                     </div>
                     <div className="col-span-2 text-center">

@@ -28,7 +28,8 @@ export async function GET() {
 
   const isEnabled = parseBoolean(process.env.LIVE_RESULTS_ENABLED)
   const source = process.env.LIVE_RESULTS_SOURCE?.trim() || 'public_web'
-  const autoApply = parseBoolean(process.env.LIVE_RESULTS_AUTO_APPLY)
+  // HIGH confidence results always auto-apply regardless of env var
+  const autoApply = true
 
   const lastCronRun = recentLogs.find((l) => l.type === 'CRON_RUN')
   const recentErrors = recentLogs.filter((l) => l.type === 'ERROR').slice(0, 5)
