@@ -112,7 +112,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside className="hidden md:flex w-56 bg-slate-900 text-white flex-col min-h-screen fixed top-0 left-0 bottom-0 z-30">
         <div className="p-4 border-b border-slate-700">
           <div className="text-lg font-bold">{'\u{26BD}'} Admin</div>
-          <div className="text-xs text-slate-400">Mundial 2026</div>
+          <div className="text-xs text-slate-400">Mundial 2026 · v2.6</div>
         </div>
         <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
           <NavLinks />
