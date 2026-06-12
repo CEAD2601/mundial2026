@@ -131,8 +131,6 @@ export async function GET() {
       prevPos,
       movement,
       display: movement === null ? '—' : movement > 0 ? `↑${movement}` : movement < 0 ? `↓${Math.abs(movement)}` : '—',
-      registrationTiebreakerUsed: (participantFull?.submittedAt ?? participantFull?.createdAt)?.toISOString(),
-      submittedAt: participantFull?.submittedAt?.toISOString() ?? null,
       createdAt: participantFull?.createdAt?.toISOString() ?? null,
       currStats: {
         totalPoints: s.totalPoints,
@@ -148,7 +146,7 @@ export async function GET() {
         totalGoalDiffError: pPrev.reduce((sum, pr) => sum + (pr.goalDifferenceError ?? 0), 0),
         predCount: pPrev.length,
       },
-      registrationDate: (s.submittedAt ?? s.createdAt).toISOString(),
+      registrationDate: s.createdAt.toISOString(),
       isPaid: participants.find((p) => p.id === s.id)?.payment?.paymentStatus === 'VERIFIED',
       storedDB: storedMap.get(s.id) ?? null,
     }
