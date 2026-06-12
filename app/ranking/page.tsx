@@ -617,11 +617,11 @@ export default function RankingPage() {
               <div className="mt-3 bg-slate-100 rounded-xl p-3">
                 <p className="text-xs text-slate-500 font-medium mb-1">Criterios de desempate (en caso de empate en puntos):</p>
                 <ol className="text-xs text-slate-400 space-y-0.5 list-decimal list-inside">
-                  <li>Mayor cantidad de marcadores exactos (🎯)</li>
-                  <li>Mayor cantidad de resultados correctos (✅)</li>
-                  <li>Menor diferencia acumulada de goles ⚽ (no suma puntos, solo desempata)</li>
-                  <li>Fecha de registro más antigua</li>
+                  <li>Mayor cantidad de puntos por exactos (🎯)</li>
+                  <li>Mayor cantidad de puntos por correctos (✅)</li>
+                  <li>Fecha y hora de registro más antigua</li>
                 </ol>
+                <p className="text-xs text-slate-300 mt-1.5">Si el empate continúa, el sistema usa el orden interno de registro.</p>
               </div>
 
               <p className="text-xs text-slate-400 text-center mt-3">
