@@ -4357,6 +4357,7 @@ export namespace Prisma {
     team2Goals: number | null
     autoDetectedTeam1Goals: number | null
     autoDetectedTeam2Goals: number | null
+    autoCheckAttempts: number | null
   }
 
   export type MatchSumAggregateOutputType = {
@@ -4365,6 +4366,7 @@ export namespace Prisma {
     team2Goals: number | null
     autoDetectedTeam1Goals: number | null
     autoDetectedTeam2Goals: number | null
+    autoCheckAttempts: number | null
   }
 
   export type MatchMinAggregateOutputType = {
@@ -4390,6 +4392,8 @@ export namespace Prisma {
     autoDetectionConfidence: string | null
     autoDetectedAt: Date | null
     autoResultStatus: string | null
+    lastAutoCheckAt: Date | null
+    autoCheckAttempts: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -4417,6 +4421,8 @@ export namespace Prisma {
     autoDetectionConfidence: string | null
     autoDetectedAt: Date | null
     autoResultStatus: string | null
+    lastAutoCheckAt: Date | null
+    autoCheckAttempts: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -4444,6 +4450,8 @@ export namespace Prisma {
     autoDetectionConfidence: number
     autoDetectedAt: number
     autoResultStatus: number
+    lastAutoCheckAt: number
+    autoCheckAttempts: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -4456,6 +4464,7 @@ export namespace Prisma {
     team2Goals?: true
     autoDetectedTeam1Goals?: true
     autoDetectedTeam2Goals?: true
+    autoCheckAttempts?: true
   }
 
   export type MatchSumAggregateInputType = {
@@ -4464,6 +4473,7 @@ export namespace Prisma {
     team2Goals?: true
     autoDetectedTeam1Goals?: true
     autoDetectedTeam2Goals?: true
+    autoCheckAttempts?: true
   }
 
   export type MatchMinAggregateInputType = {
@@ -4489,6 +4499,8 @@ export namespace Prisma {
     autoDetectionConfidence?: true
     autoDetectedAt?: true
     autoResultStatus?: true
+    lastAutoCheckAt?: true
+    autoCheckAttempts?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -4516,6 +4528,8 @@ export namespace Prisma {
     autoDetectionConfidence?: true
     autoDetectedAt?: true
     autoResultStatus?: true
+    lastAutoCheckAt?: true
+    autoCheckAttempts?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -4543,6 +4557,8 @@ export namespace Prisma {
     autoDetectionConfidence?: true
     autoDetectedAt?: true
     autoResultStatus?: true
+    lastAutoCheckAt?: true
+    autoCheckAttempts?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -4657,6 +4673,8 @@ export namespace Prisma {
     autoDetectionConfidence: string | null
     autoDetectedAt: Date | null
     autoResultStatus: string | null
+    lastAutoCheckAt: Date | null
+    autoCheckAttempts: number
     createdAt: Date
     updatedAt: Date
     _count: MatchCountAggregateOutputType | null
@@ -4703,6 +4721,8 @@ export namespace Prisma {
     autoDetectionConfidence?: boolean
     autoDetectedAt?: boolean
     autoResultStatus?: boolean
+    lastAutoCheckAt?: boolean
+    autoCheckAttempts?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     team1?: boolean | TeamDefaultArgs<ExtArgs>
@@ -4734,6 +4754,8 @@ export namespace Prisma {
     autoDetectionConfidence?: boolean
     autoDetectedAt?: boolean
     autoResultStatus?: boolean
+    lastAutoCheckAt?: boolean
+    autoCheckAttempts?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     team1?: boolean | TeamDefaultArgs<ExtArgs>
@@ -4763,6 +4785,8 @@ export namespace Prisma {
     autoDetectionConfidence?: boolean
     autoDetectedAt?: boolean
     autoResultStatus?: boolean
+    lastAutoCheckAt?: boolean
+    autoCheckAttempts?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     team1?: boolean | TeamDefaultArgs<ExtArgs>
@@ -4792,11 +4816,13 @@ export namespace Prisma {
     autoDetectionConfidence?: boolean
     autoDetectedAt?: boolean
     autoResultStatus?: boolean
+    lastAutoCheckAt?: boolean
+    autoCheckAttempts?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type MatchOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "matchNumber" | "group" | "team1Id" | "team2Id" | "kickoffUtc" | "venue" | "city" | "source" | "status" | "team1Goals" | "team2Goals" | "result" | "resultUpdatedAt" | "resultSource" | "autoDetectedTeam1Goals" | "autoDetectedTeam2Goals" | "autoDetectedResult" | "autoDetectedSource" | "autoDetectionConfidence" | "autoDetectedAt" | "autoResultStatus" | "createdAt" | "updatedAt", ExtArgs["result"]["match"]>
+  export type MatchOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "matchNumber" | "group" | "team1Id" | "team2Id" | "kickoffUtc" | "venue" | "city" | "source" | "status" | "team1Goals" | "team2Goals" | "result" | "resultUpdatedAt" | "resultSource" | "autoDetectedTeam1Goals" | "autoDetectedTeam2Goals" | "autoDetectedResult" | "autoDetectedSource" | "autoDetectionConfidence" | "autoDetectedAt" | "autoResultStatus" | "lastAutoCheckAt" | "autoCheckAttempts" | "createdAt" | "updatedAt", ExtArgs["result"]["match"]>
   export type MatchInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     team1?: boolean | TeamDefaultArgs<ExtArgs>
     team2?: boolean | TeamDefaultArgs<ExtArgs>
@@ -4842,6 +4868,8 @@ export namespace Prisma {
       autoDetectionConfidence: string | null
       autoDetectedAt: Date | null
       autoResultStatus: string | null
+      lastAutoCheckAt: Date | null
+      autoCheckAttempts: number
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["match"]>
@@ -5292,6 +5320,8 @@ export namespace Prisma {
     readonly autoDetectionConfidence: FieldRef<"Match", 'String'>
     readonly autoDetectedAt: FieldRef<"Match", 'DateTime'>
     readonly autoResultStatus: FieldRef<"Match", 'String'>
+    readonly lastAutoCheckAt: FieldRef<"Match", 'DateTime'>
+    readonly autoCheckAttempts: FieldRef<"Match", 'Int'>
     readonly createdAt: FieldRef<"Match", 'DateTime'>
     readonly updatedAt: FieldRef<"Match", 'DateTime'>
   }
@@ -14025,6 +14055,8 @@ export namespace Prisma {
     autoDetectionConfidence: 'autoDetectionConfidence',
     autoDetectedAt: 'autoDetectedAt',
     autoResultStatus: 'autoResultStatus',
+    lastAutoCheckAt: 'lastAutoCheckAt',
+    autoCheckAttempts: 'autoCheckAttempts',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -14581,6 +14613,8 @@ export namespace Prisma {
     autoDetectionConfidence?: StringNullableFilter<"Match"> | string | null
     autoDetectedAt?: DateTimeNullableFilter<"Match"> | Date | string | null
     autoResultStatus?: StringNullableFilter<"Match"> | string | null
+    lastAutoCheckAt?: DateTimeNullableFilter<"Match"> | Date | string | null
+    autoCheckAttempts?: IntFilter<"Match"> | number
     createdAt?: DateTimeFilter<"Match"> | Date | string
     updatedAt?: DateTimeFilter<"Match"> | Date | string
     team1?: XOR<TeamScalarRelationFilter, TeamWhereInput>
@@ -14611,6 +14645,8 @@ export namespace Prisma {
     autoDetectionConfidence?: SortOrderInput | SortOrder
     autoDetectedAt?: SortOrderInput | SortOrder
     autoResultStatus?: SortOrderInput | SortOrder
+    lastAutoCheckAt?: SortOrderInput | SortOrder
+    autoCheckAttempts?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     team1?: TeamOrderByWithRelationInput
@@ -14644,6 +14680,8 @@ export namespace Prisma {
     autoDetectionConfidence?: StringNullableFilter<"Match"> | string | null
     autoDetectedAt?: DateTimeNullableFilter<"Match"> | Date | string | null
     autoResultStatus?: StringNullableFilter<"Match"> | string | null
+    lastAutoCheckAt?: DateTimeNullableFilter<"Match"> | Date | string | null
+    autoCheckAttempts?: IntFilter<"Match"> | number
     createdAt?: DateTimeFilter<"Match"> | Date | string
     updatedAt?: DateTimeFilter<"Match"> | Date | string
     team1?: XOR<TeamScalarRelationFilter, TeamWhereInput>
@@ -14674,6 +14712,8 @@ export namespace Prisma {
     autoDetectionConfidence?: SortOrderInput | SortOrder
     autoDetectedAt?: SortOrderInput | SortOrder
     autoResultStatus?: SortOrderInput | SortOrder
+    lastAutoCheckAt?: SortOrderInput | SortOrder
+    autoCheckAttempts?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: MatchCountOrderByAggregateInput
@@ -14709,6 +14749,8 @@ export namespace Prisma {
     autoDetectionConfidence?: StringNullableWithAggregatesFilter<"Match"> | string | null
     autoDetectedAt?: DateTimeNullableWithAggregatesFilter<"Match"> | Date | string | null
     autoResultStatus?: StringNullableWithAggregatesFilter<"Match"> | string | null
+    lastAutoCheckAt?: DateTimeNullableWithAggregatesFilter<"Match"> | Date | string | null
+    autoCheckAttempts?: IntWithAggregatesFilter<"Match"> | number
     createdAt?: DateTimeWithAggregatesFilter<"Match"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Match"> | Date | string
   }
@@ -15695,6 +15737,8 @@ export namespace Prisma {
     autoDetectionConfidence?: string | null
     autoDetectedAt?: Date | string | null
     autoResultStatus?: string | null
+    lastAutoCheckAt?: Date | string | null
+    autoCheckAttempts?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     team1: TeamCreateNestedOneWithoutMatchesAsTeam1Input
@@ -15725,6 +15769,8 @@ export namespace Prisma {
     autoDetectionConfidence?: string | null
     autoDetectedAt?: Date | string | null
     autoResultStatus?: string | null
+    lastAutoCheckAt?: Date | string | null
+    autoCheckAttempts?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     predictions?: PredictionUncheckedCreateNestedManyWithoutMatchInput
@@ -15751,6 +15797,8 @@ export namespace Prisma {
     autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    lastAutoCheckAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoCheckAttempts?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     team1?: TeamUpdateOneRequiredWithoutMatchesAsTeam1NestedInput
@@ -15781,6 +15829,8 @@ export namespace Prisma {
     autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    lastAutoCheckAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoCheckAttempts?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     predictions?: PredictionUncheckedUpdateManyWithoutMatchNestedInput
@@ -15809,6 +15859,8 @@ export namespace Prisma {
     autoDetectionConfidence?: string | null
     autoDetectedAt?: Date | string | null
     autoResultStatus?: string | null
+    lastAutoCheckAt?: Date | string | null
+    autoCheckAttempts?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -15834,6 +15886,8 @@ export namespace Prisma {
     autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    lastAutoCheckAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoCheckAttempts?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -15861,6 +15915,8 @@ export namespace Prisma {
     autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    lastAutoCheckAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoCheckAttempts?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -17034,6 +17090,8 @@ export namespace Prisma {
     autoDetectionConfidence?: SortOrder
     autoDetectedAt?: SortOrder
     autoResultStatus?: SortOrder
+    lastAutoCheckAt?: SortOrder
+    autoCheckAttempts?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -17044,6 +17102,7 @@ export namespace Prisma {
     team2Goals?: SortOrder
     autoDetectedTeam1Goals?: SortOrder
     autoDetectedTeam2Goals?: SortOrder
+    autoCheckAttempts?: SortOrder
   }
 
   export type MatchMaxOrderByAggregateInput = {
@@ -17069,6 +17128,8 @@ export namespace Prisma {
     autoDetectionConfidence?: SortOrder
     autoDetectedAt?: SortOrder
     autoResultStatus?: SortOrder
+    lastAutoCheckAt?: SortOrder
+    autoCheckAttempts?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -17096,6 +17157,8 @@ export namespace Prisma {
     autoDetectionConfidence?: SortOrder
     autoDetectedAt?: SortOrder
     autoResultStatus?: SortOrder
+    lastAutoCheckAt?: SortOrder
+    autoCheckAttempts?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -17106,6 +17169,7 @@ export namespace Prisma {
     team2Goals?: SortOrder
     autoDetectedTeam1Goals?: SortOrder
     autoDetectedTeam2Goals?: SortOrder
+    autoCheckAttempts?: SortOrder
   }
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
@@ -18400,6 +18464,8 @@ export namespace Prisma {
     autoDetectionConfidence?: string | null
     autoDetectedAt?: Date | string | null
     autoResultStatus?: string | null
+    lastAutoCheckAt?: Date | string | null
+    autoCheckAttempts?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     team2: TeamCreateNestedOneWithoutMatchesAsTeam2Input
@@ -18428,6 +18494,8 @@ export namespace Prisma {
     autoDetectionConfidence?: string | null
     autoDetectedAt?: Date | string | null
     autoResultStatus?: string | null
+    lastAutoCheckAt?: Date | string | null
+    autoCheckAttempts?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     predictions?: PredictionUncheckedCreateNestedManyWithoutMatchInput
@@ -18464,6 +18532,8 @@ export namespace Prisma {
     autoDetectionConfidence?: string | null
     autoDetectedAt?: Date | string | null
     autoResultStatus?: string | null
+    lastAutoCheckAt?: Date | string | null
+    autoCheckAttempts?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     team1: TeamCreateNestedOneWithoutMatchesAsTeam1Input
@@ -18492,6 +18562,8 @@ export namespace Prisma {
     autoDetectionConfidence?: string | null
     autoDetectedAt?: Date | string | null
     autoResultStatus?: string | null
+    lastAutoCheckAt?: Date | string | null
+    autoCheckAttempts?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     predictions?: PredictionUncheckedCreateNestedManyWithoutMatchInput
@@ -18549,6 +18621,8 @@ export namespace Prisma {
     autoDetectionConfidence?: StringNullableFilter<"Match"> | string | null
     autoDetectedAt?: DateTimeNullableFilter<"Match"> | Date | string | null
     autoResultStatus?: StringNullableFilter<"Match"> | string | null
+    lastAutoCheckAt?: DateTimeNullableFilter<"Match"> | Date | string | null
+    autoCheckAttempts?: IntFilter<"Match"> | number
     createdAt?: DateTimeFilter<"Match"> | Date | string
     updatedAt?: DateTimeFilter<"Match"> | Date | string
   }
@@ -19070,6 +19144,8 @@ export namespace Prisma {
     autoDetectionConfidence?: string | null
     autoDetectedAt?: Date | string | null
     autoResultStatus?: string | null
+    lastAutoCheckAt?: Date | string | null
+    autoCheckAttempts?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     team1: TeamCreateNestedOneWithoutMatchesAsTeam1Input
@@ -19099,6 +19175,8 @@ export namespace Prisma {
     autoDetectionConfidence?: string | null
     autoDetectedAt?: Date | string | null
     autoResultStatus?: string | null
+    lastAutoCheckAt?: Date | string | null
+    autoCheckAttempts?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -19185,6 +19263,8 @@ export namespace Prisma {
     autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    lastAutoCheckAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoCheckAttempts?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     team1?: TeamUpdateOneRequiredWithoutMatchesAsTeam1NestedInput
@@ -19214,6 +19294,8 @@ export namespace Prisma {
     autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    lastAutoCheckAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoCheckAttempts?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -19408,6 +19490,8 @@ export namespace Prisma {
     autoDetectionConfidence?: string | null
     autoDetectedAt?: Date | string | null
     autoResultStatus?: string | null
+    lastAutoCheckAt?: Date | string | null
+    autoCheckAttempts?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -19434,6 +19518,8 @@ export namespace Prisma {
     autoDetectionConfidence?: string | null
     autoDetectedAt?: Date | string | null
     autoResultStatus?: string | null
+    lastAutoCheckAt?: Date | string | null
+    autoCheckAttempts?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -19459,6 +19545,8 @@ export namespace Prisma {
     autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    lastAutoCheckAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoCheckAttempts?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     team2?: TeamUpdateOneRequiredWithoutMatchesAsTeam2NestedInput
@@ -19487,6 +19575,8 @@ export namespace Prisma {
     autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    lastAutoCheckAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoCheckAttempts?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     predictions?: PredictionUncheckedUpdateManyWithoutMatchNestedInput
@@ -19514,6 +19604,8 @@ export namespace Prisma {
     autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    lastAutoCheckAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoCheckAttempts?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -19539,6 +19631,8 @@ export namespace Prisma {
     autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    lastAutoCheckAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoCheckAttempts?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     team1?: TeamUpdateOneRequiredWithoutMatchesAsTeam1NestedInput
@@ -19567,6 +19661,8 @@ export namespace Prisma {
     autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    lastAutoCheckAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoCheckAttempts?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     predictions?: PredictionUncheckedUpdateManyWithoutMatchNestedInput
@@ -19594,6 +19690,8 @@ export namespace Prisma {
     autoDetectionConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     autoDetectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     autoResultStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    lastAutoCheckAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    autoCheckAttempts?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
