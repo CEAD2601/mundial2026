@@ -33,6 +33,7 @@ export interface CronRunSummary {
   resultsDetected: number
   resultsAutoApplied: number
   resultsPendingReview: number
+  resultsNotFinalYet: number
   errors: string[]
   timestamp: string
 }
@@ -455,6 +456,7 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
     resultsDetected: 0,
     resultsAutoApplied: 0,
     resultsPendingReview: 0,
+    resultsNotFinalYet: 0,
     errors: [],
     timestamp: new Date().toISOString(),
   }
@@ -472,24 +474,37 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
 
   try {
     const now = new Date()
-    // Review window: 105 min after kickoff (match should be finished) up to 6 hours
-    const reviewWindowStart = new Date(now.getTime() - 105 * 60 * 1000)
+    // Review window: 120 min after kickoff (2 hours — match should be finished) up to 6 hours
+    const reviewWindowStart = new Date(now.getTime() - 120 * 60 * 1000)
     const reviewWindowEnd = new Date(now.getTime() - 6 * 60 * 60 * 1000)
     // Only re-check a match if it hasn't been checked in the last 10 minutes
     const reCheckThreshold = new Date(now.getTime() - 10 * 60 * 1000)
 
-    const candidateMatches = await prisma.match.findMany({
-      where: {
-        status: { in: ['SCHEDULED', 'IN_PROGRESS'] },
-        kickoffUtc: { gte: reviewWindowEnd, lte: reviewWindowStart },
-        autoCheckAttempts: { lt: 20 },
-        OR: [
-          { lastAutoCheckAt: null },
-          { lastAutoCheckAt: { lte: reCheckThreshold } },
-        ],
-      },
-      include: { team1: true, team2: true },
-    })
+    // Try with new tracking columns first; fall back gracefully if DB hasn't been migrated yet
+    let candidateMatches: Awaited<ReturnType<typeof prisma.match.findMany<{ include: { team1: true; team2: true } }>>>
+    try {
+      candidateMatches = await prisma.match.findMany({
+        where: {
+          status: { in: ['SCHEDULED', 'IN_PROGRESS'] },
+          kickoffUtc: { gte: reviewWindowEnd, lte: reviewWindowStart },
+          autoCheckAttempts: { lt: 20 },
+          OR: [
+            { lastAutoCheckAt: null },
+            { lastAutoCheckAt: { lte: reCheckThreshold } },
+          ],
+        },
+        include: { team1: true, team2: true },
+      })
+    } catch {
+      // Columns may not exist yet — fall back to basic time-window query
+      candidateMatches = await prisma.match.findMany({
+        where: {
+          status: { in: ['SCHEDULED', 'IN_PROGRESS'] },
+          kickoffUtc: { gte: reviewWindowEnd, lte: reviewWindowStart },
+        },
+        include: { team1: true, team2: true },
+      })
+    }
 
     summary.matchesChecked = candidateMatches.length
 
@@ -645,6 +660,7 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
       if (!appliedMatchIds.has(match.id)) {
         const notFoundInDetected = !aggregated.some((d) => d.matchNumber === match.matchNumber)
         if (notFoundInDetected) {
+          summary.resultsNotFinalYet++
           await prisma.liveResultsLog.create({
             data: {
               type: 'CRON_RUN',
@@ -653,19 +669,26 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
             },
           })
         }
-        await prisma.match.update({
-          where: { id: match.id },
-          data: {
-            lastAutoCheckAt: now,
-            autoCheckAttempts: { increment: 1 },
-          },
-        })
+        try {
+          await prisma.match.update({
+            where: { id: match.id },
+            data: {
+              lastAutoCheckAt: now,
+              autoCheckAttempts: { increment: 1 },
+            },
+          })
+        } catch {
+          // Column may not exist yet — not critical, continue
+        }
       } else {
-        // Applied — mark as checked (attempts tracking still useful for audit)
-        await prisma.match.update({
-          where: { id: match.id },
-          data: { lastAutoCheckAt: now },
-        })
+        try {
+          await prisma.match.update({
+            where: { id: match.id },
+            data: { lastAutoCheckAt: now },
+          })
+        } catch {
+          // Column may not exist yet — not critical, continue
+        }
       }
     }
 
@@ -698,7 +721,7 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
   await prisma.liveResultsLog.create({
     data: {
       type: 'CRON_RUN',
-      message: `Cron completado: ${summary.resultsDetected} detectados, ${summary.resultsAutoApplied} aplicados automáticamente, ${summary.resultsPendingReview} pendientes de revisión`,
+      message: `CRON_RUN_COMPLETED: ${summary.matchesChecked} consultados, ${summary.resultsAutoApplied} aplicados, ${summary.resultsPendingReview} pendientes, ${summary.resultsNotFinalYet} sin finalizar`,
     },
   })
 

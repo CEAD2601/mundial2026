@@ -17,21 +17,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { runLiveResultsUpdate } from '@/lib/liveResultsService'
 
-export async function POST(req: NextRequest) {
-  // Validate secret
-  const cronSecret = process.env.CRON_SECRET
-  if (!cronSecret) {
-    return NextResponse.json(
-      { error: 'CRON_SECRET not configured' },
-      { status: 503 }
-    )
-  }
-
+function validateCronSecret(req: NextRequest): boolean {
+  const cronSecret = process.env.CRON_SECRET?.trim()
+  if (!cronSecret) return false
   const authHeader = req.headers.get('authorization')
   const querySecret = req.nextUrl.searchParams.get('secret')
-  const providedSecret = authHeader?.replace('Bearer ', '') ?? querySecret
+  const provided = (authHeader?.replace('Bearer ', '') ?? querySecret ?? '').trim()
+  return provided === cronSecret
+}
 
-  if (providedSecret !== cronSecret) {
+export async function POST(req: NextRequest) {
+  if (!process.env.CRON_SECRET?.trim()) {
+    return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 503 })
+  }
+  if (!validateCronSecret(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -46,17 +45,10 @@ export async function POST(req: NextRequest) {
 
 // Also allow GET for Vercel Cron (which sends GET requests)
 export async function GET(req: NextRequest) {
-  const cronSecret = process.env.CRON_SECRET
-  if (!cronSecret) {
+  if (!process.env.CRON_SECRET?.trim()) {
     return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 503 })
   }
-
-  // Vercel Cron sends Authorization: Bearer <CRON_SECRET>
-  const authHeader = req.headers.get('authorization')
-  const querySecret = req.nextUrl.searchParams.get('secret')
-  const providedSecret = authHeader?.replace('Bearer ', '') ?? querySecret
-
-  if (providedSecret !== cronSecret) {
+  if (!validateCronSecret(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

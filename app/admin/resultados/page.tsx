@@ -456,9 +456,28 @@ export default function ResultadosAdminPage() {
               </div>
             )}
             {liveStatus && liveStatus.enabled && (
-              <div className="mt-4 bg-green-50 border border-green-200 rounded-xl p-3 text-sm text-green-800 space-y-1">
-                <p>✅ <strong>Automatización activada.</strong> Los resultados finales confiables se aplican automáticamente y actualizan el ranking. Solo los resultados dudosos quedan pendientes de revisión.</p>
-                <p className="text-green-700">ℹ️ Los resultados finales con confianza alta se aplican automáticamente. Los resultados con confianza media o baja requieren revisión. El cron corre cada 10 minutos.</p>
+              <div className="mt-4 space-y-3">
+                <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-sm text-green-800">
+                  <p>✅ <strong>Automatización activada.</strong> FINAL + confianza alta → se aplica solo y recalcula ranking. Sin intervención manual.</p>
+                  <p className="text-green-700 mt-1">Ventana de revisión: desde 2 horas después del inicio hasta 6 horas. Reintento cada 10 minutos.</p>
+                </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-sm text-blue-800">
+                  <p className="font-semibold mb-1">⏱ Estado del cron automático</p>
+                  <ul className="space-y-0.5 text-blue-700">
+                    <li>• Vercel Cron: corre una vez al día (3:00 AM UTC) — limitación del plan Hobby</li>
+                    <li>• Para cron cada 10 min: requiere configurar <strong>cron-job.org</strong> (ver abajo)</li>
+                  </ul>
+                </div>
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
+                  <p className="font-semibold mb-2">📋 Configurar cron cada 10 minutos (una sola vez)</p>
+                  <ol className="space-y-1 text-amber-700 list-decimal list-inside text-xs">
+                    <li>Ir a <strong>cron-job.org</strong> → crear cuenta gratis</li>
+                    <li>Nuevo cron job → URL: <code className="bg-amber-100 px-1 rounded">https://mundial2026-nine-psi.vercel.app/api/cron/update-live-results</code></li>
+                    <li>Método: GET · Intervalo: cada 10 minutos</li>
+                    <li>Header: <code className="bg-amber-100 px-1 rounded">Authorization: Bearer 7EuU0JAH6oN9rxyvCjOe3BFTIZlSKdzwYbGWRq1i</code></li>
+                    <li>Guardar y activar</li>
+                  </ol>
+                </div>
               </div>
             )}
 
