@@ -477,35 +477,21 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
     // Review window: 120 min after kickoff (2 hours — match should be finished) up to 6 hours
     const reviewWindowStart = new Date(now.getTime() - 120 * 60 * 1000)
     const reviewWindowEnd = new Date(now.getTime() - 6 * 60 * 60 * 1000)
-    // Only re-check a match if it hasn't been checked in the last 10 minutes
-    const reCheckThreshold = new Date(now.getTime() - 10 * 60 * 1000)
 
-    // Try with new tracking columns first; fall back gracefully if DB hasn't been migrated yet
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let candidateMatches: any[]
-    try {
-      candidateMatches = await prisma.match.findMany({
-        where: {
-          status: { in: ['SCHEDULED', 'IN_PROGRESS'] },
-          kickoffUtc: { gte: reviewWindowEnd, lte: reviewWindowStart },
-          autoCheckAttempts: { lt: 20 },
-          OR: [
-            { lastAutoCheckAt: null },
-            { lastAutoCheckAt: { lte: reCheckThreshold } },
-          ],
-        },
-        include: { team1: true, team2: true },
-      })
-    } catch {
-      // Columns may not exist yet — fall back to basic time-window query
-      candidateMatches = await prisma.match.findMany({
-        where: {
-          status: { in: ['SCHEDULED', 'IN_PROGRESS'] },
-          kickoffUtc: { gte: reviewWindowEnd, lte: reviewWindowStart },
-        },
-        include: { team1: true, team2: true },
-      })
-    }
+    // Query without new tracking columns (lastAutoCheckAt / autoCheckAttempts require SQL migration)
+    const candidateMatches = await prisma.match.findMany({
+      where: {
+        status: { in: ['SCHEDULED', 'IN_PROGRESS'] },
+        kickoffUtc: { gte: reviewWindowEnd, lte: reviewWindowStart },
+      },
+      select: {
+        id: true, matchNumber: true, group: true, kickoffUtc: true,
+        status: true, team1Goals: true, team2Goals: true, result: true,
+        autoResultStatus: true, autoDetectedTeam1Goals: true, autoDetectedTeam2Goals: true,
+        team1: { select: { id: true, displayName: true, fifaCode: true, isoCode: true, shortName: true, aliases: true } },
+        team2: { select: { id: true, displayName: true, fifaCode: true, isoCode: true, shortName: true, aliases: true } },
+      },
+    })
 
     summary.matchesChecked = candidateMatches.length
 
@@ -522,7 +508,7 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
       await prisma.liveResultsLog.create({
         data: {
           type: 'CRON_RUN',
-          message: `AUTO_CHECK_STARTED: Revisando Partido #${m.matchNumber} (${minutesSinceKickoff} min desde inicio, intento #${m.autoCheckAttempts + 1})`,
+          message: `AUTO_CHECK_STARTED: Revisando Partido #${m.matchNumber} (${minutesSinceKickoff} min desde inicio)`,
           matchId: m.id,
         },
       })
@@ -655,8 +641,7 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
         })
       }
     }
-    // Update lastAutoCheckAt and autoCheckAttempts for all checked matches
-    // (including those where no result was found yet — they'll be retried next run)
+    // Log matches not yet final
     for (const match of candidateMatches) {
       if (!appliedMatchIds.has(match.id)) {
         const notFoundInDetected = !aggregated.some((d) => d.matchNumber === match.matchNumber)
@@ -670,46 +655,7 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
             },
           })
         }
-        try {
-          await prisma.match.update({
-            where: { id: match.id },
-            data: {
-              lastAutoCheckAt: now,
-              autoCheckAttempts: { increment: 1 },
-            },
-          })
-        } catch {
-          // Column may not exist yet — not critical, continue
-        }
-      } else {
-        try {
-          await prisma.match.update({
-            where: { id: match.id },
-            data: { lastAutoCheckAt: now },
-          })
-        } catch {
-          // Column may not exist yet — not critical, continue
-        }
       }
-    }
-
-    // Alert if any matches exceeded the 6-hour window without resolution
-    const stalledMatches = await prisma.match.findMany({
-      where: {
-        status: { in: ['SCHEDULED', 'IN_PROGRESS'] },
-        kickoffUtc: { lte: new Date(now.getTime() - 6 * 60 * 60 * 1000) },
-        autoCheckAttempts: { gte: 20 },
-      },
-      select: { matchNumber: true, id: true },
-    })
-    for (const m of stalledMatches) {
-      await prisma.liveResultsLog.create({
-        data: {
-          type: 'ERROR',
-          message: `Partido #${m.matchNumber} superó 6 horas sin resultado confirmado. Requiere revisión manual.`,
-          matchId: m.id,
-        },
-      })
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Error desconocido'
