@@ -481,7 +481,8 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
     const reCheckThreshold = new Date(now.getTime() - 10 * 60 * 1000)
 
     // Try with new tracking columns first; fall back gracefully if DB hasn't been migrated yet
-    let candidateMatches: Awaited<ReturnType<typeof prisma.match.findMany<{ include: { team1: true; team2: true } }>>>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let candidateMatches: any[]
     try {
       candidateMatches = await prisma.match.findMany({
         where: {
