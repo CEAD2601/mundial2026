@@ -47,6 +47,18 @@ interface LiveStatus {
   lastRunMessage: string | null
 }
 
+interface UpcomingCheck {
+  id: string
+  matchNumber: number
+  team1: { displayName: string; flagEmoji: string }
+  team2: { displayName: string; flagEmoji: string }
+  kickoffUtc: string
+  firstCheckAt: string
+  lastAutoCheckAt: string | null
+  autoCheckAttempts: number
+  status: 'WAITING' | 'CHECKING' | 'REQUIRES_MANUAL'
+}
+
 interface LogEntry {
   type: string
   message: string
@@ -73,6 +85,7 @@ export default function ResultadosAdminPage() {
   // Live results state
   const [liveStatus, setLiveStatus] = useState<LiveStatus | null>(null)
   const [pendingMatches, setPendingMatches] = useState<PendingAutoMatch[]>([])
+  const [upcomingChecks, setUpcomingChecks] = useState<UpcomingCheck[]>([])
   const [recentLogs, setRecentLogs] = useState<LogEntry[]>([])
   const [liveLoading, setLiveLoading] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
@@ -112,6 +125,7 @@ export default function ResultadosAdminPage() {
       const data = await res.json()
       setLiveStatus(data.status)
       setPendingMatches(data.pendingMatches ?? [])
+      setUpcomingChecks(data.upcomingChecks ?? [])
       setRecentLogs(data.recentLogs ?? [])
     }
     setLiveLoading(false)
@@ -486,6 +500,52 @@ export default function ResultadosAdminPage() {
               </div>
             )}
           </div>
+
+          {/* Upcoming auto-checks */}
+          {upcomingChecks.length > 0 && (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-100">
+                <h2 className="font-bold text-slate-800">Próximas revisiones automáticas</h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Cada partido se revisa automáticamente 105 minutos después de su inicio.
+                </p>
+              </div>
+              <div className="divide-y divide-slate-50">
+                {upcomingChecks.map((m) => {
+                  const kickoffVet = new Date(m.kickoffUtc).toLocaleString('es-VE', {
+                    timeZone: 'America/Caracas',
+                    month: 'short', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit',
+                  })
+                  const firstCheckVet = new Date(m.firstCheckAt).toLocaleString('es-VE', {
+                    timeZone: 'America/Caracas',
+                    hour: '2-digit', minute: '2-digit',
+                  })
+                  const statusConfig = {
+                    WAITING: { label: 'Esperando inicio', color: 'bg-slate-100 text-slate-600' },
+                    CHECKING: { label: 'En revisión', color: 'bg-blue-100 text-blue-700' },
+                    REQUIRES_MANUAL: { label: 'Rev. manual', color: 'bg-red-100 text-red-700' },
+                  }[m.status]
+                  return (
+                    <div key={m.id} className="px-5 py-3 flex items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-slate-800 truncate">
+                          {m.team1.flagEmoji} {m.team1.displayName} vs {m.team2.displayName} {m.team2.flagEmoji}
+                        </div>
+                        <div className="text-xs text-slate-400 mt-0.5">
+                          Inicio: {kickoffVet} · Primera revisión: {firstCheckVet}
+                          {m.autoCheckAttempts > 0 && ` · Intentos: ${m.autoCheckAttempts}`}
+                        </div>
+                      </div>
+                      <span className={`text-xs font-bold px-2 py-1 rounded-full shrink-0 ${statusConfig.color}`}>
+                        {statusConfig.label}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Pending confirmation */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">

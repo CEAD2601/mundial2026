@@ -14,7 +14,12 @@ function parseBoolean(value: string | undefined): boolean {
 }
 
 export async function GET() {
-  const [pendingMatches, recentLogs] = await Promise.all([
+  const now = new Date()
+  const next48h = new Date(now.getTime() + 48 * 60 * 60 * 1000)
+  const reviewWindowStart = new Date(now.getTime() - 105 * 60 * 1000)
+  const reviewWindowEnd = new Date(now.getTime() - 6 * 60 * 60 * 1000)
+
+  const [pendingMatches, recentLogs, upcomingAndActiveMatches] = await Promise.all([
     prisma.match.findMany({
       where: { autoResultStatus: 'PENDING_REVIEW' },
       include: { team1: true, team2: true },
@@ -23,6 +28,21 @@ export async function GET() {
     prisma.liveResultsLog.findMany({
       orderBy: { createdAt: 'desc' },
       take: 50,
+    }),
+    // Matches to show in "upcoming checks" panel:
+    // 1. Scheduled in next 48h (not started yet)
+    // 2. Currently in review window (105min - 6h past kickoff, not finished)
+    prisma.match.findMany({
+      where: {
+        status: { in: ['SCHEDULED', 'IN_PROGRESS'] },
+        OR: [
+          { kickoffUtc: { gte: now, lte: next48h } },
+          { kickoffUtc: { gte: reviewWindowEnd, lte: reviewWindowStart } },
+        ],
+      },
+      include: { team1: true, team2: true },
+      orderBy: { kickoffUtc: 'asc' },
+      take: 20,
     }),
   ])
 
@@ -78,6 +98,28 @@ export async function GET() {
       adminAction: l.adminAction,
       createdAt: l.createdAt,
     })),
+    upcomingChecks: upcomingAndActiveMatches.map((m) => {
+      const kickoff = m.kickoffUtc.getTime()
+      const firstCheckAt = new Date(kickoff + 105 * 60 * 1000)
+      const inWindow = now.getTime() >= kickoff + 105 * 60 * 1000
+      const exhausted = (m.autoCheckAttempts ?? 0) >= 20
+      const status = exhausted
+        ? 'REQUIRES_MANUAL'
+        : inWindow
+        ? 'CHECKING'
+        : 'WAITING'
+      return {
+        id: m.id,
+        matchNumber: m.matchNumber,
+        team1: { displayName: m.team1.displayName, flagEmoji: m.team1.flagEmoji },
+        team2: { displayName: m.team2.displayName, flagEmoji: m.team2.flagEmoji },
+        kickoffUtc: m.kickoffUtc,
+        firstCheckAt,
+        lastAutoCheckAt: m.lastAutoCheckAt ?? null,
+        autoCheckAttempts: m.autoCheckAttempts ?? 0,
+        status,
+      }
+    }),
   })
 }
 
