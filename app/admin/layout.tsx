@@ -19,6 +19,7 @@ const NAV = [
   { href: '/admin/backups',       icon: '\u{1F4BE}', label: 'Backups' },
   { href: '/admin/configuracion', icon: '\u{2699}\u{FE0F}', label: 'Configuración' },
   { href: '/admin/analytics',     icon: '\u{1F4CA}', label: 'Analíticas' },
+  { href: '/admin/prototipo-eliminatorias-avanzado', icon: '\u{1F3C6}', label: 'Prototipo Eliminatorias' },
 ]
 
 function NavLinks({ onSelect }: { onSelect?: () => void }) {

@@ -1128,7 +1128,7 @@ export default function PrototipoEliminatoriasV3() {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="bg-yellow-400 text-slate-900 text-xs font-extrabold px-2.5 py-1 rounded-full">
-              Prototipo demo
+              Eliminatorias 2026
             </span>
             <span className="bg-green-500/30 border border-green-400/30 text-green-100 text-xs px-2.5 py-1 rounded-full">
               {pct}% completado
@@ -1399,7 +1399,7 @@ export default function PrototipoEliminatoriasV3() {
         </div>
 
         <p className="text-xs text-slate-400 text-center mt-4 pb-4">
-          Datos de demostración · Se actualizará con resultados reales
+          Se actualizará con resultados reales al inicio del torneo
         </p>
       </div>
     )
@@ -1442,7 +1442,7 @@ export default function PrototipoEliminatoriasV3() {
             { label: 'Partidos abiertos',  val: totalOpenCount,              icon: '⚽' },
             { label: 'Picks en sesión',    val: Object.keys(picks).length,   icon: '📝' },
             { label: 'Etapa actual',       val: STAGE_META[activeStage].short, icon: '📍' },
-            { label: 'Participantes demo', val: DEMO_PARTICIPANTS.length,    icon: '👥' },
+            { label: 'Participantes',      val: DEMO_PARTICIPANTS.length,    icon: '👥' },
           ].map(s => (
             <div key={s.label} className="bg-white border border-slate-200 rounded-2xl p-4 text-center shadow-sm">
               <div className="text-2xl mb-1">{s.icon}</div>
@@ -1637,7 +1637,7 @@ export default function PrototipoEliminatoriasV3() {
           ✅ Inscribirme en la quiniela
         </button>
         <p className="text-[10px] text-slate-400 text-center mt-3">
-          Prototipo demo · Sin conexión a base de datos real
+          Vista previa interna · Datos de prueba
         </p>
       </div>
     )
@@ -1654,7 +1654,7 @@ export default function PrototipoEliminatoriasV3() {
           onClick={() => setView('admin')}
           className="underline text-slate-700 hover:text-slate-900"
         >
-          Ver Admin demo
+          Panel admin
         </button>
       </div>
 
