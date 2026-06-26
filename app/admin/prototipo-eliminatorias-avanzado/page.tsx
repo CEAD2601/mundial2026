@@ -19,14 +19,20 @@ import {
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type View = 'home' | 'llenado' | 'bracket' | 'mi-quiniela' | 'ranking' | 'admin'
+type View = 'home' | 'llenado' | 'bracket' | 'mi-quiniela' | 'ranking' | 'admin' | 'registro'
 type Pick = { home: number; away: number }
 type Picks = Record<string, Pick>
 
 const STAGES: Stage[] = ['R32', 'R16', 'QF', 'SF', 'FINAL']
 const STORAGE_KEY = 'ko-proto-v3-picks'
-const DEMO_NAME = 'Carlos Demo'
-const DEMO_CODE = 'KO-0001'
+const DEMO_NAME   = 'Carlos Demo'
+const DEMO_CEDULA = '12345678'
+const DEMO_WA     = '04141234567'
+
+function maskCedula(c: string) {
+  if (c.length <= 4) return 'V-' + '•'.repeat(c.length)
+  return 'V-' + c.slice(0, 2) + '••••' + c.slice(-2)
+}
 
 // ── Storage ────────────────────────────────────────────────────────────────────
 
@@ -244,6 +250,18 @@ export default function PrototipoEliminatoriasV3() {
   const [confirmed, setConfirmed] = useState(false)
   const matchListTopRef = useRef<HTMLDivElement>(null)
 
+  // Registro demo
+  const [registered, setRegistered] = useState(false)
+  const [regForm, setRegForm] = useState({ nombre: '', cedula: '', whatsapp: '', ciudad: '', email: '' })
+  const [regErrors, setRegErrors] = useState<Record<string, string>>({})
+
+  // Mi Quiniela — búsqueda
+  const [miqQuery, setMiqQuery] = useState('')
+  const [miqFound, setMiqFound] = useState(false)
+
+  // Admin — búsqueda participantes
+  const [adminSearch, setAdminSearch] = useState('')
+
   useEffect(() => { setPicks(loadPicks()) }, [])
 
   useEffect(() => {
@@ -303,11 +321,11 @@ export default function PrototipoEliminatoriasV3() {
   // ── Navigation ──────────────────────────────────────────────────────────────
 
   const navItems: { id: View; label: string; emoji: string }[] = [
-    { id: 'home',         label: 'Inicio',     emoji: '🏠' },
-    { id: 'llenado',      label: 'Llenar',     emoji: '⚽' },
-    { id: 'mi-quiniela',  label: 'Mi quiniela', emoji: '📋' },
-    { id: 'ranking',      label: 'Ranking',    emoji: '🏆' },
-    { id: 'bracket',      label: 'Cuadro',     emoji: '📊' },
+    { id: 'home',        label: 'Inicio',      emoji: '🏠' },
+    { id: 'llenado',     label: 'Llenar',      emoji: '⚽' },
+    { id: 'mi-quiniela', label: 'Mi quiniela', emoji: '📋' },
+    { id: 'ranking',     label: 'Ranking',     emoji: '🏆' },
+    { id: 'bracket',     label: 'Cuadro',      emoji: '📊' },
   ]
 
   // ── HOME ────────────────────────────────────────────────────────────────────
@@ -381,7 +399,7 @@ export default function PrototipoEliminatoriasV3() {
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center max-w-sm mx-auto sm:max-w-none">
               <button
-                onClick={() => setView('llenado')}
+                onClick={() => setView(registered || filledCount > 0 ? 'llenado' : 'registro')}
                 className="bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-slate-900 font-extrabold px-8 py-4 rounded-2xl text-base shadow-2xl transition-all active:scale-95 touch-manipulation"
               >
                 ⚽ {filledCount > 0 ? 'Continuar llenando' : 'Participar ahora'}
@@ -548,10 +566,10 @@ export default function PrototipoEliminatoriasV3() {
                 Predice los 32 partidos y compite por el primer lugar de la Quiniela Eliminatorias 2026.
               </p>
               <button
-                onClick={() => setView('llenado')}
+                onClick={() => setView(registered || filledCount > 0 ? 'llenado' : 'registro')}
                 className="bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-slate-900 font-extrabold px-10 py-4 rounded-2xl text-lg shadow-xl transition-all active:scale-95 touch-manipulation"
               >
-                ⚽ Llenar mi quiniela ahora
+                ⚽ {registered || filledCount > 0 ? 'Llenar mi quiniela' : 'Inscribirme ahora'}
               </button>
             </div>
           </section>
@@ -1029,8 +1047,69 @@ export default function PrototipoEliminatoriasV3() {
 
   function renderMiQuiniela() {
     const allOpen = KNOCKOUT_MATCHES.filter(m => m.isOpenForPredictions)
-    const filled = allOpen.filter(m => picks[m.id] !== undefined).length
-    const pct = allOpen.length > 0 ? Math.round(filled / allOpen.length * 100) : 0
+    const filled  = allOpen.filter(m => picks[m.id] !== undefined).length
+    const pct     = allOpen.length > 0 ? Math.round(filled / allOpen.length * 100) : 0
+
+    // Determine if we're showing the registered user's quiniela or search mode
+    const showQuiniela = registered || miqFound || filledCount > 0
+    const displayName  = registered ? regForm.nombre || DEMO_NAME : DEMO_NAME
+    const displayCed   = registered ? regForm.cedula || DEMO_CEDULA : DEMO_CEDULA
+
+    // Search handler (demo: matches cedula or WhatsApp)
+    function handleSearch() {
+      const q = miqQuery.trim()
+      if (q === DEMO_CEDULA || q === DEMO_WA || q === '04141234567' || q.toLowerCase() === 'carlos') {
+        setMiqFound(true)
+      } else {
+        setToast('❌ No se encontró ninguna quiniela con ese dato')
+      }
+    }
+
+    if (!showQuiniela) {
+      return (
+        <div className="max-w-2xl mx-auto px-4 py-8">
+          {/* Search card */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-4">
+            <div className="text-center mb-6">
+              <div className="text-4xl mb-3">📋</div>
+              <h2 className="text-xl font-extrabold text-slate-800 mb-1">Buscar mi quiniela</h2>
+              <p className="text-sm text-slate-500">Ingresa tu cédula o WhatsApp para ver tu quiniela.</p>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Cédula o WhatsApp</label>
+                <input
+                  type="text"
+                  value={miqQuery}
+                  onChange={e => setMiqQuery(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                  placeholder="Ej: 12345678  ó  04141234567"
+                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-green-500 font-mono"
+                />
+              </div>
+              <button
+                onClick={handleSearch}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-extrabold py-3.5 rounded-xl text-sm transition-all active:scale-95"
+              >
+                🔍 Buscar quiniela
+              </button>
+            </div>
+          </div>
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+            <p className="text-xs text-blue-700 font-semibold mb-1">¿No tienes quiniela todavía?</p>
+            <button
+              onClick={() => setView('registro')}
+              className="text-xs text-blue-600 underline font-bold"
+            >
+              Inscribirme ahora →
+            </button>
+          </div>
+          <p className="text-xs text-slate-400 text-center mt-4">
+            Demo: prueba con cédula <strong>12345678</strong> o WhatsApp <strong>04141234567</strong>
+          </p>
+        </div>
+      )
+    }
 
     return (
       <div className="max-w-2xl mx-auto px-4 py-6 pb-10">
@@ -1039,11 +1118,12 @@ export default function PrototipoEliminatoriasV3() {
           <div className="flex items-start justify-between mb-3">
             <div>
               <p className="text-green-200 text-xs font-semibold">Quiniela Eliminatorias 2026</p>
-              <p className="text-xl font-extrabold mt-0.5">{DEMO_NAME}</p>
+              <p className="text-xl font-extrabold mt-0.5">{displayName}</p>
             </div>
+            {/* Cédula mascarada — no código */}
             <div className="bg-white/15 border border-white/30 rounded-xl px-3 py-2 text-right shrink-0 ml-3">
-              <p className="text-xs text-green-200">Código</p>
-              <p className="font-extrabold text-sm tracking-wider">{DEMO_CODE}</p>
+              <p className="text-xs text-green-200">Cédula</p>
+              <p className="font-extrabold text-sm tracking-wider font-mono">{maskCedula(displayCed)}</p>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -1158,8 +1238,16 @@ export default function PrototipoEliminatoriasV3() {
             <div className="bg-green-50 border-2 border-green-300 rounded-2xl p-5 text-center">
               <div className="text-3xl mb-2">🎉</div>
               <p className="text-green-700 font-extrabold text-base">¡Quiniela confirmada!</p>
-              <p className="text-green-600 text-sm mt-1">Código: <strong>{DEMO_CODE}</strong></p>
+              <p className="text-green-600 text-sm mt-1">Cédula: <strong className="font-mono">{maskCedula(displayCed)}</strong></p>
             </div>
+          )}
+          {miqFound && !registered && (
+            <button
+              onClick={() => { setMiqFound(false); setMiqQuery('') }}
+              className="w-full border border-slate-200 text-slate-500 font-semibold py-3 rounded-xl text-sm hover:bg-slate-50 transition-all"
+            >
+              ← Buscar otra quiniela
+            </button>
           )}
         </div>
       </div>
@@ -1260,48 +1348,54 @@ export default function PrototipoEliminatoriasV3() {
           </div>
 
           {/* Top 3 */}
-          {top3.map(r => (
-            <div
-              key={r.code}
-              className={`grid gap-0 px-3 py-3 items-center border-b border-slate-100 ${
-                r.code === DEMO_CODE ? 'bg-yellow-50 border-l-4 border-l-yellow-400' : ''
-              } ${r.pos === 1 ? 'bg-yellow-50/50' : ''}`}
-              style={{ gridTemplateColumns: '36px 1fr 44px 36px 36px 28px' }}
-            >
-              <span className="text-center font-extrabold text-base">
-                {r.pos === 1 ? '🥇' : r.pos === 2 ? '🥈' : '🥉'}
-              </span>
-              <span className="font-semibold text-slate-800 text-xs truncate">{r.name}</span>
-              <span className="text-center font-extrabold text-slate-900 text-sm">{r.pts}</span>
-              <span className="text-center text-slate-600 text-xs">{r.exact}</span>
-              <span className="text-center text-slate-600 text-xs">{r.correct}</span>
-              <span className="flex items-center justify-center">
-                {r.move > 0 ? <TrendingUp size={13} className="text-green-500" /> :
-                 r.move < 0 ? <TrendingDown size={13} className="text-red-400" /> :
-                 <span className="text-slate-300 text-[10px]">—</span>}
-              </span>
-            </div>
-          ))}
+          {top3.map(r => {
+            const isMe = r.name === DEMO_NAME
+            return (
+              <div
+                key={`${r.pos}-${r.name}`}
+                className={`grid gap-0 px-3 py-3 items-center border-b border-slate-100 ${
+                  isMe ? 'bg-yellow-50 border-l-4 border-l-yellow-400' : r.pos === 1 ? 'bg-yellow-50/50' : ''
+                }`}
+                style={{ gridTemplateColumns: '36px 1fr 44px 36px 36px 28px' }}
+              >
+                <span className="text-center font-extrabold text-base">
+                  {r.pos === 1 ? '🥇' : r.pos === 2 ? '🥈' : '🥉'}
+                </span>
+                <span className="font-semibold text-slate-800 text-xs truncate">{r.name}</span>
+                <span className="text-center font-extrabold text-slate-900 text-sm">{r.pts}</span>
+                <span className="text-center text-slate-600 text-xs">{r.exact}</span>
+                <span className="text-center text-slate-600 text-xs">{r.correct}</span>
+                <span className="flex items-center justify-center">
+                  {r.move > 0 ? <TrendingUp size={13} className="text-green-500" /> :
+                   r.move < 0 ? <TrendingDown size={13} className="text-red-400" /> :
+                   <span className="text-slate-300 text-[10px]">—</span>}
+                </span>
+              </div>
+            )
+          })}
 
           {/* Rest */}
-          {rest.map(r => (
-            <div
-              key={r.code}
-              className={`grid gap-0 px-3 py-3 items-center border-b border-slate-100 last:border-b-0 ${r.code === DEMO_CODE ? 'bg-yellow-50 border-l-4 border-l-yellow-400' : ''}`}
-              style={{ gridTemplateColumns: '36px 1fr 44px 36px 36px 28px' }}
-            >
-              <span className="text-center font-bold text-slate-400 text-xs">{r.pos}</span>
-              <span className="font-medium text-slate-700 text-xs truncate">{r.name}</span>
-              <span className="text-center font-extrabold text-slate-900 text-sm">{r.pts}</span>
-              <span className="text-center text-slate-500 text-xs">{r.exact}</span>
-              <span className="text-center text-slate-500 text-xs">{r.correct}</span>
-              <span className="flex items-center justify-center">
-                {r.move > 0 ? <TrendingUp size={13} className="text-green-500" /> :
-                 r.move < 0 ? <TrendingDown size={13} className="text-red-400" /> :
-                 <span className="text-slate-300 text-[10px]">—</span>}
-              </span>
-            </div>
-          ))}
+          {rest.map(r => {
+            const isMe = r.name === DEMO_NAME
+            return (
+              <div
+                key={`${r.pos}-${r.name}`}
+                className={`grid gap-0 px-3 py-3 items-center border-b border-slate-100 last:border-b-0 ${isMe ? 'bg-yellow-50 border-l-4 border-l-yellow-400' : ''}`}
+                style={{ gridTemplateColumns: '36px 1fr 44px 36px 36px 28px' }}
+              >
+                <span className="text-center font-bold text-slate-400 text-xs">{r.pos}</span>
+                <span className="font-medium text-slate-700 text-xs truncate">{r.name}</span>
+                <span className="text-center font-extrabold text-slate-900 text-sm">{r.pts}</span>
+                <span className="text-center text-slate-500 text-xs">{r.exact}</span>
+                <span className="text-center text-slate-500 text-xs">{r.correct}</span>
+                <span className="flex items-center justify-center">
+                  {r.move > 0 ? <TrendingUp size={13} className="text-green-500" /> :
+                   r.move < 0 ? <TrendingDown size={13} className="text-red-400" /> :
+                   <span className="text-slate-300 text-[10px]">—</span>}
+                </span>
+              </div>
+            )
+          })}
         </div>
 
         <p className="text-xs text-slate-400 text-center mt-4 pb-4">
@@ -1313,7 +1407,28 @@ export default function PrototipoEliminatoriasV3() {
 
   // ── ADMIN DEMO ───────────────────────────────────────────────────────────────
 
+  // Demo participants with full cedula (visible only in admin)
+  const DEMO_PARTICIPANTS = [
+    { name: 'Carlos Demo',    cedula: '12345678',  wa: '04141234567', ciudad: 'Caracas',   email: 'carlos@demo.com',  pts: 28 },
+    { name: 'María Delgado',  cedula: '8765432',   wa: '04121234567', ciudad: 'Valencia',  email: '',                 pts: 25 },
+    { name: 'Laura Bracho',   cedula: '15234567',  wa: '04261234567', ciudad: 'Maracaibo', email: 'laura@demo.com',   pts: 22 },
+    { name: 'José Martínez',  cedula: '10234567',  wa: '04141234568', ciudad: 'Barquisimeto', email: '',              pts: 20 },
+    { name: 'Ana Rodríguez',  cedula: '18234567',  wa: '04241234567', ciudad: 'Caracas',   email: '',                 pts: 18 },
+    { name: 'Pedro Gómez',    cedula: '9234567',   wa: '04161234567', ciudad: 'Maracay',   email: '',                 pts: 16 },
+    { name: 'Diana Torres',   cedula: '20234567',  wa: '04121234568', ciudad: 'Caracas',   email: '',                 pts: 14 },
+    { name: 'Rafael López',   cedula: '11234567',  wa: '04141234569', ciudad: 'Valencia',  email: '',                 pts: 12 },
+  ]
+
   function renderAdmin() {
+    const q = adminSearch.toLowerCase().trim()
+    const filtered = q === ''
+      ? DEMO_PARTICIPANTS
+      : DEMO_PARTICIPANTS.filter(p =>
+          p.name.toLowerCase().includes(q) ||
+          p.cedula.includes(q) ||
+          p.wa.includes(q)
+        )
+
     return (
       <div className="max-w-2xl mx-auto px-4 py-6">
         <div className="bg-slate-800 text-white rounded-2xl p-5 mb-5 shadow-lg">
@@ -1321,12 +1436,13 @@ export default function PrototipoEliminatoriasV3() {
           <p className="text-slate-400 text-sm">Solo revisión interna · Sin conexión a producción</p>
         </div>
 
+        {/* Stats */}
         <div className="grid grid-cols-2 gap-3 mb-5">
           {[
-            { label: 'Partidos abiertos', val: totalOpenCount, icon: '⚽' },
-            { label: 'Picks en sesión',   val: Object.keys(picks).length, icon: '📝' },
-            { label: 'Etapa actual',      val: STAGE_META[activeStage].short, icon: '📍' },
-            { label: 'Participantes demo', val: DEMO_RANKING.length, icon: '👥' },
+            { label: 'Partidos abiertos',  val: totalOpenCount,              icon: '⚽' },
+            { label: 'Picks en sesión',    val: Object.keys(picks).length,   icon: '📝' },
+            { label: 'Etapa actual',       val: STAGE_META[activeStage].short, icon: '📍' },
+            { label: 'Participantes demo', val: DEMO_PARTICIPANTS.length,    icon: '👥' },
           ].map(s => (
             <div key={s.label} className="bg-white border border-slate-200 rounded-2xl p-4 text-center shadow-sm">
               <div className="text-2xl mb-1">{s.icon}</div>
@@ -1336,6 +1452,52 @@ export default function PrototipoEliminatoriasV3() {
           ))}
         </div>
 
+        {/* Participant search */}
+        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden mb-5 shadow-sm">
+          <div className="px-4 py-3 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+            <h2 className="font-extrabold text-slate-700 text-sm">👥 Participantes</h2>
+            <span className="text-xs text-slate-400">{filtered.length} / {DEMO_PARTICIPANTS.length}</span>
+          </div>
+          <div className="px-4 py-3 border-b border-slate-100">
+            <input
+              type="text"
+              value={adminSearch}
+              onChange={e => setAdminSearch(e.target.value)}
+              placeholder="Buscar por nombre, cédula o WhatsApp…"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-green-500"
+            />
+          </div>
+          {/* Table header */}
+          <div className="grid px-3 py-2 bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-500"
+            style={{ gridTemplateColumns: '1fr 90px 100px 40px' }}>
+            <span>Participante</span>
+            <span>Cédula</span>
+            <span>WhatsApp</span>
+            <span className="text-center">Pts</span>
+          </div>
+          {filtered.length === 0 ? (
+            <div className="px-4 py-6 text-xs text-slate-400 text-center italic">Sin resultados</div>
+          ) : (
+            filtered.map(p => (
+              <div
+                key={p.cedula}
+                className="grid px-3 py-2.5 border-b border-slate-100 last:border-b-0 items-center hover:bg-slate-50 transition-colors"
+                style={{ gridTemplateColumns: '1fr 90px 100px 40px' }}
+              >
+                <div>
+                  <p className="text-xs font-semibold text-slate-800 truncate">{p.name}</p>
+                  {p.ciudad && <p className="text-[10px] text-slate-400">{p.ciudad}</p>}
+                </div>
+                {/* Cédula completa visible en admin */}
+                <span className="text-xs font-mono text-slate-600">V-{p.cedula}</span>
+                <span className="text-xs text-slate-500">{p.wa}</span>
+                <span className="text-xs font-extrabold text-green-700 text-center">{p.pts}</span>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Actions */}
         <div className="space-y-3 mb-6">
           <button
             onClick={() => { setPicks({}); storePicks({}); setToast('🗑 Picks borrados') }}
@@ -1344,7 +1506,7 @@ export default function PrototipoEliminatoriasV3() {
             🗑 Borrar todos los picks demo
           </button>
           <button
-            onClick={() => { setActiveStage('R32'); setView('llenado'); }}
+            onClick={() => { setActiveStage('R32'); setView('llenado') }}
             className="w-full bg-slate-50 border border-slate-200 text-slate-600 font-bold py-3.5 rounded-xl hover:bg-slate-100 transition-all touch-manipulation"
           >
             🔄 Ir a Dieciseisavos de final
@@ -1376,6 +1538,107 @@ export default function PrototipoEliminatoriasV3() {
             ))}
           </ul>
         </div>
+      </div>
+    )
+  }
+
+  // ── REGISTRO ────────────────────────────────────────────────────────────────
+
+  function renderRegistro() {
+    function validate() {
+      const errs: Record<string, string> = {}
+      if (!regForm.nombre.trim()) errs.nombre = 'El nombre es obligatorio'
+      if (!regForm.cedula.trim()) {
+        errs.cedula = 'La cédula es obligatoria'
+      } else if (!/^\d{6,10}$/.test(regForm.cedula.trim())) {
+        errs.cedula = 'Solo números, entre 6 y 10 dígitos'
+      }
+      if (!regForm.whatsapp.trim()) {
+        errs.whatsapp = 'El WhatsApp es obligatorio'
+      } else if (!/^04\d{9}$/.test(regForm.whatsapp.replace(/[\s\-]/g, ''))) {
+        errs.whatsapp = 'Formato venezolano: 04XXXXXXXXX'
+      }
+      return errs
+    }
+
+    function handleSubmit() {
+      const errs = validate()
+      setRegErrors(errs)
+      if (Object.keys(errs).length === 0) {
+        setRegistered(true)
+        setToast('✅ ¡Inscripción exitosa! Ahora llena tu quiniela.')
+        setView('llenado')
+      }
+    }
+
+    const field = (
+      id: keyof typeof regForm,
+      label: string,
+      placeholder: string,
+      required: boolean,
+      hint?: string,
+      type = 'text'
+    ) => (
+      <div>
+        <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+        <input
+          type={type}
+          value={regForm[id]}
+          onChange={e => setRegForm(f => ({ ...f, [id]: e.target.value }))}
+          placeholder={placeholder}
+          className={`w-full border-2 rounded-xl px-4 py-3 text-sm focus:outline-none transition-colors ${
+            regErrors[id] ? 'border-red-300 focus:border-red-400' : 'border-slate-200 focus:border-green-500'
+          }`}
+        />
+        {hint && !regErrors[id] && <p className="text-[10px] text-slate-400 mt-1">{hint}</p>}
+        {regErrors[id] && <p className="text-[10px] text-red-500 mt-1">⚠ {regErrors[id]}</p>}
+      </div>
+    )
+
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-6 pb-10">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-green-700 to-blue-700 rounded-2xl p-5 text-white mb-6 shadow-lg">
+          <button
+            onClick={() => setView('home')}
+            className="text-green-200 text-xs mb-3 flex items-center gap-1 hover:text-white"
+          >
+            ← Volver
+          </button>
+          <h1 className="text-xl font-extrabold mb-0.5">📝 Inscripción</h1>
+          <p className="text-green-200 text-sm">Quiniela Eliminatorias 2026 · Mundial 2026</p>
+        </div>
+
+        {/* Notice */}
+        <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-5 text-xs text-blue-700">
+          <strong>Tu cédula es tu identificador.</strong> La usarás para acceder a tu quiniela en cualquier momento. No necesitas recordar ningún código adicional.
+        </div>
+
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4 mb-6">
+          {field('nombre',   'Nombre completo',     'Ej: Carlos Eduardo Acosta',    true)}
+          {field('cedula',   'Cédula de identidad', 'Ej: 12345678',                 true,  'Solo números, sin V- ni E-')}
+          {field('whatsapp', 'WhatsApp',             'Ej: 04141234567',              true,  'Número venezolano: 04XXXXXXXXX', 'tel')}
+          {field('ciudad',   'Ciudad',               'Ej: Caracas',                  false)}
+          {field('email',    'Email',                'Ej: correo@ejemplo.com',       false, undefined, 'email')}
+        </div>
+
+        {/* Privacy note */}
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 mb-5 text-xs text-slate-500 space-y-1">
+          <p>🔒 <strong>Privacidad:</strong> tu cédula no se mostrará completa en el ranking público.</p>
+          <p>🚫 Una cédula puede inscribirse <strong>una sola vez</strong> en esta quiniela eliminatoria.</p>
+        </div>
+
+        <button
+          onClick={handleSubmit}
+          className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-extrabold py-4 rounded-2xl text-base shadow-lg transition-all active:scale-95 touch-manipulation"
+        >
+          ✅ Inscribirme en la quiniela
+        </button>
+        <p className="text-[10px] text-slate-400 text-center mt-3">
+          Prototipo demo · Sin conexión a base de datos real
+        </p>
       </div>
     )
   }
@@ -1421,6 +1684,7 @@ export default function PrototipoEliminatoriasV3() {
       {/* Main content */}
       <main>
         {view === 'home'        && renderHome()}
+        {view === 'registro'    && renderRegistro()}
         {view === 'llenado'     && renderLlenado()}
         {view === 'bracket'     && renderBracket()}
         {view === 'mi-quiniela' && renderMiQuiniela()}
