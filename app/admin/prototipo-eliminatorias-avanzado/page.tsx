@@ -82,6 +82,76 @@ function totalFilled(picks: Picks) {
   return KNOCKOUT_MATCHES.filter(m => m.isOpenForPredictions && pickComplete(picks[m.id])).length
 }
 
+// ── Prize pool ─────────────────────────────────────────────────────────────────
+const ENTRY_USD  = 20
+const RATE_BS    = 730
+const PCT_1ST    = 0.65
+const PCT_2ND    = 0.20
+const PCT_ORG    = 0.15
+
+function getKnockoutPrizePool(enrolled: { paymentStatus: string }[]) {
+  const verified = enrolled.filter(p => p.paymentStatus === 'verified').length
+  const pozoUSD  = verified * ENTRY_USD
+  const pozoBs   = pozoUSD * RATE_BS
+  return {
+    verified,
+    pozoUSD,
+    pozoBs,
+    prize1USD:  Math.round(pozoUSD * PCT_1ST),
+    prize2USD:  Math.round(pozoUSD * PCT_2ND),
+    prizeOrgUSD: Math.round(pozoUSD * PCT_ORG),
+    prize1Bs:   Math.round(pozoBs * PCT_1ST),
+    prize2Bs:   Math.round(pozoBs * PCT_2ND),
+    prizeOrgBs: Math.round(pozoBs * PCT_ORG),
+  }
+}
+
+// ── AnimatedCounter ─────────────────────────────────────────────────────────────
+// Counts from 0 → value on mount. Respects prefers-reduced-motion.
+
+function AnimatedCounter({
+  value, prefix = '', suffix = '', duration = 900, delay = 0, decimals = 0,
+}: {
+  value: number; prefix?: string; suffix?: string
+  duration?: number; delay?: number; decimals?: number
+}) {
+  const [display, setDisplay] = useState(0)
+  const rafRef = useRef<number | null>(null)
+  const startRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    const reduced = typeof window !== 'undefined'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduced || value === 0) { setDisplay(value); return }
+
+    let started = false
+    const timeout = setTimeout(() => {
+      started = true
+      const animate = (ts: number) => {
+        if (!startRef.current) startRef.current = ts
+        const elapsed = ts - startRef.current
+        const progress = Math.min(elapsed / duration, 1)
+        // ease-out cubic
+        const eased = 1 - Math.pow(1 - progress, 3)
+        setDisplay(Math.round(eased * value * Math.pow(10, decimals)) / Math.pow(10, decimals))
+        if (progress < 1) rafRef.current = requestAnimationFrame(animate)
+        else setDisplay(value)
+      }
+      rafRef.current = requestAnimationFrame(animate)
+    }, delay)
+
+    return () => {
+      clearTimeout(timeout)
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      startRef.current = null
+      if (started) setDisplay(value)
+    }
+  }, [value, duration, delay, decimals])
+
+  const formatted = display.toLocaleString('es-VE', { maximumFractionDigits: decimals })
+  return <span>{prefix}{formatted}{suffix}</span>
+}
+
 // ── Flag helpers ───────────────────────────────────────────────────────────────
 // Windows browsers don't render Unicode regional indicator flag emoji.
 // Convert the emoji to a 2-letter ISO code and serve the flag as a PNG from flagcdn.com.
@@ -554,6 +624,8 @@ export default function PrototipoEliminatoriasV3() {
   // ── HOME ────────────────────────────────────────────────────────────────────
 
   function renderHome() {
+    const pool = getKnockoutPrizePool(koEnrolled)
+
     return (
       <div className="min-h-screen flex flex-col bg-slate-50">
 
@@ -758,18 +830,34 @@ export default function PrototipoEliminatoriasV3() {
         {/* ── STATS BAR ── */}
         <div className="bg-white border-b border-slate-200 shadow-sm ko-rise-d1">
           <div className="max-w-4xl mx-auto px-4 py-5 grid grid-cols-3 sm:grid-cols-5 gap-4 text-center">
-            {[
-              { value: '16',      label: 'Partidos',         color: 'text-green-600' },
-              { value: '32',      label: 'Equipos',          color: 'text-blue-600' },
-              { value: '20 USD',  label: 'Entrada',          color: 'text-yellow-600' },
-              { value: '14.600',  label: 'Monto en Bs',      color: 'text-amber-600' },
-              { value: '65%',     label: 'Premio 1er lugar', color: 'text-purple-600' },
-            ].map(({ value, label, color }, i) => (
-              <div key={label} className={i >= 3 ? 'hidden sm:block' : ''}>
-                <div className={`text-2xl font-extrabold ${color}`}>{value}</div>
-                <div className="text-xs text-slate-500 mt-0.5">{label}</div>
+            <div>
+              <div className="text-2xl font-extrabold text-green-600">
+                <AnimatedCounter value={16} duration={700} delay={100} />
               </div>
-            ))}
+              <div className="text-xs text-slate-500 mt-0.5">Partidos</div>
+            </div>
+            <div>
+              <div className="text-2xl font-extrabold text-blue-600">
+                <AnimatedCounter value={32} duration={700} delay={150} />
+              </div>
+              <div className="text-xs text-slate-500 mt-0.5">Equipos</div>
+            </div>
+            <div>
+              <div className="text-2xl font-extrabold text-yellow-600">
+                <AnimatedCounter value={20} suffix=" USD" duration={700} delay={200} />
+              </div>
+              <div className="text-xs text-slate-500 mt-0.5">Entrada</div>
+            </div>
+            <div className="hidden sm:block">
+              <div className="text-2xl font-extrabold text-amber-600">
+                <AnimatedCounter value={14600} duration={800} delay={250} />
+              </div>
+              <div className="text-xs text-slate-500 mt-0.5">Monto en Bs</div>
+            </div>
+            <div className="hidden sm:block">
+              <div className="text-2xl font-extrabold text-purple-600">65%</div>
+              <div className="text-xs text-slate-500 mt-0.5">Premio 1er lugar</div>
+            </div>
           </div>
         </div>
 
@@ -980,21 +1068,46 @@ export default function PrototipoEliminatoriasV3() {
               </h2>
             </div>
             <div className="bg-white rounded-3xl shadow-md border border-slate-100 overflow-hidden">
-              {/* Header gradient */}
+              {/* Pozo header */}
               <div className="relative bg-gradient-to-br from-green-600 via-green-700 to-blue-800 text-white p-8 text-center overflow-hidden">
                 <div className="relative">
-                  <p className="text-green-200 text-sm mb-2">Pozo acumulado · 24 pagos verificados</p>
-                  <p className="text-5xl font-extrabold text-white drop-shadow">$480 <span className="text-2xl font-bold text-green-200">USD</span></p>
-                  <p className="text-green-300 text-sm mt-1">350.400 Bs <span className="text-xs">(tasa fija 730 Bs/USD)</span></p>
-                  <p className="text-green-400 text-xs mt-1">24 pagos verificados × $20 USD = $480 USD</p>
+                  <p className="text-green-200 text-sm mb-2">
+                    Pozo acumulado · <AnimatedCounter value={pool.verified} suffix=" pagos verificados" duration={700} delay={300} />
+                  </p>
+                  <p className="text-5xl font-extrabold text-white drop-shadow">
+                    $<AnimatedCounter value={pool.pozoUSD} duration={900} delay={200} /> <span className="text-2xl font-bold text-green-200">USD</span>
+                  </p>
+                  <p className="text-green-300 text-sm mt-1">
+                    <AnimatedCounter value={pool.pozoBs} duration={900} delay={250} /> Bs
+                    <span className="text-xs ml-1">(tasa fija {RATE_BS} Bs/USD)</span>
+                  </p>
+                  <p className="text-green-400 text-xs mt-1">
+                    {pool.verified} pagos verificados × ${ENTRY_USD} USD = ${pool.pozoUSD} USD
+                  </p>
                 </div>
               </div>
+
               {/* Prize rows */}
               <div className="divide-y divide-slate-100">
                 {[
-                  { medal: '🥇', pos: '1er Lugar',     pct: '65%', usd: '$312 USD', ves: '227.760 Bs', color: 'from-yellow-50 to-amber-50', badge: 'bg-yellow-100 text-yellow-800' },
-                  { medal: '🥈', pos: '2do Lugar',     pct: '20%', usd: '$96 USD',  ves: '70.080 Bs',  color: 'from-slate-50 to-slate-50',  badge: 'bg-slate-100 text-slate-600' },
-                  { medal: '🏛️', pos: 'Organización', pct: '15%', usd: '$72 USD',  ves: '52.560 Bs',  color: '',                           badge: 'bg-blue-50 text-blue-600' },
+                  {
+                    medal: '🥇', pos: '1.er Lugar', pct: '65%',
+                    usd: pool.prize1USD, bs: pool.prize1Bs,
+                    color: 'from-yellow-50 to-amber-50', badge: 'bg-yellow-100 text-yellow-800',
+                    delay: 400,
+                  },
+                  {
+                    medal: '🥈', pos: '2.do Lugar', pct: '20%',
+                    usd: pool.prize2USD, bs: pool.prize2Bs,
+                    color: 'from-slate-50 to-slate-50', badge: 'bg-slate-100 text-slate-600',
+                    delay: 500,
+                  },
+                  {
+                    medal: '🏛️', pos: 'Organización', pct: '15%',
+                    usd: pool.prizeOrgUSD, bs: pool.prizeOrgBs,
+                    color: '', badge: 'bg-blue-50 text-blue-600',
+                    delay: 600,
+                  },
                 ].map((row) => (
                   <div key={row.pos} className={`flex items-center justify-between px-6 py-5 bg-gradient-to-r ${row.color} hover:bg-opacity-80 transition-colors`}>
                     <div className="flex items-center gap-3">
@@ -1004,15 +1117,22 @@ export default function PrototipoEliminatoriasV3() {
                     <div className="flex items-center gap-3">
                       <span className={`text-sm font-bold px-3 py-1 rounded-full ${row.badge}`}>{row.pct}</span>
                       <div className="text-right">
-                        <div className="font-extrabold text-lg text-slate-800">{row.usd}</div>
-                        <div className="text-xs text-slate-500">{row.ves}</div>
+                        <div className="font-extrabold text-lg text-slate-800">
+                          $<AnimatedCounter value={row.usd} duration={800} delay={row.delay} /> USD
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          <AnimatedCounter value={row.bs} duration={800} delay={row.delay + 50} /> Bs
+                        </div>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
+
               <p className="text-center text-xs text-slate-400 p-4">
-                Datos demo · El pozo se actualizará según los pagos verificados por el administrador. · Tasa fija: 730 Bs/USD
+                {pool.verified === 0
+                  ? 'El pozo se actualizará cuando se verifiquen los primeros pagos.'
+                  : `${pool.verified} pago${pool.verified !== 1 ? 's' : ''} verificado${pool.verified !== 1 ? 's' : ''} · Tasa fija: ${RATE_BS} Bs/USD`}
               </p>
             </div>
           </section>
