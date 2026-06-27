@@ -39,6 +39,11 @@ const DEMO_NAME   = 'Carlos Demo'
 const DEMO_CEDULA = '12345678'
 const DEMO_WA     = '04141234567'
 
+const ADMIN_CODE         = 'Ko2026!'
+const ADMIN_SESSION_KEY  = 'ko-admin-session'
+
+type AdminModule = 'dashboard' | 'participantes' | 'pagos' | 'quinielas' | 'resultados' | 'ranking' | 'backups' | 'configuracion' | 'analiticas'
+
 function maskCedula(c: string) {
   if (c.length <= 4) return 'V-' + '•'.repeat(c.length)
   return 'V-' + c.slice(0, 2) + '••••' + c.slice(-2)
@@ -451,6 +456,12 @@ export default function PrototipoEliminatoriasV3() {
   const [miqQuery, setMiqQuery] = useState('')
   const [miqFound, setMiqFound] = useState(false)
 
+  // Admin — autenticación y módulo activo
+  const [adminUnlocked, setAdminUnlocked] = useState(false)
+  const [adminInputCode, setAdminInputCode] = useState('')
+  const [adminCodeError, setAdminCodeError] = useState(false)
+  const [adminModule, setAdminModule] = useState<AdminModule>('dashboard')
+
   // Admin — búsqueda participantes
   const [adminSearch, setAdminSearch] = useState('')
 
@@ -503,6 +514,11 @@ export default function PrototipoEliminatoriasV3() {
 
   useEffect(() => { setPicks(loadPicks()) }, [])
   useEffect(() => { setKoEnrolled(loadKOEnrolled()) }, [])
+  useEffect(() => {
+    if (typeof window !== 'undefined' && localStorage.getItem(ADMIN_SESSION_KEY) === 'ok') {
+      setAdminUnlocked(true)
+    }
+  }, [])
 
   // Scroll-reveal — activa .ko-visible cuando la sección entra al viewport.
   // setTimeout(80) es crítico: sin él el observer fires antes de que el browser
@@ -1447,6 +1463,16 @@ export default function PrototipoEliminatoriasV3() {
               <p className="text-green-200 text-xs mt-4">Pago Móvil Banesco · Zelle · 20 USD / 14.600 Bs · Tasa fija 730 Bs/USD</p>
             </div>
           </section>
+
+          {/* Admin footer link — discreto, solo visible si sabes que existe */}
+          <div className="text-center py-8">
+            <button
+              onClick={() => setView('admin')}
+              className="text-slate-300 hover:text-slate-400 text-[10px] transition-colors"
+            >
+              ·
+            </button>
+          </div>
 
         </main>
       </div>
@@ -2847,168 +2873,519 @@ export default function PrototipoEliminatoriasV3() {
   ]
 
   function renderAdmin() {
+
+    // ── LOGIN ────────────────────────────────────────────────────────────────
+    if (!adminUnlocked) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-slate-900 px-4">
+          <div className="w-full max-w-sm">
+            <div className="text-center mb-8">
+              <div className="text-5xl mb-3">🔐</div>
+              <h1 className="text-white text-2xl font-extrabold">Admin · Eliminatorias 2026</h1>
+              <p className="text-slate-400 text-sm mt-1">Acceso restringido</p>
+            </div>
+            <div className="bg-slate-800 rounded-2xl p-6 shadow-2xl">
+              <label className="block text-slate-300 text-xs font-bold mb-2 uppercase tracking-wider">Código de acceso</label>
+              <input
+                type="password"
+                value={adminInputCode}
+                onChange={e => { setAdminInputCode(e.target.value); setAdminCodeError(false) }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    if (adminInputCode === ADMIN_CODE) {
+                      localStorage.setItem(ADMIN_SESSION_KEY, 'ok')
+                      setAdminUnlocked(true)
+                      setAdminInputCode('')
+                    } else {
+                      setAdminCodeError(true)
+                    }
+                  }
+                }}
+                placeholder="••••••••"
+                className={`w-full bg-slate-700 text-white rounded-xl px-4 py-3 text-sm focus:outline-none mb-3 transition-all ${adminCodeError ? 'border-2 border-red-500' : 'border border-slate-600 focus:border-green-500'}`}
+                autoFocus
+              />
+              {adminCodeError && (
+                <p className="text-red-400 text-xs mb-3">Código incorrecto. Intenta de nuevo.</p>
+              )}
+              <button
+                onClick={() => {
+                  if (adminInputCode === ADMIN_CODE) {
+                    localStorage.setItem(ADMIN_SESSION_KEY, 'ok')
+                    setAdminUnlocked(true)
+                    setAdminInputCode('')
+                  } else {
+                    setAdminCodeError(true)
+                  }
+                }}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-extrabold py-3 rounded-xl text-sm transition-all touch-manipulation"
+              >
+                Ingresar
+              </button>
+              <button
+                onClick={() => setView('home')}
+                className="w-full mt-2 text-slate-500 hover:text-slate-300 text-xs py-2 transition-colors"
+              >
+                ← Volver al inicio
+              </button>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    // ── PANEL ADMIN (autenticado) ─────────────────────────────────────────────
+    const pool = getKnockoutPrizePool(koEnrolled)
+    const verifiedList = koEnrolled.filter(p => p.paymentStatus === 'verified')
+    const pendingList  = koEnrolled.filter(p => p.paymentStatus === 'pending')
+    const rejectedList = koEnrolled.filter(p => p.paymentStatus === 'rejected')
     const q = adminSearch.toLowerCase().trim()
-    const filtered = q === ''
-      ? DEMO_PARTICIPANTS
-      : DEMO_PARTICIPANTS.filter(p =>
-          p.name.toLowerCase().includes(q) ||
+    const filteredEnrolled = q === ''
+      ? koEnrolled
+      : koEnrolled.filter(p =>
+          p.nombre.toLowerCase().includes(q) ||
           p.cedula.includes(q) ||
-          p.wa.includes(q)
+          p.whatsapp.includes(q)
         )
 
-    return (
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        <div className="bg-slate-800 text-white rounded-2xl p-5 mb-5 shadow-lg">
-          <h1 className="text-xl font-extrabold mb-0.5">⚙️ Panel Admin Demo</h1>
-          <p className="text-slate-400 text-sm">Solo revisión interna · Sin conexión a producción</p>
-        </div>
+    const NAV: { id: AdminModule; label: string; emoji: string }[] = [
+      { id: 'dashboard',     label: 'Dashboard',      emoji: '📊' },
+      { id: 'participantes', label: 'Participantes',   emoji: '👥' },
+      { id: 'pagos',         label: 'Pagos',           emoji: '💳' },
+      { id: 'quinielas',     label: 'Quinielas',       emoji: '⚽' },
+      { id: 'resultados',    label: 'Resultados',      emoji: '📅' },
+      { id: 'ranking',       label: 'Ranking',         emoji: '🏆' },
+      { id: 'backups',       label: 'Backups',         emoji: '💾' },
+      { id: 'configuracion', label: 'Configuración',   emoji: '⚙️' },
+      { id: 'analiticas',    label: 'Analíticas',      emoji: '📈' },
+    ]
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-3 mb-5">
-          {[
-            { label: 'Partidos abiertos',  val: totalOpenCount,              icon: '⚽' },
-            { label: 'Picks en sesión',    val: Object.keys(picks).length,   icon: '📝' },
-            { label: 'Etapa actual',       val: STAGE_META[activeStage].short, icon: '📍' },
-            { label: 'Participantes',      val: DEMO_PARTICIPANTS.length,    icon: '👥' },
-          ].map(s => (
-            <div key={s.label} className="bg-white border border-slate-200 rounded-2xl p-4 text-center shadow-sm">
-              <div className="text-2xl mb-1">{s.icon}</div>
-              <div className="text-xl font-extrabold text-slate-800">{s.val}</div>
-              <div className="text-xs text-slate-500 mt-0.5">{s.label}</div>
-            </div>
-          ))}
-        </div>
+    function renderModule() {
 
-        {/* Participant search */}
-        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden mb-5 shadow-sm">
-          <div className="px-4 py-3 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
-            <h2 className="font-extrabold text-slate-700 text-sm">👥 Participantes</h2>
-            <span className="text-xs text-slate-400">{filtered.length} / {DEMO_PARTICIPANTS.length}</span>
-          </div>
-          <div className="px-4 py-3 border-b border-slate-100">
-            <input
-              type="text"
-              value={adminSearch}
-              onChange={e => setAdminSearch(e.target.value)}
-              placeholder="Buscar por nombre, cédula o WhatsApp…"
-              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-green-500"
-            />
-          </div>
-          {/* Table header */}
-          <div className="grid px-3 py-2 bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-500"
-            style={{ gridTemplateColumns: '1fr 90px 100px 40px' }}>
-            <span>Participante</span>
-            <span>Cédula</span>
-            <span>WhatsApp</span>
-            <span className="text-center">Pts</span>
-          </div>
-          {filtered.length === 0 ? (
-            <div className="px-4 py-6 text-xs text-slate-400 text-center italic">Sin resultados</div>
-          ) : (
-            filtered.map(p => (
-              <div
-                key={p.cedula}
-                className="grid px-3 py-2.5 border-b border-slate-100 last:border-b-0 items-center hover:bg-slate-50 transition-colors"
-                style={{ gridTemplateColumns: '1fr 90px 100px 40px' }}
-              >
-                <div>
-                  <p className="text-xs font-semibold text-slate-800 truncate">{p.name}</p>
-                  {p.ciudad && <p className="text-[10px] text-slate-400">{p.ciudad}</p>}
+      // ── DASHBOARD ──────────────────────────────────────────────────────────
+      if (adminModule === 'dashboard') {
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { label: 'Inscritos', val: koEnrolled.length, icon: '👥', color: 'text-blue-700' },
+                { label: 'Verificados', val: verifiedList.length, icon: '✅', color: 'text-green-700' },
+                { label: 'Pendientes', val: pendingList.length, icon: '⏳', color: 'text-amber-700' },
+                { label: 'Rechazados', val: rejectedList.length, icon: '❌', color: 'text-red-700' },
+              ].map(s => (
+                <div key={s.label} className="bg-white border border-slate-200 rounded-2xl p-4 text-center shadow-sm">
+                  <div className="text-2xl mb-1">{s.icon}</div>
+                  <div className={`text-2xl font-extrabold ${s.color}`}>{s.val}</div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">{s.label}</div>
                 </div>
-                {/* Cédula completa visible en admin */}
-                <span className="text-xs font-mono text-slate-600">V-{p.cedula}</span>
-                <span className="text-xs text-slate-500">{p.wa}</span>
-                <span className="text-xs font-extrabold text-green-700 text-center">{p.pts}</span>
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Simulate match finished */}
-        <div className="bg-slate-900 rounded-2xl p-5 mb-5 shadow-lg">
-          <h2 className="text-white font-extrabold text-sm mb-1">🔁 Simular partido finalizado</h2>
-          <p className="text-slate-400 text-xs mb-4">
-            Simula el ciclo completo: resultado → ranking → estadísticas → logs.<br />
-            Basado en: <span className="text-green-400 font-bold">{SIMULATED_MATCH.matchLabel}</span> (#{SIMULATED_MATCH.fifaMatchNumber})
-          </p>
-          <button
-            disabled={statSimRunning}
-            onClick={() => {
-              setStatSimRunning(true)
-              setStatSimLogs([])
-              let i = 0
-              const interval = setInterval(() => {
-                if (i < SIMULATED_MATCH.logs.length) {
-                  setStatSimLogs(prev => [...prev, SIMULATED_MATCH.logs[i]])
-                  i++
-                } else {
-                  clearInterval(interval)
-                  setStatSimRunning(false)
-                  setStatLastUpdate(`Partido #${SIMULATED_MATCH.fifaMatchNumber} · ${SIMULATED_MATCH.matchLabel}`)
-                  setToast('✅ Estadísticas actualizadas (simulación)')
-                }
-              }, 500)
-            }}
-            className="w-full bg-green-600 hover:bg-green-700 disabled:bg-slate-600 text-white font-extrabold py-3 rounded-xl text-sm transition-all touch-manipulation"
-          >
-            {statSimRunning ? '⏳ Ejecutando…' : '▶ Simular partido finalizado'}
-          </button>
-
-          {statSimLogs.length > 0 && (
-            <div className="mt-3 bg-slate-800 rounded-xl p-3 font-mono text-[10px] space-y-1">
-              {statSimLogs.map((log, i) => (
-                <p key={i} className={`${log.startsWith('STATS_APPLIED') ? 'text-green-400' : log.startsWith('STATS_SKIP') ? 'text-yellow-400' : 'text-slate-300'}`}>
-                  {log}
-                </p>
               ))}
-              {!statSimRunning && <p className="text-blue-400 mt-1">✓ Proceso completado</p>}
             </div>
-          )}
-        </div>
 
-        {/* Pending events — collapsed technical section */}
-        <details className="bg-white border border-slate-200 rounded-2xl overflow-hidden mb-5 shadow-sm group">
-          <summary className="px-4 py-3 flex items-center justify-between cursor-pointer list-none hover:bg-slate-50 transition-colors">
-            <div className="flex items-center gap-2">
-              <h2 className="font-extrabold text-slate-700 text-sm">🔧 Revisión técnica de eventos</h2>
-              {pendingEvents.filter(e => e.status === 'pending').length > 0 && (
-                <span className="bg-amber-100 text-amber-700 text-[10px] font-extrabold px-2 py-0.5 rounded-full">
-                  {pendingEvents.filter(e => e.status === 'pending').length}
-                </span>
+            {/* Pozo */}
+            <div className="bg-gradient-to-br from-green-700 to-blue-700 rounded-2xl p-5 text-white shadow-lg">
+              <p className="text-green-200 text-xs font-bold uppercase tracking-wider mb-3">Pozo acumulado</p>
+              <div className="text-3xl font-extrabold mb-1">${pool.pozoUSD.toLocaleString('es-VE')} USD</div>
+              <div className="text-green-200 text-sm">{pool.pozoBs.toLocaleString('es-VE')} Bs</div>
+              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                {[
+                  { label: '1er lugar', val: pool.prize1USD },
+                  { label: '2do lugar', val: pool.prize2USD },
+                  { label: 'Organización', val: pool.prizeOrgUSD },
+                ].map(p => (
+                  <div key={p.label} className="bg-white/10 rounded-xl p-2">
+                    <div className="text-base font-extrabold">${p.val}</div>
+                    <div className="text-[10px] text-green-200">{p.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Acciones rápidas */}
+            <div className="grid grid-cols-2 gap-3">
+              <button onClick={() => setAdminModule('participantes')}
+                className="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm hover:bg-slate-50 transition-colors">
+                <div className="text-xl mb-1">👥</div>
+                <p className="text-xs font-extrabold text-slate-700">Ver participantes</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">{pendingList.length} pendientes de verificar</p>
+              </button>
+              <button onClick={() => setAdminModule('backups')}
+                className="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm hover:bg-slate-50 transition-colors">
+                <div className="text-xl mb-1">💾</div>
+                <p className="text-xs font-extrabold text-slate-700">Descargar backup</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">JSON de inscritos</p>
+              </button>
+            </div>
+
+            {/* Simulación */}
+            <div className="bg-slate-900 rounded-2xl p-5 shadow-lg">
+              <h2 className="text-white font-extrabold text-sm mb-1">🔁 Simular partido finalizado</h2>
+              <p className="text-slate-400 text-xs mb-4">
+                Ciclo: resultado → ranking → estadísticas<br />
+                Partido: <span className="text-green-400 font-bold">{SIMULATED_MATCH.matchLabel}</span>
+              </p>
+              <button
+                disabled={statSimRunning}
+                onClick={() => {
+                  setStatSimRunning(true); setStatSimLogs([])
+                  let i = 0
+                  const interval = setInterval(() => {
+                    if (i < SIMULATED_MATCH.logs.length) { setStatSimLogs(prev => [...prev, SIMULATED_MATCH.logs[i]]); i++ }
+                    else { clearInterval(interval); setStatSimRunning(false); setStatLastUpdate(`Partido #${SIMULATED_MATCH.fifaMatchNumber}`); setToast('✅ Simulación completada') }
+                  }, 500)
+                }}
+                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-slate-600 text-white font-extrabold py-3 rounded-xl text-sm transition-all touch-manipulation"
+              >
+                {statSimRunning ? '⏳ Ejecutando…' : '▶ Simular'}
+              </button>
+              {statSimLogs.length > 0 && (
+                <div className="mt-3 bg-slate-800 rounded-xl p-3 font-mono text-[10px] space-y-1 max-h-40 overflow-y-auto">
+                  {statSimLogs.map((log, i) => (
+                    <p key={i} className={log.startsWith('STATS_APPLIED') ? 'text-green-400' : log.startsWith('STATS_SKIP') ? 'text-yellow-400' : 'text-slate-300'}>{log}</p>
+                  ))}
+                  {!statSimRunning && <p className="text-blue-400">✓ Completado</p>}
+                </div>
               )}
             </div>
-            <span className="text-slate-400 text-xs">Ver ▾</span>
-          </summary>
-          <div className="border-t border-slate-100">
-            <p className="text-[10px] text-slate-400 px-4 py-2 bg-slate-50/50">
-              Eventos con confianza media/baja detectados automáticamente. En producción estos se procesan sin revisión manual salvo que la confianza sea muy baja.
-            </p>
-            {pendingEvents.length === 0 ? (
-              <div className="px-4 py-6 text-xs text-slate-400 text-center italic">Sin eventos pendientes</div>
+          </div>
+        )
+      }
+
+      // ── PARTICIPANTES ──────────────────────────────────────────────────────
+      if (adminModule === 'participantes') {
+        return (
+          <div>
+            <div className="px-0 py-3 flex items-center gap-3 mb-3">
+              <input
+                type="text"
+                value={adminSearch}
+                onChange={e => setAdminSearch(e.target.value)}
+                placeholder="Buscar por nombre, cédula o WhatsApp…"
+                className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-green-500"
+              />
+              <span className="text-xs text-slate-400 shrink-0">{filteredEnrolled.length}</span>
+            </div>
+            {filteredEnrolled.length === 0 ? (
+              <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center text-xs text-slate-400 italic">
+                {koEnrolled.length === 0 ? 'No hay inscritos en esta sesión. Registra participantes primero.' : 'Sin resultados para esa búsqueda.'}
+              </div>
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                <div className="grid px-3 py-2 bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-500 uppercase"
+                  style={{ gridTemplateColumns: '1fr 80px 80px 70px' }}>
+                  <span>Participante</span><span>Cédula</span><span>Ciudad</span><span className="text-center">Pago</span>
+                </div>
+                {filteredEnrolled.map(p => (
+                  <div key={p.cedula}
+                    className="grid px-3 py-3 border-b border-slate-100 last:border-b-0 items-center"
+                    style={{ gridTemplateColumns: '1fr 80px 80px 70px' }}>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-800 truncate">{p.nombre}</p>
+                      <p className="text-[10px] text-slate-400">{p.whatsapp}</p>
+                    </div>
+                    <span className="text-[10px] font-mono text-slate-600">V-{p.cedula}</span>
+                    <span className="text-[10px] text-slate-500 truncate">{p.ciudad ?? '—'}</span>
+                    <div className="flex justify-center">
+                      <button
+                        onClick={() => {
+                          const next: 'pending' | 'verified' | 'rejected' = p.paymentStatus === 'pending' ? 'verified' : p.paymentStatus === 'verified' ? 'rejected' : 'pending'
+                          const updated = koEnrolled.map(x => x.cedula === p.cedula ? { ...x, paymentStatus: next } : x)
+                          setKoEnrolled(updated); saveKOEnrolled(updated)
+                          setToast(next === 'verified' ? `✅ ${p.displayName} verificado` : next === 'rejected' ? `❌ ${p.displayName} rechazado` : `⏳ ${p.displayName} pendiente`)
+                        }}
+                        className={`text-[10px] font-extrabold px-2 py-1 rounded-lg ${
+                          p.paymentStatus === 'verified' ? 'bg-green-100 text-green-700' :
+                          p.paymentStatus === 'rejected' ? 'bg-red-100 text-red-600'    : 'bg-amber-100 text-amber-700'
+                        }`}
+                      >
+                        {p.paymentStatus === 'verified' ? '✅ OK' : p.paymentStatus === 'rejected' ? '❌ Rech.' : '⏳ Pend.'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      }
+
+      // ── PAGOS ──────────────────────────────────────────────────────────────
+      if (adminModule === 'pagos') {
+        const groups: { label: string; list: KOParticipant[]; color: string }[] = [
+          { label: '⏳ Pendientes de verificar', list: pendingList,  color: 'amber' },
+          { label: '✅ Pagos verificados',        list: verifiedList, color: 'green' },
+          { label: '❌ Rechazados',               list: rejectedList, color: 'red'   },
+        ]
+        return (
+          <div className="space-y-4">
+            {groups.map(g => (
+              <div key={g.label} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                <div className={`px-4 py-3 border-b bg-${g.color}-50 border-${g.color}-100 flex items-center justify-between`}>
+                  <h3 className="text-sm font-extrabold text-slate-700">{g.label}</h3>
+                  <span className="text-xs text-slate-400">{g.list.length}</span>
+                </div>
+                {g.list.length === 0 ? (
+                  <p className="px-4 py-4 text-xs text-slate-400 italic">Sin registros</p>
+                ) : (
+                  g.list.map(p => (
+                    <div key={p.cedula} className="px-4 py-3 border-b border-slate-100 last:border-b-0 flex items-center justify-between gap-2">
+                      <div>
+                        <p className="text-xs font-semibold text-slate-800">{p.nombre}</p>
+                        <p className="text-[10px] text-slate-400">V-{p.cedula} · {p.whatsapp}</p>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        {p.paymentStatus !== 'verified' && (
+                          <button onClick={() => { const u = koEnrolled.map(x => x.cedula === p.cedula ? { ...x, paymentStatus: 'verified' as const } : x); setKoEnrolled(u); saveKOEnrolled(u); setToast(`✅ Verificado`) }}
+                            className="bg-green-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg">✓</button>
+                        )}
+                        {p.paymentStatus !== 'rejected' && (
+                          <button onClick={() => { const u = koEnrolled.map(x => x.cedula === p.cedula ? { ...x, paymentStatus: 'rejected' as const } : x); setKoEnrolled(u); saveKOEnrolled(u); setToast(`❌ Rechazado`) }}
+                            className="bg-red-50 border border-red-200 text-red-600 text-[10px] font-bold px-2 py-1 rounded-lg">✗</button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            ))}
+          </div>
+        )
+      }
+
+      // ── QUINIELAS ──────────────────────────────────────────────────────────
+      if (adminModule === 'quinielas') {
+        const r32Matches = KNOCKOUT_MATCHES.filter(m => m.stage === 'R32')
+        return (
+          <div className="space-y-3">
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+              <p className="text-xs font-extrabold text-slate-700 mb-1">Quiniela Dieciseisavos (R32)</p>
+              <p className="text-[10px] text-slate-400">{r32Matches.length} partidos · {verifiedList.length} inscritos verificados</p>
+            </div>
+            {koEnrolled.length === 0 ? (
+              <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center text-xs text-slate-400 italic">
+                No hay inscritos en sesión.
+              </div>
+            ) : (
+              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-500 uppercase grid" style={{ gridTemplateColumns: '1fr 80px 80px' }}>
+                  <span>Participante</span><span className="text-center">Pago</span><span className="text-center">Picks</span>
+                </div>
+                {koEnrolled.map(p => {
+                  const hasPicks = Object.keys(picks).length > 0
+                  return (
+                    <div key={p.cedula} className="px-4 py-3 border-b border-slate-100 last:border-b-0 grid items-center gap-2" style={{ gridTemplateColumns: '1fr 80px 80px' }}>
+                      <div>
+                        <p className="text-xs font-semibold text-slate-800 truncate">{p.nombre}</p>
+                        <p className="text-[10px] text-slate-400">{p.ciudad ?? '—'}</p>
+                      </div>
+                      <span className={`text-[10px] font-extrabold text-center ${p.paymentStatus === 'verified' ? 'text-green-600' : p.paymentStatus === 'rejected' ? 'text-red-500' : 'text-amber-600'}`}>
+                        {p.paymentStatus === 'verified' ? '✅' : p.paymentStatus === 'rejected' ? '❌' : '⏳'}
+                      </span>
+                      <span className="text-[10px] text-slate-400 text-center">
+                        {p.cedula === DEMO_CEDULA && hasPicks ? `${Object.keys(picks).length}/${r32Matches.length}` : '0/' + r32Matches.length}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )
+      }
+
+      // ── RESULTADOS ──────────────────────────────────────────────────────────
+      if (adminModule === 'resultados') {
+        const byStage = STAGES.map(s => ({
+          stage: s,
+          label: STAGE_META[s].label,
+          matches: KNOCKOUT_MATCHES.filter(m => m.stage === s),
+        }))
+        return (
+          <div className="space-y-3">
+            {byStage.map(({ stage, label, matches }) => (
+              <details key={stage} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                <summary className="px-4 py-3 flex items-center justify-between cursor-pointer list-none hover:bg-slate-50">
+                  <span className="text-sm font-extrabold text-slate-700">{label}</span>
+                  <span className="text-xs text-slate-400">{matches.length} partidos ▾</span>
+                </summary>
+                <div className="border-t border-slate-100 divide-y divide-slate-100">
+                  {matches.map(m => (
+                    <div key={m.id} className="px-4 py-3 flex items-center justify-between gap-2">
+                      <div>
+                        <p className="text-xs font-semibold text-slate-800">#{m.fifaMatchNumber} · {m.date}</p>
+                        <p className="text-[10px] text-slate-500">{m.home.name ?? m.home.placeholder} vs {m.away.name ?? m.away.placeholder}</p>
+                      </div>
+                      <span className={`text-[10px] font-extrabold px-2 py-1 rounded-lg ${
+                        m.status === 'FINISHED' ? 'bg-green-100 text-green-700' :
+                        m.status === 'LIVE'     ? 'bg-red-100 text-red-600'     : 'bg-slate-100 text-slate-500'
+                      }`}>
+                        {m.status === 'FINISHED' ? 'Finalizado' : m.status === 'LIVE' ? '● LIVE' : 'Próximo'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        )
+      }
+
+      // ── RANKING ────────────────────────────────────────────────────────────
+      if (adminModule === 'ranking') {
+        return (
+          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+            <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-500 uppercase grid" style={{ gridTemplateColumns: '28px 1fr 60px 50px 50px' }}>
+              <span>#</span><span>Participante</span><span className="text-center">Ciudad</span><span className="text-center">🏆</span><span className="text-center">Pts</span>
+            </div>
+            {KO_DEMO_RANKING.map((r, i) => (
+              <div key={r.cedula} className="px-4 py-3 border-b border-slate-100 last:border-b-0 grid items-center gap-2" style={{ gridTemplateColumns: '28px 1fr 60px 50px 50px' }}>
+                <span className="text-xs font-extrabold text-slate-400">{i + 1}</span>
+                <div>
+                  <p className="text-xs font-semibold text-slate-800">{r.displayName}</p>
+                  <p className="text-[10px] text-slate-400">V-{r.cedula}</p>
+                </div>
+                <span className="text-[10px] text-slate-500 text-center truncate">{r.ciudad ?? '—'}</span>
+                <span className={`text-[10px] font-extrabold text-center ${r.paymentStatus === 'verified' ? 'text-green-600' : 'text-amber-600'}`}>
+                  {r.paymentStatus === 'verified' ? '✅' : '⏳'}
+                </span>
+                <span className="text-xs font-extrabold text-slate-700 text-center">{r.totalPoints}</span>
+              </div>
+            ))}
+          </div>
+        )
+      }
+
+      // ── BACKUPS ────────────────────────────────────────────────────────────
+      if (adminModule === 'backups') {
+        const doDownload = () => {
+          const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), total: koEnrolled.length, inscritos: koEnrolled }, null, 2)], { type: 'application/json' })
+          const url  = URL.createObjectURL(blob)
+          const a    = document.createElement('a')
+          a.href = url; a.download = `ko-inscritos-${new Date().toISOString().slice(0, 10)}.json`
+          a.click(); URL.revokeObjectURL(url)
+          setToast('💾 Backup descargado')
+        }
+        return (
+          <div className="space-y-4">
+            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+              <h3 className="text-sm font-extrabold text-slate-700 mb-1">💾 Exportar inscritos</h3>
+              <p className="text-xs text-slate-500 mb-4">Descarga un JSON con todos los participantes registrados en esta sesión.</p>
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 mb-4 font-mono text-[10px] text-slate-600">
+                <p>Total inscritos: {koEnrolled.length}</p>
+                <p>Verificados: {verifiedList.length}</p>
+                <p>Pendientes: {pendingList.length}</p>
+                <p>Rechazados: {rejectedList.length}</p>
+              </div>
+              <button
+                onClick={doDownload}
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-extrabold py-3 rounded-xl text-sm transition-all touch-manipulation"
+              >
+                ⬇ Descargar JSON
+              </button>
+            </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+              <p className="text-amber-800 text-xs font-extrabold mb-2">⚠️ Solo datos de sesión</p>
+              <p className="text-amber-700 text-[10px]">Este backup contiene los inscritos guardados en sessionStorage del prototipo. No refleja datos de producción real.</p>
+            </div>
+          </div>
+        )
+      }
+
+      // ── CONFIGURACIÓN ──────────────────────────────────────────────────────
+      if (adminModule === 'configuracion') {
+        return (
+          <div className="space-y-3">
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+              <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
+                <p className="text-sm font-extrabold text-slate-700">Configuración de la quiniela</p>
+                <p className="text-[10px] text-slate-400">Solo lectura en el prototipo</p>
+              </div>
+              {[
+                { label: 'Precio de entrada', val: `$${ENTRY_USD} USD / ${(ENTRY_USD * RATE_BS).toLocaleString('es-VE')} Bs` },
+                { label: 'Tasa de cambio',    val: `730 Bs/USD (fija)` },
+                { label: '1er lugar',          val: `${Math.round(PCT_1ST * 100)}% del pozo` },
+                { label: '2do lugar',          val: `${Math.round(PCT_2ND * 100)}% del pozo` },
+                { label: 'Organización',       val: `${Math.round(PCT_ORG * 100)}% del pozo` },
+                { label: 'Etapa activa',       val: STAGE_META[activeStage].label },
+                { label: 'Partidos abiertos',  val: `${totalOpenCount}` },
+                { label: 'Storage key picks',  val: STORAGE_KEY },
+              ].map(row => (
+                <div key={row.label} className="px-4 py-3 border-b border-slate-100 last:border-b-0 flex items-center justify-between gap-4">
+                  <span className="text-xs text-slate-500">{row.label}</span>
+                  <span className="text-xs font-semibold text-slate-800 text-right">{row.val}</span>
+                </div>
+              ))}
+            </div>
+            <div className="space-y-2">
+              <button onClick={() => { setPicks({}); storePicks({}); setToast('🗑 Picks borrados') }}
+                className="w-full bg-red-50 border border-red-200 text-red-600 font-bold py-3 rounded-xl text-xs hover:bg-red-100 transition-all touch-manipulation">
+                🗑 Borrar todos los picks de sesión
+              </button>
+              <button onClick={() => { setActiveStage('R32'); setView('llenado') }}
+                className="w-full bg-slate-50 border border-slate-200 text-slate-600 font-bold py-3 rounded-xl text-xs hover:bg-slate-100 transition-all touch-manipulation">
+                🔄 Ir a Dieciseisavos de final
+              </button>
+            </div>
+          </div>
+        )
+      }
+
+      // ── ANALÍTICAS ────────────────────────────────────────────────────────
+      if (adminModule === 'analiticas') {
+        const totalPicks     = Object.keys(picks).length
+        const r32Total       = KNOCKOUT_MATCHES.filter(m => m.stage === 'R32').length
+        const pickPct        = r32Total > 0 ? Math.round((totalPicks / r32Total) * 100) : 0
+        const ciudades       = koEnrolled.reduce<Record<string, number>>((acc, p) => { if (p.ciudad) acc[p.ciudad] = (acc[p.ciudad] ?? 0) + 1; return acc }, {})
+        const ciudadTop      = Object.entries(ciudades).sort((a, b) => b[1] - a[1]).slice(0, 5)
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'Picks demo llenados', val: `${totalPicks}/${r32Total}`, icon: '📝' },
+                { label: 'Completitud picks',   val: `${pickPct}%`,               icon: '📊' },
+                { label: 'Inscritos totales',   val: `${koEnrolled.length}`,      icon: '👥' },
+                { label: 'Tasa verificación',   val: koEnrolled.length > 0 ? `${Math.round((verifiedList.length / koEnrolled.length) * 100)}%` : '—', icon: '✅' },
+              ].map(s => (
+                <div key={s.label} className="bg-white border border-slate-200 rounded-2xl p-4 text-center shadow-sm">
+                  <div className="text-xl mb-1">{s.icon}</div>
+                  <div className="text-xl font-extrabold text-slate-800">{s.val}</div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">{s.label}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+              <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
+                <p className="text-sm font-extrabold text-slate-700">Top ciudades</p>
+              </div>
+              {ciudadTop.length === 0 ? (
+                <p className="px-4 py-4 text-xs text-slate-400 italic">Sin datos suficientes</p>
+              ) : (
+                ciudadTop.map(([ciudad, count]) => (
+                  <div key={ciudad} className="px-4 py-3 border-b border-slate-100 last:border-b-0 flex items-center justify-between">
+                    <span className="text-xs text-slate-700">{ciudad}</span>
+                    <span className="text-xs font-extrabold text-slate-800">{count}</span>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Pending events */}
+            <details className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+              <summary className="px-4 py-3 flex items-center justify-between cursor-pointer list-none hover:bg-slate-50">
+                <span className="text-sm font-extrabold text-slate-700">🔧 Eventos técnicos pendientes</span>
+                <span className="text-xs text-slate-400">{pendingEvents.filter(e => e.status === 'pending').length} ▾</span>
+              </summary>
+              <div className="border-t border-slate-100 divide-y divide-slate-100">
                 {pendingEvents.map(ev => (
                   <div key={ev.id} className={`px-4 py-3 ${ev.status !== 'pending' ? 'opacity-40' : ''}`}>
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div>
-                        <p className="text-[10px] text-slate-400 font-semibold">{ev.matchLabel}</p>
-                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                          <span className="text-base">{ev.flag}</span>
-                          <span className="text-sm font-bold text-slate-800">{ev.playerName}</span>
-                          <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
-                            ev.eventType === 'GOAL'        ? 'bg-green-100 text-green-700' :
-                            ev.eventType === 'ASSIST'      ? 'bg-blue-100 text-blue-700'  :
-                            ev.eventType === 'YELLOW_CARD' ? 'bg-amber-100 text-amber-700':
-                                                              'bg-red-100 text-red-700'
-                          }`}>
-                            {ev.eventType === 'GOAL' ? '⚽ Gol' : ev.eventType === 'ASSIST' ? '🅰️ Asistencia' : ev.eventType === 'YELLOW_CARD' ? '🟨 Amarilla' : '🟥 Roja'}
-                          </span>
-                          <span className="text-[10px] text-slate-400">min. {ev.minute} · {ev.source} · <span className={ev.confidence === 'high' ? 'text-green-600' : ev.confidence === 'medium' ? 'text-amber-600' : 'text-red-600'}>{ev.confidence}</span></span>
-                        </div>
+                        <p className="text-[10px] text-slate-400">{ev.matchLabel}</p>
+                        <p className="text-xs font-semibold text-slate-800">{ev.playerName} · {ev.eventType} min.{ev.minute}</p>
                       </div>
                       {ev.status !== 'pending' && (
                         <span className={`text-[10px] font-extrabold px-2 py-1 rounded-lg shrink-0 ${ev.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
-                          {ev.status === 'approved' ? '✓ OK' : '✗ Rechaz.'}
+                          {ev.status === 'approved' ? '✓ OK' : '✗ Rech.'}
                         </span>
                       )}
                     </div>
@@ -3023,56 +3400,73 @@ export default function PrototipoEliminatoriasV3() {
                   </div>
                 ))}
               </div>
-            )}
+            </details>
           </div>
-        </details>
+        )
+      }
 
-        {/* Actions */}
-        <div className="space-y-3 mb-6">
-          <button
-            onClick={() => setView('estadisticas')}
-            className="w-full bg-slate-900 text-white font-bold py-3.5 rounded-xl hover:bg-slate-800 transition-all touch-manipulation"
-          >
-            📈 Ver panel de estadísticas
-          </button>
-          <button
-            onClick={() => { setPicks({}); storePicks({}); setToast('🗑 Picks borrados') }}
-            className="w-full bg-red-50 border border-red-200 text-red-600 font-bold py-3.5 rounded-xl hover:bg-red-100 transition-all touch-manipulation"
-          >
-            🗑 Borrar todos los picks demo
-          </button>
-          <button
-            onClick={() => { setActiveStage('R32'); setView('llenado') }}
-            className="w-full bg-slate-50 border border-slate-200 text-slate-600 font-bold py-3.5 rounded-xl hover:bg-slate-100 transition-all touch-manipulation"
-          >
-            🔄 Ir a Dieciseisavos de final
-          </button>
-          <button
-            onClick={() => setView('home')}
-            className="w-full bg-green-50 border border-green-200 text-green-700 font-bold py-3.5 rounded-xl hover:bg-green-100 transition-all touch-manipulation"
-          >
-            🏠 Ver como participante
-          </button>
+      return null
+    }
+
+    return (
+      <div className="min-h-screen bg-slate-100">
+        {/* Admin header */}
+        <div className="bg-slate-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20 shadow-lg">
+          <div className="flex items-center gap-3">
+            <span className="text-lg">⚙️</span>
+            <div>
+              <p className="text-sm font-extrabold leading-tight">Panel Admin</p>
+              <p className="text-slate-400 text-[10px]">Eliminatorias 2026 · Prototipo</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setView('home')} className="text-slate-400 hover:text-white text-xs py-1 px-2 rounded-lg transition-colors">🏠</button>
+            <button
+              onClick={() => {
+                localStorage.removeItem(ADMIN_SESSION_KEY)
+                setAdminUnlocked(false)
+                setAdminModule('dashboard')
+                setView('home')
+              }}
+              className="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold py-1.5 px-3 rounded-lg transition-colors"
+            >
+              Salir
+            </button>
+          </div>
         </div>
 
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
-          <p className="text-amber-800 font-extrabold text-sm mb-3">⚠️ Confirmación de aislamiento</p>
-          <ul className="text-xs text-amber-700 space-y-1.5">
-            {[
-              'Sin conexión a base de datos real',
-              'Sin Prisma ni migraciones',
-              'Sin modificar participantes reales',
-              'Sin afectar ranking real',
-              'Sin tocar fase de grupos actual',
-              'Sin automatización real de resultados',
-              'Datos almacenados en sessionStorage solamente',
-            ].map(item => (
-              <li key={item} className="flex items-center gap-2">
-                <CheckCircle size={12} className="text-green-600 shrink-0" />
-                {item}
-              </li>
+        <div className="max-w-3xl mx-auto px-4 py-4 pb-28">
+          {/* Module nav — horizontal scroll */}
+          <div className="flex gap-2 overflow-x-auto pb-2 mb-5 scrollbar-hide">
+            {NAV.map(n => (
+              <button
+                key={n.id}
+                onClick={() => setAdminModule(n.id)}
+                className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+                  adminModule === n.id
+                    ? 'bg-green-600 text-white shadow-md'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <span>{n.emoji}</span>{n.label}
+              </button>
             ))}
-          </ul>
+          </div>
+
+          {/* Module content */}
+          {renderModule()}
+
+          {/* Isolation notice */}
+          <div className="mt-6 bg-amber-50 border border-amber-200 rounded-2xl p-4">
+            <p className="text-amber-800 font-extrabold text-xs mb-2">⚠️ Aislamiento confirmado</p>
+            <ul className="text-[10px] text-amber-700 space-y-1">
+              {['Sin DB real · Sin Prisma', 'Sin participantes reales', 'Sin ranking real', 'Sin cron real', 'Datos en sessionStorage'].map(item => (
+                <li key={item} className="flex items-center gap-1.5">
+                  <CheckCircle size={10} className="text-green-600 shrink-0" />{item}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     )
@@ -3643,14 +4037,8 @@ export default function PrototipoEliminatoriasV3() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Demo banner */}
-      <div className="bg-amber-400 text-slate-900 text-xs font-bold py-1.5 text-center px-4 flex items-center justify-center gap-2 flex-wrap">
-        <span>🔒 PROTOTIPO PRIVADO · Sin conexión a producción</span>
-        <button
-          onClick={() => setView('admin')}
-          className="underline text-slate-700 hover:text-slate-900"
-        >
-          Panel admin
-        </button>
+      <div className="bg-amber-400 text-slate-900 text-xs font-bold py-1.5 text-center px-4">
+        🔒 PROTOTIPO PRIVADO · Sin conexión a producción
       </div>
 
       {/* Navigation tabs */}
