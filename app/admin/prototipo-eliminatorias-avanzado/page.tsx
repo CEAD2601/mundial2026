@@ -11,6 +11,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   Minus, Plus, ArrowRight, Save, Lock, CheckCircle,
   Trophy, TrendingUp, TrendingDown, ChevronRight,
+  Users, Clock, Star, Shield, BarChart2, ChevronDown, ChevronUp,
 } from 'lucide-react'
 import {
   KNOCKOUT_MATCHES, STAGE_META, DEMO_RANKING,
@@ -385,123 +386,161 @@ export default function PrototipoEliminatoriasV3() {
 
   function renderHome() {
     return (
-      <div>
-        {/* Hero */}
-        <header className="relative overflow-hidden text-white" style={{ minHeight: '520px' }}>
-          {/* Background image — mobile/portrait */}
-          <div className="absolute inset-0 block sm:hidden">
-            <img
-              src="/assets/hero/hero-mobile.webp"
-              alt="Quiniela Eliminatorias 2026 — jugadores internacionales"
-              className="w-full h-full object-cover"
-              style={{ objectPosition: 'center top' }}
-            />
-          </div>
-          {/* Background image — desktop/landscape */}
-          <div className="absolute inset-0 hidden sm:block">
-            <img
-              src="/assets/hero/hero-desktop.webp"
-              alt="Quiniela Eliminatorias 2026 — jugadores internacionales"
-              className="w-full h-full object-cover object-center"
-            />
-          </div>
-          {/* Dark gradient overlay for legibility */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/80" />
-          {/* Green tint at bottom */}
-          <div className="absolute inset-0 bg-gradient-to-t from-green-900/50 to-transparent" />
+      <div className="min-h-screen flex flex-col bg-slate-50">
 
-          <div className="relative max-w-2xl mx-auto px-4 pt-10 pb-20 text-center">
-            {/* Country badge */}
-            <div className="inline-flex items-center gap-2 bg-black/40 backdrop-blur-sm border border-white/25 rounded-full px-4 py-1.5 text-white/90 text-xs font-bold mb-4">
-              🇲🇽 México · 🇺🇸 EE.UU. · 🇨🇦 Canadá 2026
+        {/* ── Animaciones suaves (respeta prefers-reduced-motion) ── */}
+        <style>{`
+          @keyframes ko-rise { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:translateY(0) } }
+          .ko-rise    { animation: ko-rise 0.55s ease both; }
+          .ko-rise-d1 { animation: ko-rise 0.55s 0.08s ease both; }
+          .ko-rise-d2 { animation: ko-rise 0.55s 0.18s ease both; }
+          .ko-rise-d3 { animation: ko-rise 0.55s 0.30s ease both; }
+          .ko-rise-d4 { animation: ko-rise 0.55s 0.42s ease both; }
+          @media (prefers-reduced-motion: reduce) {
+            .ko-rise, .ko-rise-d1, .ko-rise-d2, .ko-rise-d3, .ko-rise-d4 { animation: none !important; }
+          }
+        `}</style>
+
+        {/* ── HERO ── */}
+        <header className="relative overflow-hidden text-white flex flex-col min-h-screen sm:min-h-[600px]">
+
+          {/* Mobile image */}
+          <div className="absolute inset-0 block sm:hidden">
+            <img src="/assets/hero/hero-mobile.webp" alt="Quiniela Eliminatorias 2026"
+              className="w-full h-full object-cover" style={{ objectPosition: 'center top' }} />
+          </div>
+          {/* Desktop image */}
+          <div className="absolute inset-0 hidden sm:block">
+            <img src="/assets/hero/hero-desktop.webp" alt="Quiniela Eliminatorias 2026"
+              className="w-full h-full object-cover object-center" />
+          </div>
+
+          {/* Overlays */}
+          <div className="absolute inset-0 sm:hidden bg-gradient-to-b from-black/55 via-transparent to-black/85" />
+          <div className="absolute inset-0 hidden sm:block bg-[radial-gradient(ellipse_60%_80%_at_50%_40%,rgba(0,0,0,0.55)_0%,transparent_100%)]" />
+          <div className="absolute inset-0 hidden sm:block bg-gradient-to-t from-black/70 via-transparent to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-r from-green-900/20 via-transparent to-blue-900/20" />
+
+          {/* Content */}
+          <div className="relative flex-1 flex flex-col max-w-3xl mx-auto px-4 w-full
+                          sm:pt-14 sm:pb-20 sm:justify-start
+                          pt-8 pb-16 justify-end text-center items-center ko-rise">
+
+            {/* Host badge */}
+            <div className="inline-flex items-center gap-2 bg-black/30 backdrop-blur-md border border-white/20 rounded-full px-4 py-1.5 text-xs sm:text-sm font-semibold mb-4 shadow-lg">
+              <span>🇲🇽 🇺🇸 🇨🇦</span>
+              <span className="text-white/90">México · EE.UU. · Canadá 2026</span>
             </div>
 
             {/* Status badge */}
-            <div className="flex justify-center mb-4">
-              <div className="inline-flex items-center gap-2 bg-yellow-400/25 border border-yellow-400/50 rounded-full px-4 py-1.5 text-yellow-300 text-sm font-bold animate-pulse">
-                🟢 Inscripciones abiertas
-              </div>
+            <div className="inline-flex items-center gap-2 bg-yellow-400/20 border border-yellow-400/40 rounded-full px-4 py-1.5 text-yellow-300 text-sm font-bold mb-5 animate-pulse">
+              🟢 Inscripciones abiertas
             </div>
 
-            {/* Main title */}
-            <h1 className="text-4xl sm:text-5xl font-extrabold mb-3 leading-tight tracking-tight drop-shadow-2xl">
-              Quiniela<br />
-              <span className="text-yellow-400">Eliminatorias 2026</span>
+            {/* Title */}
+            <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold mb-4 leading-[1.05] tracking-tight"
+                style={{ textShadow: '0 2px 20px rgba(0,0,0,0.8), 0 4px 40px rgba(0,0,0,0.5)' }}>
+              Quiniela{' '}
+              <span className="text-yellow-300" style={{ textShadow: '0 0 30px rgba(251,191,36,0.6), 0 2px 20px rgba(0,0,0,0.8)' }}>
+                Eliminatorias 2026
+              </span>
             </h1>
 
-            <p className="text-white/90 text-base mb-2 font-semibold drop-shadow-md">
-              Nueva ronda · Nuevos participantes · Nuevo ranking
+            <p className="text-base sm:text-xl text-white/90 mb-3 max-w-lg mx-auto leading-relaxed"
+               style={{ textShadow: '0 1px 8px rgba(0,0,0,0.8)' }}>
+              Predice los <strong className="text-yellow-300 font-bold">32 partidos</strong> de la fase eliminatoria,
+              compite con tus amigos y gana el pozo acumulado.
             </p>
-            <p className="text-white/65 text-sm mb-6">
+
+            <p className="text-white/55 text-sm mb-8" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
               Dieciseisavos · Octavos · Cuartos · Semifinales · Final
             </p>
 
             {/* Progress bar if started */}
             {filledCount > 0 && (
-              <div className="bg-black/30 backdrop-blur-sm border border-white/20 rounded-2xl p-3 mb-5 max-w-xs mx-auto">
+              <div className="bg-black/30 backdrop-blur-sm border border-white/20 rounded-2xl p-3 mb-6 max-w-xs mx-auto w-full">
                 <p className="text-xs text-green-200 mb-1.5 font-semibold">Tu progreso</p>
                 <div className="w-full bg-white/20 rounded-full h-2.5 mb-1.5">
                   <div className="bg-yellow-400 h-2.5 rounded-full transition-all duration-500" style={{ width: `${pctTotal}%` }} />
                 </div>
-                <p className="text-xs text-yellow-300 font-extrabold">
-                  {filledCount} / {totalOpenCount} partidos · {pctTotal}%
-                </p>
+                <p className="text-xs text-yellow-300 font-extrabold">{filledCount} / {totalOpenCount} partidos · {pctTotal}%</p>
               </div>
             )}
 
             {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center max-w-sm mx-auto sm:max-w-none">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center w-full max-w-sm sm:max-w-none">
               <button
                 onClick={() => setView(registered || filledCount > 0 ? 'llenado' : 'registro')}
-                className="bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-slate-900 font-extrabold px-8 py-4 rounded-2xl text-base shadow-2xl transition-all active:scale-95 touch-manipulation"
+                className="group relative bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-slate-900 font-extrabold px-8 py-4 rounded-2xl text-base sm:text-lg transition-all shadow-2xl hover:-translate-y-1 active:scale-95 inline-flex items-center gap-2 w-full sm:w-auto justify-center touch-manipulation"
+                style={{ boxShadow: '0 8px 32px rgba(251,191,36,0.4), 0 2px 8px rgba(0,0,0,0.3)' }}
               >
-                ⚽ {filledCount > 0 ? 'Continuar llenando' : 'Participar ahora'}
+                <span className="text-xl group-hover:scale-110 transition-transform">⚽</span>
+                {filledCount > 0 ? 'Continuar quiniela' : 'Participar ahora'}
+                <span className="absolute -top-2.5 -right-2.5 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg border border-red-400">
+                  20 USD
+                </span>
               </button>
               <button
                 onClick={() => setView('ranking')}
-                className="bg-white/15 hover:bg-white/25 active:bg-white/30 border border-white/30 text-white font-bold px-6 py-4 rounded-2xl text-base transition-all touch-manipulation backdrop-blur-sm"
+                className="bg-white/15 hover:bg-white/25 active:bg-white/30 backdrop-blur-md border border-white/30 text-white font-semibold px-7 py-4 rounded-2xl text-base transition-all hover:-translate-y-0.5 inline-flex items-center gap-2 w-full sm:w-auto justify-center touch-manipulation"
               >
                 🏆 Ver ranking
               </button>
               <button
                 onClick={() => setView('mi-quiniela')}
-                className="bg-white/15 hover:bg-white/25 active:bg-white/30 border border-white/30 text-white font-bold px-6 py-4 rounded-2xl text-base transition-all touch-manipulation backdrop-blur-sm"
+                className="bg-white/15 hover:bg-white/25 active:bg-white/30 backdrop-blur-md border border-white/30 text-white font-semibold px-7 py-4 rounded-2xl text-base transition-all hover:-translate-y-0.5 inline-flex items-center gap-2 w-full sm:w-auto justify-center touch-manipulation"
               >
                 📋 Mi quiniela
               </button>
             </div>
+
+            {/* Trust indicators */}
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-white/50 text-xs">
+              <span className="flex items-center gap-1"><span className="text-green-400">✓</span> Pago Móvil o Zelle</span>
+              <span className="w-px h-3 bg-white/20 hidden sm:block" />
+              <span className="flex items-center gap-1"><span className="text-green-400">✓</span> 20 USD / 14.600 Bs · Tasa fija</span>
+              <span className="w-px h-3 bg-white/20 hidden sm:block" />
+              <span className="flex items-center gap-1"><span className="text-green-400">✓</span> Ranking en tiempo real</span>
+            </div>
           </div>
 
           {/* Wave */}
-          <div className="absolute bottom-0 left-0 right-0 overflow-hidden leading-[0]">
-            <svg viewBox="0 0 1440 60" xmlns="http://www.w3.org/2000/svg" className="w-full block">
-              <path d="M0,30 Q360,60 720,30 Q1080,0 1440,30 L1440,60 L0,60 Z" fill="#f8fafc" />
+          <div className="absolute bottom-0 left-0 right-0">
+            <svg viewBox="0 0 1440 60" xmlns="http://www.w3.org/2000/svg" className="w-full">
+              <path d="M0,30 Q360,60 720,30 Q1080,0 1440,30 L1440,60 L0,60 Z" fill="#f8fafc"/>
             </svg>
           </div>
         </header>
 
-        {/* Stats bar */}
-        <div className="bg-slate-50 border-b border-slate-200">
-          <div className="max-w-2xl mx-auto px-4 py-5 grid grid-cols-4 gap-2 text-center">
+        {/* ── STATS BAR ── */}
+        <div className="bg-white border-b border-slate-200 shadow-sm ko-rise-d1">
+          <div className="max-w-4xl mx-auto px-4 py-5 grid grid-cols-3 sm:grid-cols-5 gap-4 text-center">
             {[
-              { v: '32', l: 'partidos' },
-              { v: '5',  l: 'rondas' },
-              { v: '32', l: 'equipos' },
-              { v: '19 jul', l: 'final' },
-            ].map(s => (
-              <div key={s.l}>
-                <p className="text-xl font-extrabold text-slate-800">{s.v}</p>
-                <p className="text-xs text-slate-500 mt-0.5">{s.l}</p>
+              { value: '32',      label: 'Partidos',         color: 'text-green-600' },
+              { value: '32',      label: 'Equipos',          color: 'text-blue-600' },
+              { value: '20 USD',  label: 'Entrada',          color: 'text-yellow-600' },
+              { value: '14.600',  label: 'Monto en Bs',      color: 'text-amber-600' },
+              { value: '65%',     label: 'Premio 1er lugar', color: 'text-purple-600' },
+            ].map(({ value, label, color }, i) => (
+              <div key={label} className={i >= 3 ? 'hidden sm:block' : ''}>
+                <div className={`text-2xl font-extrabold ${color}`}>{value}</div>
+                <div className="text-xs text-slate-500 mt-0.5">{label}</div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="max-w-2xl mx-auto px-4 py-8 space-y-10">
+        <main className="flex-1 max-w-4xl mx-auto px-4 py-14 w-full space-y-20">
 
-          {/* Etapas overview */}
-          <section>
-            <h2 className="text-lg font-extrabold text-slate-800 mb-4">Etapas de la eliminatoria</h2>
+          {/* ── ETAPAS (único del prototipo) ── */}
+          <section className="ko-rise-d2">
+            <div className="text-center mb-8">
+              <span className="inline-block bg-green-100 text-green-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Tu quiniela</span>
+              <h2 className="text-3xl font-extrabold text-slate-900">
+                Etapas de la <span className="text-green-600">eliminatoria</span>
+              </h2>
+              <p className="text-slate-500 mt-2 text-sm">Llena y guarda los marcadores de cada etapa del torneo.</p>
+            </div>
             <div className="space-y-3">
               {STAGES.map(s => {
                 const meta = STAGE_META[s]
@@ -511,19 +550,14 @@ export default function PrototipoEliminatoriasV3() {
                 const partial = stagePartial(s, picks)
                 const locked = open.length === 0
                 return (
-                  <div
-                    key={s}
-                    className={`rounded-2xl border-2 p-4 flex items-center justify-between gap-3 transition-all ${
-                      done    ? 'border-green-300 bg-green-50' :
-                      partial ? 'border-amber-300 bg-amber-50/60' :
-                      locked  ? 'border-slate-200 bg-slate-50 opacity-60' :
-                      'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
-                    }`}
-                  >
+                  <div key={s} className={`rounded-2xl border-2 p-4 flex items-center justify-between gap-3 transition-all ${
+                    done    ? 'border-green-300 bg-green-50' :
+                    partial ? 'border-amber-300 bg-amber-50/60' :
+                    locked  ? 'border-slate-200 bg-slate-50 opacity-60' :
+                    'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
+                  }`}>
                     <div className="flex items-center gap-3 min-w-0">
-                      <span className="text-xl shrink-0">
-                        {done ? '✅' : partial ? '📝' : locked ? '🔒' : '⚽'}
-                      </span>
+                      <span className="text-xl shrink-0">{done ? '✅' : partial ? '📝' : locked ? '🔒' : '⚽'}</span>
                       <div className="min-w-0">
                         <p className="font-bold text-slate-800 text-sm truncate">{meta.label}</p>
                         <p className="text-xs text-slate-500">{meta.dates} · {meta.matches} partidos</p>
@@ -531,16 +565,11 @@ export default function PrototipoEliminatoriasV3() {
                     </div>
                     <div className="shrink-0">
                       {locked ? (
-                        <span className="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full font-semibold">
-                          Por definir
-                        </span>
+                        <span className="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full font-semibold">Por definir</span>
                       ) : (
                         <button
                           onClick={() => { setActiveStage(s); setView('llenado') }}
-                          className={`text-xs font-bold px-3.5 py-2 rounded-xl transition-all active:scale-95 touch-manipulation ${
-                            done ? 'bg-green-600 text-white hover:bg-green-700' :
-                            'bg-green-600 text-white hover:bg-green-700'
-                          }`}
+                          className="text-xs font-bold px-3.5 py-2 rounded-xl transition-all active:scale-95 touch-manipulation bg-green-600 text-white hover:bg-green-700"
                         >
                           {done ? `${filled}/${open.length} ✓` : `${filled}/${open.length} → Llenar`}
                         </button>
@@ -552,282 +581,371 @@ export default function PrototipoEliminatoriasV3() {
             </div>
           </section>
 
-          {/* Scoring system */}
+          {/* ── ¿CÓMO PARTICIPAR? ── */}
           <section>
-            <h2 className="text-lg font-extrabold text-slate-800 mb-4">Sistema de puntuación</h2>
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              {[
-                { pts: '3 pts',  label: 'Marcador exacto',    emoji: '🎯', bg: 'bg-yellow-50', border: 'border-yellow-300', chip: 'bg-yellow-400 text-slate-900' },
-                { pts: '1 pt',   label: 'Resultado correcto', emoji: '✅', bg: 'bg-green-50',  border: 'border-green-300',  chip: 'bg-green-500 text-white' },
-                { pts: '0 pts',  label: 'Incorrecto',         emoji: '❌', bg: 'bg-slate-50',  border: 'border-slate-200',  chip: 'bg-slate-300 text-slate-700' },
-              ].map(c => (
-                <div key={c.pts} className={`${c.bg} border ${c.border} rounded-2xl p-4 text-center`}>
-                  <div className="text-2xl mb-2">{c.emoji}</div>
-                  <span className={`${c.chip} text-xs font-extrabold rounded-lg px-2 py-1 mb-2 inline-block`}>{c.pts}</span>
-                  <p className="text-xs text-slate-600 leading-tight mt-1">{c.label}</p>
-                </div>
-              ))}
+            <div className="text-center mb-10">
+              <span className="inline-block bg-green-100 text-green-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Proceso</span>
+              <h2 className="text-3xl font-extrabold text-slate-900">
+                ¿Cómo <span className="text-green-600">participar?</span>
+              </h2>
+              <p className="text-slate-500 mt-2">En 5 pasos simples, completa tu quiniela y compite por el premio.</p>
             </div>
-            {/* Example */}
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
-              <p className="text-xs font-semibold text-blue-800 mb-2">Ejemplo:</p>
-              <div className="flex gap-3 text-xs text-blue-700">
-                <span>Real: <strong>2-1</strong></span>
-                <span>|</span>
-                <span>Predices <strong>2-1</strong> → 🎯 3 pts</span>
-                <span>|</span>
-                <span>Predices <strong>1-0</strong> → ✅ 1 pt</span>
-                <span>|</span>
-                <span>Predices <strong>0-2</strong> → ❌ 0 pts</span>
-              </div>
-            </div>
-          </section>
 
-          {/* How it works — 5 steps */}
-          <section>
-            <h2 className="text-lg font-extrabold text-slate-800 mb-4">¿Cómo participar?</h2>
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
               {[
-                { n:'1', emoji:'📝', title:'Regístrate',            desc:'Nombre completo, cédula y WhatsApp. Sin complicaciones.' },
-                { n:'2', emoji:'⚽', title:'Llena tu quiniela',     desc:'Predice el marcador exacto de los 32 partidos eliminatorios.' },
-                { n:'3', emoji:'💳', title:'Paga y reporta',        desc:'Pago Móvil o Zelle. Reporta tu comprobante por WhatsApp.' },
-                { n:'4', emoji:'📊', title:'Sigue el ranking',      desc:'Ve tu posición en tiempo real después de cada partido.' },
-                { n:'5', emoji:'🏆', title:'¡Gana el premio!',      desc:'El mejor puntaje acumulado se lleva el 65% del pozo.' },
-              ].map(s => (
-                <div key={s.n} className="bg-white border border-slate-200 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
-                  <span className="w-8 h-8 rounded-full bg-green-600 text-white text-sm font-extrabold flex items-center justify-center shrink-0 mt-0.5">
-                    {s.n}
-                  </span>
-                  <div>
-                    <p className="font-bold text-slate-800 text-sm">{s.emoji} {s.title}</p>
-                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{s.desc}</p>
+                {
+                  num: 1,
+                  icon: (<svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>),
+                  title: 'Regístrate', desc: 'Nombre, cédula y WhatsApp.',
+                  color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200',
+                },
+                {
+                  num: 2,
+                  icon: (<svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>),
+                  title: 'Llena tu quiniela', desc: 'Predice los 32 marcadores.',
+                  color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200',
+                },
+                {
+                  num: 3,
+                  icon: (<svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>),
+                  title: 'Paga y reporta', desc: 'Pago Móvil o Zelle. Envía tu comprobante por WhatsApp.',
+                  color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200',
+                },
+                {
+                  num: 4,
+                  icon: (<svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>),
+                  title: 'Sigue el ranking', desc: 'Mira tu posición en vivo.',
+                  color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200',
+                },
+                {
+                  num: 5,
+                  icon: <Trophy className="w-8 h-8" />,
+                  title: '¡Gana!', desc: 'El mejor puntaje gana el premio.',
+                  color: 'text-yellow-600', bg: 'bg-yellow-50', border: 'border-yellow-200',
+                },
+              ].map((step) => (
+                <div key={step.num} className="flex lg:flex-col items-start lg:items-center gap-4 lg:gap-0 lg:text-center">
+                  <div className={`relative flex-1 lg:w-full bg-white rounded-2xl p-5 lg:p-6 shadow-sm border ${step.border} hover:shadow-md transition-all`}>
+                    <div className={`absolute -top-3 -left-3 lg:left-1/2 lg:-translate-x-1/2 w-7 h-7 ${step.bg} border-2 ${step.border} ${step.color} text-sm font-extrabold rounded-full flex items-center justify-center shadow-sm`}>
+                      {step.num}
+                    </div>
+                    <div className={`${step.color} mb-3 mt-1`}>{step.icon}</div>
+                    <div className="font-bold text-slate-800 text-sm mb-1">{step.title}</div>
+                    <div className="text-xs text-slate-500 leading-snug">{step.desc}</div>
                   </div>
                 </div>
               ))}
             </div>
+
+            <div className="text-center mt-8">
+              <button
+                onClick={() => setView(registered || filledCount > 0 ? 'llenado' : 'registro')}
+                className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold px-8 py-3.5 rounded-2xl transition-all shadow-lg hover:shadow-green-500/25 hover:-translate-y-0.5 text-sm touch-manipulation"
+              >
+                ⚽ Empezar ahora · 20 USD
+              </button>
+            </div>
           </section>
 
-          {/* Prize pool / Pozo */}
+          {/* ── TABLA DE PREMIOS ── */}
           <section>
-            <h2 className="text-lg font-extrabold text-slate-800 mb-4">💰 Pozo acumulado</h2>
-            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-5 text-white shadow-xl">
-              <div className="grid grid-cols-3 gap-3 mb-5">
-                <div className="bg-white/10 rounded-xl p-3 text-center">
-                  <p className="text-2xl font-extrabold text-yellow-400">$480</p>
-                  <p className="text-xs text-slate-400 mt-0.5">Pozo en USD</p>
-                </div>
-                <div className="bg-white/10 rounded-xl p-3 text-center">
-                  <p className="text-xl font-extrabold text-green-300">350.400</p>
-                  <p className="text-xs text-slate-400 mt-0.5">Pozo en Bs</p>
-                </div>
-                <div className="bg-white/10 rounded-xl p-3 text-center">
-                  <p className="text-2xl font-extrabold text-blue-300">24</p>
-                  <p className="text-xs text-slate-400 mt-0.5">Pagos verif.</p>
+            <div className="text-center mb-10">
+              <span className="inline-block bg-yellow-100 text-yellow-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Premios</span>
+              <h2 className="text-3xl font-extrabold text-slate-900">
+                Tabla de <span className="text-yellow-600">Premios</span>
+              </h2>
+            </div>
+            <div className="bg-white rounded-3xl shadow-md border border-slate-100 overflow-hidden">
+              {/* Header gradient */}
+              <div className="relative bg-gradient-to-br from-green-600 via-green-700 to-blue-800 text-white p-8 text-center overflow-hidden">
+                <div className="relative">
+                  <p className="text-green-200 text-sm mb-2">Pozo acumulado · 24 pagos verificados</p>
+                  <p className="text-5xl font-extrabold text-white drop-shadow">$480 <span className="text-2xl font-bold text-green-200">USD</span></p>
+                  <p className="text-green-300 text-sm mt-1">350.400 Bs <span className="text-xs">(tasa fija 730 Bs/USD)</span></p>
+                  <p className="text-green-400 text-xs mt-1">24 pagos verificados × $20 USD = $480 USD</p>
                 </div>
               </div>
-              <div className="space-y-2.5">
+              {/* Prize rows */}
+              <div className="divide-y divide-slate-100">
                 {[
-                  { place:'🥇 1.er lugar', pct:'65%', usd:'$312 USD', color:'text-yellow-400' },
-                  { place:'🥈 2.do lugar', pct:'20%', usd:'$96 USD',  color:'text-slate-300' },
-                  { place:'⚙️ Organización', pct:'15%', usd:'$72 USD', color:'text-slate-500' },
-                ].map(p => (
-                  <div key={p.place} className="flex items-center justify-between border-b border-white/10 pb-2.5 last:border-0 last:pb-0">
-                    <span className={`text-sm font-semibold ${p.color}`}>{p.place}</span>
+                  { medal: '🥇', pos: '1er Lugar',     pct: '65%', usd: '$312 USD', ves: '227.760 Bs', color: 'from-yellow-50 to-amber-50', badge: 'bg-yellow-100 text-yellow-800' },
+                  { medal: '🥈', pos: '2do Lugar',     pct: '20%', usd: '$96 USD',  ves: '70.080 Bs',  color: 'from-slate-50 to-slate-50',  badge: 'bg-slate-100 text-slate-600' },
+                  { medal: '🏛️', pos: 'Organización', pct: '15%', usd: '$72 USD',  ves: '52.560 Bs',  color: '',                           badge: 'bg-blue-50 text-blue-600' },
+                ].map((row) => (
+                  <div key={row.pos} className={`flex items-center justify-between px-6 py-5 bg-gradient-to-r ${row.color} hover:bg-opacity-80 transition-colors`}>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-slate-500">{p.pct}</span>
-                      <span className={`text-sm font-extrabold ${p.color}`}>{p.usd}</span>
+                      <span className="text-2xl">{row.medal}</span>
+                      <span className="font-bold text-slate-700">{row.pos}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={`text-sm font-bold px-3 py-1 rounded-full ${row.badge}`}>{row.pct}</span>
+                      <div className="text-right">
+                        <div className="font-extrabold text-lg text-slate-800">{row.usd}</div>
+                        <div className="text-xs text-slate-500">{row.ves}</div>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
-              <p className="text-[10px] text-slate-500 mt-4 text-center">
-                Datos demo · El pozo se actualizará según pagos verificados
+              <p className="text-center text-xs text-slate-400 p-4">
+                Datos demo · El pozo se actualizará según los pagos verificados por el administrador. · Tasa fija: 730 Bs/USD
               </p>
             </div>
           </section>
 
-          {/* Payment methods */}
+          {/* ── MÉTODOS DE PAGO ── */}
           <section>
-            <h2 className="text-lg font-extrabold text-slate-800 mb-4">💳 Métodos de pago</h2>
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="text-center mb-8">
+              <span className="inline-block bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Pago</span>
+              <h2 className="text-3xl font-extrabold text-slate-900">
+                Métodos de <span className="text-blue-700">Pago</span>
+              </h2>
+              <p className="text-slate-500 mt-2 text-sm">Puedes pagar por Pago Móvil Banesco o por Zelle. Elige el que prefieras.</p>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-5">
               {/* Pago Móvil */}
-              <div className="bg-white border-2 border-blue-100 rounded-2xl p-5 shadow-sm">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-2xl">📱</span>
-                  <div>
-                    <p className="font-extrabold text-slate-800">Pago Móvil</p>
-                    <p className="text-xs text-slate-400">Venezuela</p>
-                  </div>
+              <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-3xl p-6 text-white shadow-xl">
+                <div className="text-center mb-5">
+                  <div className="text-3xl mb-1">📱</div>
+                  <h3 className="font-extrabold text-xl">Pago Móvil</h3>
+                  <div className="text-green-200 text-sm mt-1">Pago en bolívares</div>
                 </div>
-                <div className="space-y-1.5 text-xs">
+                <div className="bg-white/10 rounded-2xl p-3 text-center mb-4">
+                  <div className="text-green-200 text-xs mb-1">Monto</div>
+                  <div className="text-3xl font-extrabold">14.600 <span className="text-lg font-semibold">Bs</span></div>
+                  <div className="text-green-200 text-xs mt-1">20 USD · Tasa fija 730 Bs/USD</div>
+                </div>
+                <div className="space-y-2">
                   {[
-                    ['Monto',    '14.600 Bs (tasa 730 Bs/USD)'],
-                    ['Banco',    'Banesco'],
-                    ['Teléfono', '0414-304-3337'],
-                    ['Cédula',   'V-4.561.947'],
-                    ['Concepto', 'Quiniela Elim. + tu nombre'],
-                  ].map(([k, v]) => (
-                    <div key={k} className="flex justify-between gap-2">
-                      <span className="text-slate-500 shrink-0">{k}</span>
-                      <span className="font-semibold text-slate-800 text-right">{v}</span>
+                    { label: 'Banco',    value: 'Banesco',     icon: '🏦' },
+                    { label: 'Teléfono', value: '04143043337', icon: '📞' },
+                    { label: 'Cédula',   value: 'V-4.561.947', icon: '🪪' },
+                  ].map(({ label, value, icon }) => (
+                    <div key={label} className="bg-white/10 rounded-xl px-3 py-2.5 flex items-center gap-3">
+                      <span className="text-lg">{icon}</span>
+                      <div>
+                        <div className="text-green-200 text-xs">{label}</div>
+                        <div className="font-bold text-sm">{value}</div>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
               {/* Zelle */}
-              <div className="bg-white border-2 border-purple-100 rounded-2xl p-5 shadow-sm">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-2xl">🏦</span>
-                  <div>
-                    <p className="font-extrabold text-slate-800">Zelle</p>
-                    <p className="text-xs text-slate-400">Desde USA</p>
-                  </div>
+              <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-6 text-white shadow-xl">
+                <div className="text-center mb-5">
+                  <div className="text-3xl mb-1">💵</div>
+                  <h3 className="font-extrabold text-xl">Zelle</h3>
+                  <div className="text-blue-200 text-sm mt-1">Pago en dólares</div>
                 </div>
-                <div className="space-y-1.5 text-xs">
+                <div className="bg-white/10 rounded-2xl p-3 text-center mb-4">
+                  <div className="text-blue-200 text-xs mb-1">Monto</div>
+                  <div className="text-3xl font-extrabold">20 <span className="text-lg font-semibold">USD</span></div>
+                  <div className="text-blue-200 text-xs mt-1">Pago directo en dólares</div>
+                </div>
+                <div className="space-y-2">
                   {[
-                    ['Monto',  '$20 USD'],
-                    ['Correo', 'kissigloxxi@hotmail.com'],
-                    ['Nota',   'Quiniela Elim. + tu nombre'],
-                  ].map(([k, v]) => (
-                    <div key={k} className="flex justify-between gap-2">
-                      <span className="text-slate-500 shrink-0">{k}</span>
-                      <span className="font-semibold text-slate-800 text-right">{v}</span>
+                    { label: 'Método', value: 'Zelle',                  icon: '💵' },
+                    { label: 'Correo', value: 'kissigloxxi@hotmail.com', icon: '📧' },
+                    { label: 'Monto',  value: '20 USD',                  icon: '💲' },
+                  ].map(({ label, value, icon }) => (
+                    <div key={label} className="bg-white/10 rounded-xl px-3 py-2.5 flex items-center gap-3">
+                      <span className="text-lg">{icon}</span>
+                      <div>
+                        <div className="text-blue-200 text-xs">{label}</div>
+                        <div className="font-bold text-sm">{value}</div>
+                      </div>
                     </div>
                   ))}
                 </div>
-                <p className="text-[10px] text-slate-400 mt-3">Después de pagar, envía el comprobante por WhatsApp.</p>
+              </div>
+            </div>
+            <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-sm text-yellow-800 text-center">
+              📌 Entrada: <strong>20 USD</strong> · Pago Móvil: <strong>14.600 Bs</strong> · Zelle: <strong>20 USD</strong> · Tasa fija: 730 Bs/USD
+            </div>
+          </section>
+
+          {/* ── SISTEMA DE PUNTUACIÓN ── */}
+          <section>
+            <div className="text-center mb-8">
+              <span className="inline-block bg-green-100 text-green-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Puntuación</span>
+              <h2 className="text-3xl font-extrabold text-slate-900">
+                Sistema de <span className="text-green-600">Puntuación</span>
+              </h2>
+              <p className="text-slate-500 mt-2 text-sm max-w-md mx-auto">
+                Predice el marcador exacto de cada partido y suma puntos según tu precisión.
+                <br /><span className="font-semibold text-slate-700">No eliges solo ganador — debes colocar los goles de cada equipo.</span>
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+              {[
+                { icon: '🏆', pts: '3', title: 'Marcador exacto',          desc: 'Aciertas exactamente los goles de ambos equipos.',                     bg: 'bg-yellow-50', border: 'border-yellow-300', ptsBg: 'bg-yellow-400', ptsText: 'text-slate-900' },
+                { icon: '✅', pts: '1', title: 'Ganador o empate correcto', desc: 'Aciertas quién gana o si empatan, aunque el marcador sea diferente.',   bg: 'bg-green-50',  border: 'border-green-300',  ptsBg: 'bg-green-500',  ptsText: 'text-white' },
+                { icon: '❌', pts: '0', title: 'Resultado incorrecto',      desc: 'No aciertas el ganador ni si hubo empate.',                             bg: 'bg-slate-50',  border: 'border-slate-200',  ptsBg: 'bg-slate-300',  ptsText: 'text-slate-700' },
+              ].map((card) => (
+                <div key={card.pts} className={`${card.bg} border-2 ${card.border} rounded-2xl p-5 text-center hover:shadow-md transition-shadow`}>
+                  <div className="text-4xl mb-3">{card.icon}</div>
+                  <div className={`inline-block ${card.ptsBg} ${card.ptsText} font-extrabold text-3xl rounded-xl px-5 py-2 mb-3 shadow-sm`}>
+                    {card.pts} <span className="text-lg font-semibold">pts</span>
+                  </div>
+                  <div className="font-bold text-slate-800 text-sm mb-2">{card.title}</div>
+                  <div className="text-xs text-slate-500 leading-relaxed">{card.desc}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Example block */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="bg-slate-800 text-white px-5 py-3 text-sm font-semibold">
+                ⚽ Ejemplo — Resultado real: <span className="text-yellow-300">Argentina 2 – 1 México</span>
+              </div>
+              <div className="divide-y divide-slate-100">
+                {[
+                  { pred: 'Argentina 2 – 1 México', note: 'Marcador exacto',                   pts: 3, cls: 'text-yellow-600', bg: 'bg-yellow-50' },
+                  { pred: 'Argentina 3 – 1 México', note: 'Ganador correcto (Argentina gana)', pts: 1, cls: 'text-green-600',  bg: '' },
+                  { pred: 'Argentina 1 – 1 México', note: 'Incorrecto (predijiste empate)',    pts: 0, cls: 'text-slate-400',  bg: '' },
+                ].map((row) => (
+                  <div key={row.pred} className={`flex items-center justify-between px-5 py-3.5 ${row.bg}`}>
+                    <div>
+                      <span className="font-mono font-bold text-slate-800 text-sm">{row.pred}</span>
+                      <span className="text-xs text-slate-400 ml-3 hidden sm:inline">{row.note}</span>
+                    </div>
+                    <div className={`font-extrabold text-lg ${row.cls}`}>{row.pts} pts</div>
+                  </div>
+                ))}
+              </div>
+              <div className="px-5 py-3 bg-slate-50 text-xs text-slate-500 text-center">
+                Máximo posible: <strong>3 pts × 32 partidos = 96 puntos</strong>
               </div>
             </div>
           </section>
 
-          {/* Benefits grid */}
+          {/* ── TODO LO QUE NECESITAS ── */}
           <section>
-            <h2 className="text-lg font-extrabold text-slate-800 mb-4">✅ Todo lo que necesitas</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="text-center mb-10">
+              <span className="inline-block bg-purple-100 text-purple-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Plataforma</span>
+              <h2 className="text-3xl font-extrabold text-slate-900">
+                Todo lo que <span className="text-purple-600">necesitas</span>
+              </h2>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
-                { emoji:'📊', title:'Ranking en vivo',      desc:'Actualizado tras cada partido' },
-                { emoji:'⏰', title:'Hora Venezuela',        desc:'Todos los horarios en VET' },
-                { emoji:'📋', title:'Quinielas comparables', desc:'Ve los pronósticos de todos' },
-                { emoji:'📈', title:'Estadísticas',          desc:'Goleadores y tabla de equipos' },
-                { emoji:'🔒', title:'Transparencia total',   desc:'Resultados verificables' },
-                { emoji:'💬', title:'Soporte WhatsApp',      desc:'Respuesta en menos de 1 hora' },
-              ].map(b => (
-                <div key={b.title} className="bg-white border border-slate-200 rounded-2xl p-4 text-center shadow-sm">
-                  <div className="text-2xl mb-2">{b.emoji}</div>
-                  <p className="font-bold text-slate-800 text-xs">{b.title}</p>
-                  <p className="text-[10px] text-slate-400 mt-0.5 leading-snug">{b.desc}</p>
+                { icon: <Trophy size={22} className="text-yellow-600" />,  bg: 'bg-yellow-50',  title: 'Ranking en tiempo real',  desc: 'Ve tu posición actualizada después de cada partido jugado.' },
+                { icon: <Users size={22} className="text-blue-600" />,     bg: 'bg-blue-50',    title: 'Quinielas comparables',   desc: 'Compara tu estrategia con otros participantes después del cierre.' },
+                { icon: <Clock size={22} className="text-green-600" />,    bg: 'bg-green-50',   title: 'Hora Venezuela',           desc: 'Todos los horarios en VET (UTC-4). Sin confusiones de zona horaria.' },
+                { icon: <BarChart2 size={22} className="text-purple-600" />, bg: 'bg-purple-50', title: 'Estadísticas completas',  desc: 'Goleadores y tabla de equipos del torneo.' },
+                { icon: <Shield size={22} className="text-red-600" />,     bg: 'bg-red-50',     title: 'Transparencia total',      desc: 'Resultados y puntuación verificables por todos los participantes.' },
+                { icon: <Star size={22} className="text-amber-600" />,     bg: 'bg-amber-50',   title: 'Soporte WhatsApp',         desc: 'Contacta al administrador directamente para cualquier duda.' },
+              ].map((feat, i) => (
+                <div key={i} className="bg-white rounded-2xl p-5 flex items-start gap-4 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all">
+                  <div className={`${feat.bg} rounded-xl p-2.5 shrink-0`}>{feat.icon}</div>
+                  <div>
+                    <div className="font-bold text-slate-800 text-sm">{feat.title}</div>
+                    <div className="text-xs text-slate-500 mt-1 leading-relaxed">{feat.desc}</div>
+                  </div>
                 </div>
               ))}
             </div>
           </section>
 
-          {/* Group stage historical access */}
+          {/* ── FASE ANTERIOR ── */}
           <section>
-            <h2 className="text-lg font-extrabold text-slate-800 mb-1">📁 Fase anterior</h2>
-            <p className="text-xs text-slate-500 mb-4">Consulta los resultados y quinielas de la Fase de Grupos ya disputada.</p>
-            <div className="grid sm:grid-cols-3 gap-3">
+            <div className="text-center mb-8">
+              <span className="inline-block bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Historial</span>
+              <h2 className="text-3xl font-extrabold text-slate-900">
+                Fase <span className="text-slate-600">anterior</span>
+              </h2>
+              <p className="text-slate-500 mt-2 text-sm">Consulta los resultados, ranking y quinielas de la Fase de Grupos ya disputada.</p>
+            </div>
+            <div className="grid sm:grid-cols-3 gap-4">
               {[
-                { emoji:'⚽', label:'Resultados',   desc:'Fase de Grupos',   href:'/' },
-                { emoji:'🏆', label:'Ranking',       desc:'Fase de Grupos',   href:'/ranking' },
-                { emoji:'📋', label:'Mi quiniela',  desc:'Fase de Grupos',   href:'/mi-quiniela' },
-              ].map(l => (
-                <a key={l.label} href={l.href} target="_blank" rel="noreferrer"
-                  className="flex items-center gap-3 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-2xl px-4 py-3 transition-colors">
-                  <span className="text-xl">{l.emoji}</span>
+                { emoji: '⚽', label: 'Resultados Fase de Grupos', desc: 'Todos los marcadores de la fase de grupos.',       href: '/resultados' },
+                { emoji: '🏆', label: 'Ranking Fase de Grupos',    desc: 'Posiciones finales de la quiniela anterior.',      href: '/ranking' },
+                { emoji: '📋', label: 'Mi quiniela anterior',       desc: 'Revisa tus pronósticos de la fase pasada.',       href: '/mi-quiniela' },
+              ].map(({ emoji, label, desc, href }) => (
+                <a key={label} href={href} target="_blank" rel="noreferrer"
+                  className="bg-white border-2 border-slate-200 hover:border-green-300 rounded-2xl p-5 flex items-start gap-3 shadow-sm hover:shadow-md transition-all group">
+                  <span className="text-2xl mt-0.5">{emoji}</span>
                   <div>
-                    <p className="font-bold text-slate-700 text-sm">{l.label}</p>
-                    <p className="text-[10px] text-slate-400">{l.desc}</p>
+                    <p className="font-bold text-slate-800 text-sm group-hover:text-green-700 transition-colors">{label}</p>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">{desc}</p>
                   </div>
                 </a>
               ))}
             </div>
           </section>
 
-          {/* Stats teaser */}
+          {/* ── FAQ ── */}
           <section>
-            <div className="bg-slate-900 rounded-2xl p-5 flex items-center justify-between gap-4 shadow-lg">
-              <div>
-                <p className="text-white font-extrabold text-base leading-tight">📈 Estadísticas del torneo</p>
-                <p className="text-slate-400 text-xs mt-1">Goleadores y tabla de equipos</p>
-                <div className="flex flex-wrap gap-2 mt-2.5">
-                  <span className="text-[10px] font-bold bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">⚽ Goles</span>
-                  <span className="text-[10px] font-bold bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">🏆 Equipos</span>
-                </div>
-              </div>
-              <button
-                onClick={() => setView('estadisticas')}
-                className="shrink-0 bg-white text-slate-900 font-extrabold text-xs px-4 py-2.5 rounded-xl hover:bg-slate-100 active:scale-95 transition-all touch-manipulation"
-              >
-                Ver stats
-              </button>
+            <div className="text-center mb-10">
+              <span className="inline-block bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Dudas</span>
+              <h2 className="text-3xl font-extrabold text-slate-900">
+                Preguntas <span className="text-green-600">Frecuentes</span>
+              </h2>
             </div>
-          </section>
-
-          {/* FAQ */}
-          <section>
-            <h2 className="text-lg font-extrabold text-slate-800 mb-4">❓ Preguntas frecuentes</h2>
-            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm divide-y divide-slate-100">
+            <div className="space-y-2">
               {[
-                { q:'¿Cómo funciona la quiniela?',
-                  a:'Predices el marcador exacto de cada partido de la fase eliminatoria. Por cada marcador exacto ganas 3 pts, por acertar el ganador (sin el marcador exacto) ganas 1 pt, y si fallas ganas 0 pts. Al final gana quien tenga más puntos.' },
-                { q:'¿Cuánto cuesta participar?',
-                  a:'La inscripción es de $20 USD. Puedes pagar por Pago Móvil Banesco (14.600 Bs a tasa fija 730 Bs/USD) o por Zelle ($20 USD directamente).' },
-                { q:'¿Cómo puedo pagar?',
-                  a:'Pago Móvil Banesco: teléfono 04143043337, CI V-4.561.947, monto 14.600 Bs. Zelle: kissigloxxi@hotmail.com, monto $20 USD. Después de pagar, envía el comprobante por WhatsApp con tu nombre.' },
-                { q:'¿Hasta cuándo puedo inscribirme?',
-                  a:'Puedes inscribirte y llenar tu quiniela hasta antes del primer partido de cada ronda. Una vez empieza la ronda, tu quiniela queda bloqueada.' },
-                { q:'¿Cómo se distribuyen los premios?',
-                  a:'El pozo se distribuye así: 65% para el 1.er lugar, 20% para el 2.do lugar, y 15% para costos de organización. Los montos exactos dependen del total de participantes confirmados.' },
-                { q:'¿Qué pasa si hay empate en puntos?',
-                  a:'En caso de empate en puntos, el desempate se hace por: 1) mayor cantidad de marcadores exactos, 2) menor diferencia de goles acumulada, 3) orden cronológico de inscripción.' },
-                { q:'¿Los horarios están en hora Venezuela?',
-                  a:'Sí. Todos los horarios mostrados en la quiniela están en hora Venezuela (VET, UTC-4). No necesitas hacer conversiones.' },
-                { q:'¿Puedo modificar mi quiniela después de enviarla?',
-                  a:'Sí, puedes modificar tus pronósticos hasta que comience el primer partido de la ronda correspondiente. Una vez inicia el partido, ese pronóstico queda bloqueado.' },
-                { q:'¿Cómo funcionan prórroga y penales?',
-                  a:'El marcador que cuenta es el del final del tiempo regular (90 minutos). Si el partido va a prórroga o penales, ese resultado no afecta tu pronóstico. Solo cuenta el marcador al 90\'.' },
-                { q:'¿Puedo ver la quiniela de otros participantes?',
-                  a:'Sí, una vez que el partido haya comenzado o finalizado, podrás ver los pronósticos de todos los participantes. Antes del partido, los pronósticos están ocultos para todos.' },
-              ].map((item, i) => (
-                <div key={i}>
+                { q: '¿Cómo funciona la quiniela?',
+                  a: 'Predices el marcador exacto de los 32 partidos de la fase eliminatoria. Marcador exacto = 3 puntos, ganador/empate correcto = 1 punto. Gana quien acumule más puntos al final del torneo.' },
+                { q: '¿Cuánto cuesta participar?',
+                  a: 'La inscripción es de 20 USD. Puedes pagar por Pago Móvil Banesco (14.600 Bs a tasa fija 730 Bs/USD) o por Zelle (20 USD directamente).' },
+                { q: '¿Cómo puedo pagar?',
+                  a: 'Pago Móvil Banesco: Teléfono 04143043337 · CI V-4.561.947 · Monto 14.600 Bs. Zelle: kissigloxxi@hotmail.com · 20 USD. Después de pagar, reporta la referencia o comprobante por WhatsApp.' },
+                { q: '¿Hasta cuándo puedo inscribirme?',
+                  a: 'Puedes inscribirte y llenar tu quiniela hasta antes del primer partido de la fase eliminatoria. Una vez inicia la ronda, tu quiniela queda bloqueada.' },
+                { q: '¿Cómo se distribuyen los premios?',
+                  a: 'El 65% del fondo va al 1er lugar, el 20% al 2do lugar y el 15% restante cubre los gastos de organización.' },
+                { q: '¿Qué pasa si hay empate en puntos?',
+                  a: 'Se desempata por: 1) Mayor número de predicciones exactas, 2) Mayor efectividad porcentual, 3) Orden de inscripción.' },
+                { q: '¿Puedo ver la quiniela de otros participantes?',
+                  a: 'Sí, después del cierre de inscripciones el administrador puede habilitar la vista pública de todas las quinielas.' },
+                { q: '¿Los horarios están en hora Venezuela?',
+                  a: 'Sí, todos los partidos se muestran en hora Venezuela (UTC-4, sin horario de verano).' },
+                { q: '¿Puedo modificar mi quiniela después de enviarla?',
+                  a: 'Puedes modificar tus pronósticos hasta que comience el primer partido de la ronda correspondiente. Una vez inicia el partido, ese pronóstico queda bloqueado.' },
+                { q: '¿Cómo funcionan prórroga y penales?',
+                  a: "El marcador que cuenta es el del final del tiempo regular (90 minutos). Si el partido va a prórroga o penales, ese resultado no afecta tu pronóstico. Solo cuenta el marcador al 90'." },
+              ].map((faq, i) => (
+                <div key={i} className="border border-slate-200 rounded-xl overflow-hidden hover:border-green-300 transition-colors">
                   <button
                     onClick={() => setFaqOpen(faqOpen === i ? null : i)}
-                    className="w-full flex items-center justify-between px-4 py-4 text-left hover:bg-slate-50 transition-colors touch-manipulation"
+                    className="w-full flex items-center justify-between p-4 text-left font-medium hover:bg-slate-50 transition-colors touch-manipulation"
                   >
-                    <span className="font-semibold text-slate-800 text-sm pr-4 leading-snug">{item.q}</span>
-                    <span className={`shrink-0 text-slate-400 text-lg font-light transition-transform duration-200 ${faqOpen === i ? 'rotate-45' : ''}`}>+</span>
+                    <span className="text-slate-800">{faq.q}</span>
+                    {faqOpen === i
+                      ? <ChevronUp size={18} className="text-green-600 shrink-0 ml-3" />
+                      : <ChevronDown size={18} className="text-slate-400 shrink-0 ml-3" />}
                   </button>
                   {faqOpen === i && (
-                    <div className="px-4 pb-4">
-                      <p className="text-sm text-slate-600 leading-relaxed">{item.a}</p>
-                    </div>
+                    <div className="px-4 pb-4 text-slate-600 text-sm leading-relaxed border-t border-slate-100 pt-3">{faq.a}</div>
                   )}
                 </div>
               ))}
             </div>
           </section>
 
-          {/* Bottom CTA */}
-          <section className="relative bg-gradient-to-br from-green-700 via-green-600 to-blue-700 rounded-3xl p-8 sm:p-10 text-white text-center overflow-hidden shadow-2xl">
-            <div className="absolute inset-0 opacity-[0.06]" style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='20' cy='20' r='12' stroke='white' stroke-width='2' fill='none'/%3E%3C/svg%3E")`,
-              backgroundSize: '50px 50px',
-            }} />
+          {/* ── BOTTOM CTA ── */}
+          <section className="relative bg-gradient-to-br from-green-700 via-green-600 to-blue-700 rounded-3xl p-10 text-white text-center overflow-hidden shadow-2xl">
+            <div className="absolute inset-0 opacity-[0.05]"
+              style={{ backgroundImage: 'url(/assets/hero/football-pattern.svg)', backgroundSize: '120px' }} />
             <div className="relative">
               <div className="text-5xl mb-4">🏆</div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold mb-3">¿Listo para participar?</h2>
-              <p className="text-green-100 mb-8 text-sm sm:text-base max-w-sm mx-auto">
-                Predice los 32 partidos y compite por el primer lugar de la Quiniela Eliminatorias 2026.
+              <h2 className="text-2xl sm:text-3xl font-extrabold mb-3">¡Inscripciones abiertas!</h2>
+              <p className="text-green-100 mb-8 max-w-md mx-auto">
+                Predice los 32 partidos de la fase eliminatoria y compite por el primer lugar.
               </p>
               <button
                 onClick={() => setView(registered || filledCount > 0 ? 'llenado' : 'registro')}
-                className="bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-slate-900 font-extrabold px-10 py-4 rounded-2xl text-lg shadow-xl transition-all active:scale-95 touch-manipulation"
+                className="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-slate-900 font-extrabold px-10 py-4 rounded-2xl text-lg transition-all shadow-xl hover:shadow-yellow-400/40 hover:-translate-y-1 touch-manipulation"
               >
-                ⚽ {registered || filledCount > 0 ? 'Llenar mi quiniela' : 'Inscribirme ahora'}
+                ⚽ {registered || filledCount > 0 ? 'Llenar mi quiniela' : 'Inscribirme ahora'} · 20 USD
               </button>
+              <p className="text-green-200 text-xs mt-4">Pago Móvil Banesco · Zelle · 20 USD / 14.600 Bs · Tasa fija 730 Bs/USD</p>
             </div>
           </section>
-        </div>
+
+        </main>
       </div>
     )
   }
