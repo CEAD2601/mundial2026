@@ -82,6 +82,27 @@ function totalFilled(picks: Picks) {
   return KNOCKOUT_MATCHES.filter(m => m.isOpenForPredictions && pickComplete(picks[m.id])).length
 }
 
+// ── Flag helpers ───────────────────────────────────────────────────────────────
+// Windows browsers don't render Unicode regional indicator flag emoji.
+// Convert the emoji to a 2-letter ISO code and serve the flag as a PNG from flagcdn.com.
+
+function emojiToFlagUrl(flag: string | null | undefined): string | null {
+  if (!flag) return null
+  try {
+    const codePoints = [...flag].map(c => c.codePointAt(0)!)
+    if (codePoints.length < 2) return null
+    const iso2 = codePoints.map(cp => String.fromCharCode(cp - 0x1F1E6 + 65)).join('').toLowerCase()
+    if (!/^[a-z]{2}$/.test(iso2)) return null
+    return `https://flagcdn.com/w40/${iso2}.png`
+  } catch { return null }
+}
+
+function FlagImg({ flag, size = 28, className = '' }: { flag: string | null | undefined; size?: number; className?: string }) {
+  const url = emojiToFlagUrl(flag)
+  if (!url) return <span className={`inline-flex items-center justify-center rounded-full bg-slate-200 text-slate-400 text-xs font-bold ${className}`} style={{ width: size, height: size }}>?</span>
+  return <img src={url} alt="" width={size} height={Math.round(size * 0.67)} className={`inline-block object-cover rounded-sm shrink-0 ${className}`} style={{ width: size, height: Math.round(size * 0.67) }} />
+}
+
 // ── GoalStepper ────────────────────────────────────────────────────────────────
 
 function GoalStepper({
@@ -130,11 +151,8 @@ function FlagDisplay({ flag, name, placeholder, side }: {
   const display = name || placeholder
   return (
     <div className={`flex items-center gap-2 ${side === 'right' ? 'flex-row-reverse' : ''}`}>
-      <div className="w-9 h-9 shrink-0 flex items-center justify-center text-3xl leading-none">
-        {flag
-          ? <span role="img" style={{ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>{flag}</span>
-          : <span className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-400 text-xs font-bold">?</span>
-        }
+      <div className="w-9 h-9 shrink-0 flex items-center justify-center">
+        <FlagImg flag={flag} size={32} />
       </div>
       <div className={`min-w-0 ${side === 'right' ? 'text-right' : 'text-left'}`}>
         <p className="font-bold text-slate-800 text-sm leading-tight" style={{ maxWidth: 88, wordBreak: 'break-word' }}>
@@ -273,7 +291,7 @@ function KOMatchCard({ match, pick, onPick, highlight }: {
                   : 'bg-white border-amber-200 text-amber-800 hover:border-amber-400'
               }`}
             >
-              {match.home.flag ?? '🛡️'} {homeName.length > 14 ? homeName.split(' ')[0] : homeName}
+              <span className="inline-flex items-center gap-1.5"><FlagImg flag={match.home.flag} size={16} /> {homeName.length > 14 ? homeName.split(' ')[0] : homeName}</span>
             </button>
             <button
               onClick={() => onPick(match.id, { ...current, penaltyWinner: 'away' })}
@@ -283,7 +301,7 @@ function KOMatchCard({ match, pick, onPick, highlight }: {
                   : 'bg-white border-amber-200 text-amber-800 hover:border-amber-400'
               }`}
             >
-              {match.away.flag ?? '🛡️'} {awayName.length > 14 ? awayName.split(' ')[0] : awayName}
+              <span className="inline-flex items-center gap-1.5"><FlagImg flag={match.away.flag} size={16} /> {awayName.length > 14 ? awayName.split(' ')[0] : awayName}</span>
             </button>
           </div>
           {!current.penaltyWinner && (
@@ -1635,9 +1653,7 @@ export default function PrototipoEliminatoriasV3() {
             padding: '2px 7px',
             opacity: homePh && !hasPick ? 0.5 : 1,
           }}>
-            <span style={{ fontSize: 14, lineHeight: 1, width: 18, textAlign: 'center' as const, flexShrink: 0, fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>
-              {m.home.flag ?? '🛡️'}
-            </span>
+            <FlagImg flag={m.home.flag} size={16} />
             <span style={{
               flex: 1, fontSize: 11, lineHeight: 1.3,
               fontWeight: homePh ? 400 : 600,
@@ -1666,9 +1682,7 @@ export default function PrototipoEliminatoriasV3() {
             padding: '2px 7px',
             opacity: awayPh && !hasPick ? 0.5 : 1,
           }}>
-            <span style={{ fontSize: 14, lineHeight: 1, width: 18, textAlign: 'center' as const, flexShrink: 0, fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>
-              {m.away.flag ?? '🛡️'}
-            </span>
+            <FlagImg flag={m.away.flag} size={16} />
             <span style={{
               flex: 1, fontSize: 11, lineHeight: 1.3,
               fontWeight: awayPh ? 400 : 600,
@@ -2000,13 +2014,13 @@ export default function PrototipoEliminatoriasV3() {
                       const awayDisplay = m.away.name || m.away.placeholder
                       return (
                         <div key={m.id} className={`px-4 py-3 flex items-center gap-2 ${!pick ? 'opacity-40' : ''}`}>
-                          <span className="text-lg shrink-0 leading-none" style={{ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>{m.home.flag || '⬜'}</span>
+                          <FlagImg flag={m.home.flag} size={20} />
                           <span className="flex-1 text-slate-600 text-xs truncate">{homeDisplay}</span>
                           <span className="font-extrabold text-slate-900 shrink-0 text-sm tabular-nums">
                             {pick ? `${pick.home} – ${pick.away}` : '—'}
                           </span>
                           <span className="flex-1 text-slate-600 text-xs truncate text-right">{awayDisplay}</span>
-                          <span className="text-lg shrink-0 leading-none" style={{ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>{m.away.flag || '⬜'}</span>
+                          <FlagImg flag={m.away.flag} size={20} />
                         </div>
                       )
                     })}
@@ -2191,9 +2205,7 @@ export default function PrototipoEliminatoriasV3() {
                           {/* Home */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <span style={{ fontSize: 22, lineHeight: 1, fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>
-                                {m.home.flag ?? '🛡️'}
-                              </span>
+                              <FlagImg flag={m.home.flag} size={26} />
                               <span className="font-bold text-slate-800 text-sm leading-tight truncate">{homeName}</span>
                             </div>
                           </div>
@@ -2210,9 +2222,7 @@ export default function PrototipoEliminatoriasV3() {
                           {/* Away */}
                           <div className="flex-1 min-w-0 flex flex-col items-end">
                             <div className="flex items-center gap-2 flex-row-reverse">
-                              <span style={{ fontSize: 22, lineHeight: 1, fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>
-                                {m.away.flag ?? '🛡️'}
-                              </span>
+                              <FlagImg flag={m.away.flag} size={26} />
                               <span className="font-bold text-slate-800 text-sm leading-tight truncate">{awayName}</span>
                             </div>
                           </div>
@@ -3314,7 +3324,7 @@ export default function PrototipoEliminatoriasV3() {
                       {/* Teams */}
                       <div className="flex items-center gap-3">
                         <div className="flex-1 flex items-center gap-2 min-w-0">
-                          <span className="text-2xl shrink-0" style={{ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>{m.home.flag ?? '🏳️'}</span>
+                          <FlagImg flag={m.home.flag} size={26} />
                           <span className="font-semibold text-slate-800 text-sm truncate">{m.home.name ?? m.home.placeholder}</span>
                         </div>
 
@@ -3335,7 +3345,7 @@ export default function PrototipoEliminatoriasV3() {
 
                         <div className="flex-1 flex items-center gap-2 justify-end min-w-0">
                           <span className="font-semibold text-slate-800 text-sm truncate text-right">{m.away.name ?? m.away.placeholder}</span>
-                          <span className="text-2xl shrink-0" style={{ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>{m.away.flag ?? '🏳️'}</span>
+                          <FlagImg flag={m.away.flag} size={26} />
                         </div>
                       </div>
 
