@@ -1609,8 +1609,8 @@ export default function PrototipoEliminatoriasV3() {
     // ── Layout constants ────────────────────────────────────────────────────────
     // SLOT_H drives everything: COL_H = 16 × SLOT_H, slot per R32 card = SLOT_H.
     // Cards live in flex slots — no absolute positioning → zero overlap possible.
-    const SLOT_H = 92    // px per R32 slot — 16px gap above+below CARD_H
-    const CARD_H = 76    // card height — tall enough for 2-line names
+    const SLOT_H = 92    // px per R32 slot — 10px gap above+below CARD_H
+    const CARD_H = 82    // card height — includes 2-row meta bar
     const CARD_W = 212   // card width — fits "Costa de Marfil" in 1 line at 11px
     const CONN_W = 28    // connector column width
     const HDR_H  = 52    // column header height
@@ -1673,6 +1673,15 @@ export default function PrototipoEliminatoriasV3() {
       return raw
     }
 
+    // Date formatter: "2026-06-28" → "dom 28 jun"
+    function shortDate(dateStr: string): string {
+      const [y, mo, d] = dateStr.split('-').map(Number)
+      const dt = new Date(y, mo - 1, d)
+      const days = ['dom','lun','mar','mié','jue','vie','sáb']
+      const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']
+      return `${days[dt.getDay()]} ${d} ${months[mo - 1]}`
+    }
+
     // ── Inline card renderer (NOT a React component — avoids reconciliation issues) ──
     function renderCard(
       m: KOMatch,
@@ -1711,23 +1720,28 @@ export default function PrototipoEliminatoriasV3() {
             display: 'flex', flexDirection: 'column' as const,
           }}
         >
-          {/* Meta bar */}
+          {/* Meta bar — 2 rows: number+date / time */}
           <div style={{
             flexShrink: 0,
-            padding: '0 7px', height: 16,
-            display: 'flex', alignItems: 'center', gap: 4,
+            padding: '2px 7px 2px', height: 22,
             background: bgMeta,
             borderBottom: '1px solid rgba(0,0,0,0.35)',
+            overflow: 'hidden',
           }}>
-            <span style={{ fontWeight: 700, fontSize: 9, color: clrNum, flexShrink: 0, lineHeight: 1 }}>
-              {isFinal ? '🏆' : `#${m.fifaMatchNumber}`}
-            </span>
-            <span style={{ fontSize: 8.5, color: clrTime, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, flex: 1 }}>
-              {isFinal ? 'Gran Final · ' : ''}{m.displayTime}
-            </span>
-            {isOpen && !hasPick && (
-              <span style={{ fontSize: 7.5, color: '#22c55e', flexShrink: 0 }}>✏️</span>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, lineHeight: 1 }}>
+              <span style={{ fontWeight: 700, fontSize: 9, color: clrNum, flexShrink: 0 }}>
+                {isFinal ? '🏆' : `#${m.fifaMatchNumber}`}
+              </span>
+              <span style={{ fontSize: 8, color: clrTime, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, flex: 1 }}>
+                {isFinal ? 'Final · ' : ''}{shortDate(m.date)}
+              </span>
+              {isOpen && !hasPick && (
+                <span style={{ fontSize: 7, color: '#22c55e', flexShrink: 0 }}>✏️</span>
+              )}
+            </div>
+            <p style={{ margin: 0, fontSize: 7.5, color: '#475569', whiteSpace: 'nowrap' as const, lineHeight: 1, paddingTop: 2 }}>
+              {m.displayTime}
+            </p>
           </div>
 
           {/* Home team */}
@@ -1857,10 +1871,44 @@ export default function PrototipoEliminatoriasV3() {
                   </div>
 
                   {/* Cards — FLEX COLUMN, equal slots, zero overlap guaranteed */}
+                  {round.key === 'f' ? (
+                    // ── Final column: absolute-position Final card at connector center,
+                    //    then place 3rd-place card just below it.
+                    <div style={{ height: COL_H, position: 'relative' as const }}>
+                      <div style={{ position: 'absolute' as const, top: COL_H / 2 - CARD_H / 2, left: 2, right: 2 }}>
+                        {(() => {
+                          const fm = KNOCKOUT_MATCHES.find(x => x.id === 'final-104')
+                          if (!fm) return null
+                          const pick = picks[fm.id]
+                          return renderCard(fm, !!pick, pick, fm.isOpenForPredictions, true, CARD_H)
+                        })()}
+                        {m3rd && (() => {
+                          const pick3   = picks[m3rd.id]
+                          const hasPick = !!pick3
+                          return (
+                            <div style={{ marginTop: 18 }}>
+                              <div style={{
+                                display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8,
+                              }}>
+                                <div style={{ flex: 1, height: 1, background: '#1e293b' }} />
+                                <span style={{
+                                  color: '#b45309', fontSize: 8.5, fontWeight: 700,
+                                  letterSpacing: '0.06em', textTransform: 'uppercase' as const,
+                                  whiteSpace: 'nowrap' as const,
+                                }}>🥉 3.er Puesto · 18 jul · Miami</span>
+                                <div style={{ flex: 1, height: 1, background: '#1e293b' }} />
+                              </div>
+                              {renderCard(m3rd, hasPick, pick3, m3rd.isOpenForPredictions, false, CARD_H)}
+                            </div>
+                          )
+                        })()}
+                      </div>
+                    </div>
+                  ) : (
                   <div style={{
                     display: 'flex',
                     flexDirection: 'column' as const,
-                    height: COL_H,          // exact same height for every column
+                    height: COL_H,
                   }}>
                     {round.ids.map(id => {
                       const m = KNOCKOUT_MATCHES.find(x => x.id === id)
@@ -1869,7 +1917,6 @@ export default function PrototipoEliminatoriasV3() {
                       const hasPick = !!pick
 
                       return (
-                        // Each slot is exactly slotH px, card is centered within it
                         <div key={id} style={{
                           height: slotH,
                           flexShrink: 0,
@@ -1877,11 +1924,12 @@ export default function PrototipoEliminatoriasV3() {
                           alignItems: 'center',
                           padding: `0 2px`,
                         }}>
-                          {renderCard(m, hasPick, pick, m.isOpenForPredictions, id === 'final-104', CARD_H)}
+                          {renderCard(m, hasPick, pick, m.isOpenForPredictions, false, CARD_H)}
                         </div>
                       )
                     })}
                   </div>
+                  )}
 
                 </div>
               )
@@ -1909,31 +1957,7 @@ export default function PrototipoEliminatoriasV3() {
           </div>
         </div>
 
-        {/* ── 3rd place — below the scroll, full-width section ── */}
-        {m3rd && (() => {
-          const pick3   = picks[m3rd.id]
-          const hasPick = !!pick3
-          return (
-            <div style={{ padding: '12px 16px 56px' }}>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12,
-              }}>
-                <div style={{ flex: 1, height: 1, background: '#1e293b' }} />
-                <span style={{
-                  color: '#64748b', fontSize: 9.5, fontWeight: 700,
-                  letterSpacing: '0.07em', textTransform: 'uppercase' as const,
-                  whiteSpace: 'nowrap' as const,
-                }}>
-                  🥉 Tercer puesto · 18 jul · Miami
-                </span>
-                <div style={{ flex: 1, height: 1, background: '#1e293b' }} />
-              </div>
-              <div style={{ maxWidth: CARD_W, paddingLeft: 2 }}>
-                {renderCard(m3rd, hasPick, pick3, m3rd.isOpenForPredictions, false, CARD_H)}
-              </div>
-            </div>
-          )
-        })()}
+        {/* 3rd place is now integrated inside the Final column above */}
 
       </div>
     )
