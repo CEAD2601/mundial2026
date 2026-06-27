@@ -34,21 +34,22 @@ export type StatPlayer = {
   value: number
 }
 
-// Photos: avatar.iran.liara.run provides stable gendered cartoon avatars per seed.
-// Replace photoUrl with a real headshot URL when available.
-const AV = (seed: string) => `https://avatar.iran.liara.run/public/boy?username=${encodeURIComponent(seed)}`
+// Photos: randomuser.me CDN provides stable realistic headshots (free, always loads).
+// Each player gets a fixed portrait number so the photo is consistent across renders.
+// onError chain in the component swaps to ui-avatars.com then to initials div — never empty.
+const RP = (n: number) => `https://randomuser.me/api/portraits/men/${n}.jpg`
 
 export const DEMO_GOALS: StatPlayer[] = [
-  { rank: 1,  name: 'Lionel Messi',    country: 'Argentina',  countryCode: 'ARG', flag: '🇦🇷', initials: 'LM',  color: '#3B82F6', photoUrl: AV('LionelMessi'),   value: 5 },
-  { rank: 2,  name: 'Erling Haaland',  country: 'Noruega',    countryCode: 'NOR', flag: '🇳🇴', initials: 'EH',  color: '#EF4444', photoUrl: AV('ErlingHaaland'), value: 4 },
-  { rank: 2,  name: 'Kylian Mbappé',   country: 'Francia',    countryCode: 'FRA', flag: '🇫🇷', initials: 'KM',  color: '#1E3A8A', photoUrl: AV('KylianMbappe'),  value: 4 },
-  { rank: 2,  name: 'Ousmane Dembélé', country: 'Francia',    countryCode: 'FRA', flag: '🇫🇷', initials: 'OD',  color: '#1E3A8A', photoUrl: AV('OusmaneDembele'),value: 4 },
-  { rank: 2,  name: 'Vinícius Júnior', country: 'Brasil',     countryCode: 'BRA', flag: '🇧🇷', initials: 'VJ',  color: '#22C55E', photoUrl: AV('ViniciusJunior'),value: 4 },
-  { rank: 6,  name: 'Bukayo Saka',     country: 'Inglaterra', countryCode: 'ENG', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', initials: 'BS',  color: '#60A5FA', photoUrl: AV('BukayoSaka'),    value: 3 },
-  { rank: 6,  name: 'Lamine Yamal',    country: 'España',     countryCode: 'ESP', flag: '🇪🇸', initials: 'LY',  color: '#EF4444', photoUrl: AV('LamineYamal'),   value: 3 },
-  { rank: 6,  name: 'Harry Kane',      country: 'Inglaterra', countryCode: 'ENG', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', initials: 'HK',  color: '#60A5FA', photoUrl: AV('HarryKane'),     value: 3 },
-  { rank: 6,  name: 'Rodrygo',         country: 'Brasil',     countryCode: 'BRA', flag: '🇧🇷', initials: 'RO',  color: '#22C55E', photoUrl: AV('Rodrygo'),       value: 3 },
-  { rank: 10, name: 'Romelu Lukaku',   country: 'Bélgica',    countryCode: 'BEL', flag: '🇧🇪', initials: 'RL',  color: '#EF4444', photoUrl: AV('RomeluLukaku'),  value: 2 },
+  { rank: 1,  name: 'Lionel Messi',    country: 'Argentina',  countryCode: 'ARG', flag: '🇦🇷', initials: 'LM', color: '#3B82F6', photoUrl: RP(1),  value: 5 },
+  { rank: 2,  name: 'Erling Haaland',  country: 'Noruega',    countryCode: 'NOR', flag: '🇳🇴', initials: 'EH', color: '#EF4444', photoUrl: RP(2),  value: 4 },
+  { rank: 2,  name: 'Kylian Mbappé',   country: 'Francia',    countryCode: 'FRA', flag: '🇫🇷', initials: 'KM', color: '#1E3A8A', photoUrl: RP(3),  value: 4 },
+  { rank: 2,  name: 'Ousmane Dembélé', country: 'Francia',    countryCode: 'FRA', flag: '🇫🇷', initials: 'OD', color: '#1E3A8A', photoUrl: RP(4),  value: 4 },
+  { rank: 2,  name: 'Vinícius Júnior', country: 'Brasil',     countryCode: 'BRA', flag: '🇧🇷', initials: 'VJ', color: '#22C55E', photoUrl: RP(5),  value: 4 },
+  { rank: 6,  name: 'Bukayo Saka',     country: 'Inglaterra', countryCode: 'ENG', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', initials: 'BS', color: '#60A5FA', photoUrl: RP(6),  value: 3 },
+  { rank: 6,  name: 'Lamine Yamal',    country: 'España',     countryCode: 'ESP', flag: '🇪🇸', initials: 'LY', color: '#EF4444', photoUrl: RP(7),  value: 3 },
+  { rank: 6,  name: 'Harry Kane',      country: 'Inglaterra', countryCode: 'ENG', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', initials: 'HK', color: '#60A5FA', photoUrl: RP(8),  value: 3 },
+  { rank: 6,  name: 'Rodrygo',         country: 'Brasil',     countryCode: 'BRA', flag: '🇧🇷', initials: 'RO', color: '#22C55E', photoUrl: RP(9),  value: 3 },
+  { rank: 10, name: 'Romelu Lukaku',   country: 'Bélgica',    countryCode: 'BEL', flag: '🇧🇪', initials: 'RL', color: '#EF4444', photoUrl: RP(10), value: 2 },
 ]
 
 // Legacy export alias used by renderAdmin / DEMO_STATS references

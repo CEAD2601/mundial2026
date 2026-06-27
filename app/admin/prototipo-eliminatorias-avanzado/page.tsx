@@ -1790,22 +1790,27 @@ export default function PrototipoEliminatoriasV3() {
                     {p.rank}
                   </span>
 
-                  {/* Photo */}
-                  {p.photoUrl ? (
-                    <img
-                      src={p.photoUrl}
-                      alt={p.name}
-                      className="w-9 h-9 rounded-full object-cover ring-2 ring-slate-700"
-                      onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
-                    />
-                  ) : (
-                    <div
-                      className="w-9 h-9 rounded-full flex items-center justify-center text-[10px] font-extrabold ring-2 ring-slate-700"
-                      style={{ background: p.color + '30', color: p.color }}
-                    >
-                      {p.initials}
-                    </div>
-                  )}
+                  {/* Photo — triple fallback: randomuser CDN → ui-avatars → initials div */}
+                  <img
+                    src={p.photoUrl ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=${p.color.slice(1)}&color=fff&size=100&bold=true`}
+                    alt={p.name}
+                    className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-600"
+                    style={{ objectPosition: 'center top' }}
+                    onError={e => {
+                      const img = e.target as HTMLImageElement
+                      if (!img.dataset.fb) {
+                        // first failure → try ui-avatars
+                        img.dataset.fb = '1'
+                        img.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=${p.color.slice(1)}&color=fff&size=100&bold=true&font-size=0.38`
+                      } else {
+                        // second failure → replace with styled div, never empty
+                        const div = document.createElement('div')
+                        div.style.cssText = `width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;background:${p.color}28;color:${p.color};outline:2px solid #475569`
+                        div.textContent = p.initials
+                        img.replaceWith(div)
+                      }
+                    }}
+                  />
 
                   {/* Name + country */}
                   <div className="pl-2 min-w-0">
