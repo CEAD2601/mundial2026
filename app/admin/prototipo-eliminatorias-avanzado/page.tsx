@@ -30,7 +30,7 @@ import {
 
 type View = 'home' | 'llenado' | 'bracket' | 'mi-quiniela' | 'ranking' | 'estadisticas' | 'admin' | 'registro' | 'resultados'
 type RegStep = 'choose' | 'lookup' | 'found' | 'not-found' | 'already-enrolled' | 'new'
-type Pick = { home: number; away: number }
+type Pick = { home: number; away: number; penaltyWinner?: 'home' | 'away' }
 type Picks = Record<string, Pick>
 
 const STAGES: Stage[] = ['R32', 'R16', 'QF', 'SF', 'FINAL']
@@ -54,6 +54,13 @@ function storePicks(p: Picks) { sessionStorage.setItem(STORAGE_KEY, JSON.stringi
 
 // ── Data helpers ───────────────────────────────────────────────────────────────
 
+// A pick is "complete" only if it has a score AND, when it's a draw, a penaltyWinner too.
+function pickComplete(p: Pick | undefined): boolean {
+  if (!p) return false
+  if (p.home === p.away && !p.penaltyWinner) return false  // draw without penalty winner
+  return true
+}
+
 function openMatches(s: Stage) {
   return KNOCKOUT_MATCHES.filter(m => m.stage === s && m.isOpenForPredictions)
 }
@@ -62,7 +69,7 @@ function allMatches(s: Stage) {
 }
 function stageComplete(s: Stage, picks: Picks) {
   const open = openMatches(s)
-  return open.length > 0 && open.every(m => picks[m.id] !== undefined)
+  return open.length > 0 && open.every(m => pickComplete(picks[m.id]))
 }
 function stagePartial(s: Stage, picks: Picks) {
   const open = openMatches(s)
@@ -72,7 +79,7 @@ function totalOpen() {
   return KNOCKOUT_MATCHES.filter(m => m.isOpenForPredictions).length
 }
 function totalFilled(picks: Picks) {
-  return KNOCKOUT_MATCHES.filter(m => m.isOpenForPredictions && picks[m.id] !== undefined).length
+  return KNOCKOUT_MATCHES.filter(m => m.isOpenForPredictions && pickComplete(picks[m.id])).length
 }
 
 // ── GoalStepper ────────────────────────────────────────────────────────────────
@@ -125,7 +132,7 @@ function FlagDisplay({ flag, name, placeholder, side }: {
     <div className={`flex items-center gap-2 ${side === 'right' ? 'flex-row-reverse' : ''}`}>
       <div className="w-9 h-9 shrink-0 flex items-center justify-center text-3xl leading-none">
         {flag
-          ? <span role="img">{flag}</span>
+          ? <span role="img" style={{ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>{flag}</span>
           : <span className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-400 text-xs font-bold">?</span>
         }
       </div>
@@ -144,22 +151,41 @@ function KOMatchCard({ match, pick, onPick, highlight }: {
   match: KOMatch; pick: Pick | undefined
   onPick: (id: string, p: Pick) => void; highlight?: boolean
 }) {
-  const hasPick = pick !== undefined
-  const current = pick ?? { home: 0, away: 0 }
-  const locked = !match.isOpenForPredictions
+  const hasPick    = pick !== undefined
+  const current    = pick ?? { home: 0, away: 0 }
+  const locked     = !match.isOpenForPredictions
+  const isDraw     = hasPick && current.home === current.away
+  const isComplete = pickComplete(pick)   // draw without penaltyWinner → false
+
+  const homeName = match.home.name ?? match.home.placeholder
+  const awayName = match.away.name ?? match.away.placeholder
 
   const dateObj = new Date(match.date + 'T12:00:00')
   const dateStr = dateObj.toLocaleDateString('es-VE', {
     weekday: 'short', day: 'numeric', month: 'short', timeZone: 'America/Caracas',
   })
 
+  // When score changes: if no longer a draw, remove penaltyWinner
+  function handleScoreChange(field: 'home' | 'away', v: number) {
+    const next = { ...current, [field]: v }
+    if (next.home !== next.away) {
+      onPick(match.id, { home: next.home, away: next.away })
+    } else {
+      onPick(match.id, next)
+    }
+  }
+
   return (
     <article
       className={`bg-white rounded-2xl border-2 p-4 transition-all duration-200 ${
         highlight
           ? 'border-amber-400 shadow-lg ring-2 ring-amber-300/50'
-          : hasPick
+          : isComplete
           ? 'border-green-300 shadow-sm'
+          : isDraw
+          ? 'border-amber-300 shadow-sm'
+          : hasPick
+          ? 'border-green-200 shadow-sm'
           : locked
           ? 'border-slate-100 bg-slate-50/60'
           : 'border-slate-200 hover:border-slate-300 hover:shadow-sm'
@@ -190,7 +216,7 @@ function KOMatchCard({ match, pick, onPick, highlight }: {
             ) : (
               <GoalStepper
                 value={current.home}
-                onChange={v => onPick(match.id, { ...current, home: v })}
+                onChange={v => handleScoreChange('home', v)}
                 disabled={locked}
               />
             )}
@@ -223,7 +249,7 @@ function KOMatchCard({ match, pick, onPick, highlight }: {
             ) : (
               <GoalStepper
                 value={current.away}
-                onChange={v => onPick(match.id, { ...current, away: v })}
+                onChange={v => handleScoreChange('away', v)}
                 disabled={locked}
               />
             )}
@@ -231,14 +257,58 @@ function KOMatchCard({ match, pick, onPick, highlight }: {
         </div>
       </div>
 
+      {/* ── PENALTY WINNER (only when draw predicted) ── */}
+      {hasPick && isDraw && !locked && (
+        <div className="mt-4 rounded-xl border-2 border-amber-300 bg-amber-50 p-3">
+          <p className="text-xs font-bold text-amber-800 mb-2.5 flex items-center gap-1.5">
+            ⚖️ Empate — ¿Quién gana por penales?
+            <span className="font-normal text-amber-600">(obligatorio)</span>
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => onPick(match.id, { ...current, penaltyWinner: 'home' })}
+              className={`flex-1 py-2.5 rounded-xl text-xs font-bold border-2 transition-all touch-manipulation ${
+                current.penaltyWinner === 'home'
+                  ? 'bg-amber-500 border-amber-500 text-white shadow-sm'
+                  : 'bg-white border-amber-200 text-amber-800 hover:border-amber-400'
+              }`}
+            >
+              {match.home.flag ?? '🛡️'} {homeName.length > 14 ? homeName.split(' ')[0] : homeName}
+            </button>
+            <button
+              onClick={() => onPick(match.id, { ...current, penaltyWinner: 'away' })}
+              className={`flex-1 py-2.5 rounded-xl text-xs font-bold border-2 transition-all touch-manipulation ${
+                current.penaltyWinner === 'away'
+                  ? 'bg-amber-500 border-amber-500 text-white shadow-sm'
+                  : 'bg-white border-amber-200 text-amber-800 hover:border-amber-400'
+              }`}
+            >
+              {match.away.flag ?? '🛡️'} {awayName.length > 14 ? awayName.split(' ')[0] : awayName}
+            </button>
+          </div>
+          {!current.penaltyWinner && (
+            <p className="text-[10px] text-amber-600 mt-2 text-center">
+              ⚠️ Debes elegir un ganador por penales para que tu pronóstico sea válido.
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Footer: venue · status */}
-      <div className={`mt-3 pt-3 border-t flex items-center justify-between gap-2 ${hasPick ? 'border-green-100' : 'border-slate-100'}`}>
+      <div className={`mt-3 pt-3 border-t flex items-center justify-between gap-2 ${
+        isComplete ? 'border-green-100' : isDraw ? 'border-amber-100' : 'border-slate-100'
+      }`}>
         <p className="text-xs text-slate-400 min-w-0 truncate">
           📍 {match.venue} · {match.city}
         </p>
-        {hasPick && (
+        {isComplete && (
           <span className="text-xs font-bold text-green-600 flex items-center gap-1 shrink-0">
             <CheckCircle size={11} /> Listo
+          </span>
+        )}
+        {isDraw && !current.penaltyWinner && (
+          <span className="text-xs font-bold text-amber-600 flex items-center gap-1 shrink-0">
+            ⚠️ Falta penales
           </span>
         )}
         {!hasPick && !locked && (
@@ -283,6 +353,11 @@ export default function PrototipoEliminatoriasV3() {
 
   // Ranking phase filter
   const [rankingPhase, setRankingPhase] = useState<Stage | 'all'>('all')
+  const [rankDay, setRankDay] = useState(() => {
+    const dates = [...new Set(KNOCKOUT_MATCHES.map(m => m.date))].sort()
+    const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Caracas' })
+    return dates.includes(today) ? today : (dates[0] ?? today)
+  })
 
   // Mi Quiniela — búsqueda
   const [miqQuery, setMiqQuery] = useState('')
@@ -921,21 +996,38 @@ export default function PrototipoEliminatoriasV3() {
                 Sistema de <span className="text-green-600">Puntuación</span>
               </h2>
               <p className="text-slate-500 mt-2 text-sm max-w-md mx-auto">
-                Predice el marcador exacto de cada partido y suma puntos según tu precisión.
-                <br /><span className="font-semibold text-slate-700">No eliges solo ganador — debes colocar los goles de cada equipo.</span>
+                Predice el marcador de cada partido. Lo más importante es acertar quién clasifica —
+                el marcador exacto te da puntos extra.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            {/* Points cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
               {[
-                { icon: '🏆', pts: '3', title: 'Marcador exacto',          desc: 'Aciertas exactamente los goles de ambos equipos.',                     bg: 'bg-yellow-50', border: 'border-yellow-300', ptsBg: 'bg-yellow-400', ptsText: 'text-slate-900' },
-                { icon: '✅', pts: '1', title: 'Ganador o empate correcto', desc: 'Aciertas quién gana o si empatan, aunque el marcador sea diferente.',   bg: 'bg-green-50',  border: 'border-green-300',  ptsBg: 'bg-green-500',  ptsText: 'text-white' },
-                { icon: '❌', pts: '0', title: 'Resultado incorrecto',      desc: 'No aciertas el ganador ni si hubo empate.',                             bg: 'bg-slate-50',  border: 'border-slate-200',  ptsBg: 'bg-slate-300',  ptsText: 'text-slate-700' },
+                {
+                  icon: '⚽', pts: '2', extra: '',
+                  title: 'Clasificado correcto',
+                  desc: 'Aciertas qué equipo gana (o quién avanza por penales si hay empate).',
+                  bg: 'bg-green-50', border: 'border-green-300', ptsBg: 'bg-green-500', ptsText: 'text-white',
+                },
+                {
+                  icon: '🎯', pts: '4', extra: 'máx',
+                  title: 'Marcador exacto',
+                  desc: 'Aciertas el marcador exacto Y al clasificado. Suma los 2+2 = 4 puntos.',
+                  bg: 'bg-yellow-50', border: 'border-yellow-300', ptsBg: 'bg-yellow-400', ptsText: 'text-slate-900',
+                },
+                {
+                  icon: '❌', pts: '0', extra: '',
+                  title: 'Clasificado incorrecto',
+                  desc: 'Si fallas quién clasifica, no sumas ningún punto, aunque el marcador sea parecido.',
+                  bg: 'bg-slate-50', border: 'border-slate-200', ptsBg: 'bg-slate-300', ptsText: 'text-slate-700',
+                },
               ].map((card) => (
-                <div key={card.pts} className={`${card.bg} border-2 ${card.border} rounded-2xl p-5 text-center hover:shadow-md transition-shadow`}>
+                <div key={card.title} className={`${card.bg} border-2 ${card.border} rounded-2xl p-5 text-center hover:shadow-md transition-shadow`}>
                   <div className="text-4xl mb-3">{card.icon}</div>
-                  <div className={`inline-block ${card.ptsBg} ${card.ptsText} font-extrabold text-3xl rounded-xl px-5 py-2 mb-3 shadow-sm`}>
+                  <div className={`inline-flex items-end gap-1 ${card.ptsBg} ${card.ptsText} font-extrabold text-3xl rounded-xl px-5 py-2 mb-3 shadow-sm`}>
                     {card.pts} <span className="text-lg font-semibold">pts</span>
+                    {card.extra && <span className="text-xs font-semibold opacity-70 mb-1">({card.extra})</span>}
                   </div>
                   <div className="font-bold text-slate-800 text-sm mb-2">{card.title}</div>
                   <div className="text-xs text-slate-500 leading-relaxed">{card.desc}</div>
@@ -943,16 +1035,30 @@ export default function PrototipoEliminatoriasV3() {
               ))}
             </div>
 
-            {/* Example block */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            {/* Penalty rule callout */}
+            <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 mb-6 flex gap-3 items-start">
+              <span className="text-2xl shrink-0">⚖️</span>
+              <div>
+                <p className="font-bold text-amber-900 text-sm mb-1">¿Y si el partido termina empatado?</p>
+                <p className="text-xs text-amber-700 leading-relaxed">
+                  En eliminatorias puede haber empate en 90 minutos y definición por penales.
+                  Si predices empate, deberás indicar también <strong>quién gana por penales</strong>.
+                  Lo que cuenta para los puntos es el <strong>clasificado final</strong> (incluyendo penales),
+                  no el resultado del tiempo regular.
+                </p>
+              </div>
+            </div>
+
+            {/* Example block — normal match */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-4">
               <div className="bg-slate-800 text-white px-5 py-3 text-sm font-semibold">
-                ⚽ Ejemplo — Resultado real: <span className="text-yellow-300">Argentina 2 – 1 México</span>
+                ⚽ Ejemplo A — Resultado real: <span className="text-yellow-300">Argentina 2 – 1 México</span>
               </div>
               <div className="divide-y divide-slate-100">
                 {[
-                  { pred: 'Argentina 2 – 1 México', note: 'Marcador exacto',                   pts: 3, cls: 'text-yellow-600', bg: 'bg-yellow-50' },
-                  { pred: 'Argentina 3 – 1 México', note: 'Ganador correcto (Argentina gana)', pts: 1, cls: 'text-green-600',  bg: '' },
-                  { pred: 'Argentina 1 – 1 México', note: 'Incorrecto (predijiste empate)',    pts: 0, cls: 'text-slate-400',  bg: '' },
+                  { pred: 'Argentina 2 – 1 México', note: 'Clasificado ✓ + Marcador exacto ✓',      pts: 4, cls: 'text-yellow-600', bg: 'bg-yellow-50' },
+                  { pred: 'Argentina 3 – 0 México', note: 'Clasificado ✓, marcador diferente',       pts: 2, cls: 'text-green-600',  bg: '' },
+                  { pred: 'México 1 – 0 Argentina', note: 'Clasificado ✗ — falla el ganador',        pts: 0, cls: 'text-slate-400',  bg: '' },
                 ].map((row) => (
                   <div key={row.pred} className={`flex items-center justify-between px-5 py-3.5 ${row.bg}`}>
                     <div>
@@ -963,8 +1069,30 @@ export default function PrototipoEliminatoriasV3() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Example block — draw + penalties */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="bg-amber-700 text-white px-5 py-3 text-sm font-semibold">
+                ⚖️ Ejemplo B — Resultado real: <span className="text-yellow-200">Sudáfrica 1 – 1 Canadá · Gana Canadá por penales</span>
+              </div>
+              <div className="divide-y divide-slate-100">
+                {[
+                  { pred: 'Empate 1–1 · Gana Canadá por penales', note: 'Clasificado ✓ + Marcador exacto ✓', pts: 4, cls: 'text-yellow-600', bg: 'bg-yellow-50' },
+                  { pred: 'Empate 0–0 · Gana Canadá por penales', note: 'Clasificado ✓, marcador diferente', pts: 2, cls: 'text-green-600',  bg: '' },
+                  { pred: 'Empate 1–1 · Gana Sudáfrica por penales', note: 'Clasificado ✗ — falla quien pasa', pts: 0, cls: 'text-slate-400', bg: '' },
+                ].map((row) => (
+                  <div key={row.pred} className={`flex items-center justify-between px-5 py-3.5 ${row.bg}`}>
+                    <div>
+                      <p className="font-mono font-bold text-slate-800 text-sm">{row.pred}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{row.note}</p>
+                    </div>
+                    <div className={`font-extrabold text-lg shrink-0 ml-3 ${row.cls}`}>{row.pts} pts</div>
+                  </div>
+                ))}
+              </div>
               <div className="px-5 py-3 bg-slate-50 text-xs text-slate-500 text-center">
-                Máximo posible: <strong>3 pts × 32 partidos = 96 puntos</strong>
+                Máximo posible: <strong>4 pts × 32 partidos = 128 puntos</strong>
               </div>
             </div>
           </section>
@@ -1035,7 +1163,7 @@ export default function PrototipoEliminatoriasV3() {
             <div className="space-y-2">
               {[
                 { q: '¿Cómo funciona la quiniela?',
-                  a: 'Predices el marcador exacto de los 32 partidos de la fase eliminatoria. Marcador exacto = 3 puntos, ganador/empate correcto = 1 punto. Gana quien acumule más puntos al final del torneo.' },
+                  a: 'Predices el marcador de los 32 partidos de la fase eliminatoria. Por cada partido: si aciertas quién clasifica ganas 2 puntos, y si además aciertas el marcador exacto ganas 2 puntos más (total 4 puntos). Gana quien acumule más puntos al final del torneo.' },
                 { q: '¿Cuánto cuesta participar?',
                   a: 'La inscripción es de 20 USD. Puedes pagar por Pago Móvil Banesco (14.600 Bs a tasa fija 730 Bs/USD) o por Zelle (20 USD directamente).' },
                 { q: '¿Cómo puedo pagar?',
@@ -1052,8 +1180,10 @@ export default function PrototipoEliminatoriasV3() {
                   a: 'Sí, todos los partidos se muestran en hora Venezuela (UTC-4, sin horario de verano).' },
                 { q: '¿Puedo modificar mi quiniela después de enviarla?',
                   a: 'Puedes modificar tus pronósticos hasta que comience el primer partido de la ronda correspondiente. Una vez inicia el partido, ese pronóstico queda bloqueado.' },
-                { q: '¿Cómo funcionan prórroga y penales?',
-                  a: "El marcador que cuenta es el del final del tiempo regular (90 minutos). Si el partido va a prórroga o penales, ese resultado no afecta tu pronóstico. Solo cuenta el marcador al 90'." },
+                { q: '¿Qué pasa si el partido va a penales?',
+                  a: "En eliminatorias puede haber empate en tiempo reglamentario y definición por penales. Si predices empate, el formulario te pedirá que elijas también quién gana por penales. Para los puntos, lo que cuenta es el clasificado final (quien avanza, incluyendo penales). El marcador exacto se refiere al resultado en 90 minutos (ej: 1–1), sin contar la prórroga ni los penales." },
+                { q: '¿Cómo se calculan exactamente los puntos?',
+                  a: '2 puntos si aciertas el equipo que clasifica o gana. +2 puntos adicionales si además el marcador exacto coincide (considerando los goles en 90 minutos). 0 puntos si fallas el clasificado. El máximo por partido es 4 puntos.' },
               ].map((faq, i) => {
                 const isOpen = faqOpen === i
                 return (
@@ -1156,12 +1286,22 @@ export default function PrototipoEliminatoriasV3() {
         <div className="max-w-2xl mx-auto px-4 py-4">
           {/* Scoring hint */}
           <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-4">
-            <p className="text-xs font-semibold text-blue-800 mb-1.5">Sistema de puntuación:</p>
-            <div className="flex gap-4 text-xs text-blue-700 flex-wrap">
-              <span>🎯 <strong>3 pts</strong> — Marcador exacto</span>
-              <span>✅ <strong>1 pt</strong> — Resultado correcto</span>
-              <span>❌ <strong>0 pts</strong> — Incorrecto</span>
+            <p className="text-xs font-semibold text-blue-800 mb-2">⚡ Sistema de puntos — Eliminatorias:</p>
+            <div className="space-y-1 text-xs text-blue-700">
+              <div className="flex items-center gap-2">
+                <span className="bg-green-500 text-white font-extrabold px-2 py-0.5 rounded-full text-[10px] shrink-0">+2</span>
+                <span>Aciertas el equipo clasificado o ganador</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="bg-yellow-400 text-slate-900 font-extrabold px-2 py-0.5 rounded-full text-[10px] shrink-0">+2</span>
+                <span>Aciertas además el marcador exacto</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="bg-slate-300 text-slate-700 font-extrabold px-2 py-0.5 rounded-full text-[10px] shrink-0">+0</span>
+                <span>Si fallas el clasificado, no sumas nada</span>
+              </div>
             </div>
+            <p className="text-[10px] text-blue-500 mt-2 font-medium">⚖️ Si predices empate, deberás elegir también quién gana por penales.</p>
           </div>
 
           {/* Stage tabs */}
@@ -1366,12 +1506,14 @@ export default function PrototipoEliminatoriasV3() {
 
   function renderBracket() {
     // ── Layout constants ────────────────────────────────────────────────────────
-    const SLOT_H = 64    // height per 1 R32 slot — reduced from 80
-    const CARD_H = 56    // card height — reduced from 76
-    const CARD_W = 172   // card width — reduced from 204
-    const CONN_W = 26    // connector column width
+    // SLOT_H drives everything: COL_H = 16 × SLOT_H, slot per R32 card = SLOT_H.
+    // Cards live in flex slots — no absolute positioning → zero overlap possible.
+    const SLOT_H = 92    // px per R32 slot — 16px gap above+below CARD_H
+    const CARD_H = 76    // card height — tall enough for 2-line names
+    const CARD_W = 212   // card width — fits "Costa de Marfil" in 1 line at 11px
+    const CONN_W = 28    // connector column width
     const HDR_H  = 52    // column header height
-    const COL_H  = 16 * SLOT_H   // 1024
+    const COL_H  = 16 * SLOT_H   // 1472  (same for every column)
 
     const ROUNDS = [
       { key:'r32', short:'R32',   label:'Dieciseisavos', dates:'28 jun – 3 jul',
@@ -1387,25 +1529,20 @@ export default function PrototipoEliminatoriasV3() {
         ids:['final-104'] },
     ]
 
-    function cardTop(roundIdx: number, cardIdx: number): number {
-      const spc = Math.pow(2, roundIdx)
-      return Math.round((cardIdx + 0.5) * spc * SLOT_H - CARD_H / 2)
-    }
-
-    function connPaths(roundIdx: number): string {
-      const spc     = Math.pow(2, roundIdx)
-      const pairCnt = 8 / spc
-      const hw      = CONN_W / 2
-      return Array.from({ length: pairCnt }, (_, j) => {
-        const y1 = (2 * j + 0.5) * spc * SLOT_H
-        const y2 = (2 * j + 1.5) * spc * SLOT_H
+    // ── Connector SVG paths ──────────────────────────────────────────────────
+    // For round ri with N matches, slotH = COL_H/N.
+    // Pairs (card 2j, card 2j+1) connect to the next round's card j.
+    // Centers: y1=(2j+0.5)*slotH, y2=(2j+1.5)*slotH, yM=(y1+y2)/2
+    function connPaths(ri: number): string {
+      const N      = ROUNDS[ri].ids.length
+      const slotH  = COL_H / N
+      const pairs  = N / 2
+      const hw     = CONN_W / 2
+      return Array.from({ length: pairs }, (_, j) => {
+        const y1 = (2 * j + 0.5) * slotH
+        const y2 = (2 * j + 1.5) * slotH
         const yM = (y1 + y2) / 2
-        return [
-          `M0,${y1} H${hw}`,
-          `M0,${y2} H${hw}`,
-          `M${hw},${y1} V${y2}`,
-          `M${hw},${yM} H${CONN_W}`,
-        ].join(' ')
+        return `M0,${y1} H${hw} M0,${y2} H${hw} M${hw},${y1} V${y2} M${hw},${yM} H${CONN_W}`
       }).join(' ')
     }
 
@@ -1413,133 +1550,139 @@ export default function PrototipoEliminatoriasV3() {
       setBktRound(key)
       const idx = ROUNDS.findIndex(r => r.key === key)
       bracketScrollRef.current?.scrollTo({ left: idx * (CARD_W + CONN_W), behavior: 'smooth' })
+      // Also scroll the page vertically so the first card of this round is in view.
+      // Each round's first card center = HDR_H + slotH/2, where slotH = COL_H / N.
+      const N = ROUNDS[idx].ids.length
+      const slotH = COL_H / N
+      const cardCenterInBracket = HDR_H + slotH / 2
+      const bracketTop = bracketScrollRef.current?.getBoundingClientRect().top ?? 0
+      const targetPageY = window.scrollY + bracketTop + cardCenterInBracket - 160
+      window.scrollTo({ top: Math.max(0, targetPageY), behavior: 'smooth' })
     }
 
-    // Compact placeholder labels for tight cards
-    function shortLabel(name: string | null | undefined, placeholder: string | null | undefined): string {
-      const raw = name ?? placeholder ?? 'A definir'
+    // Compact placeholder labels — never show long group-combo strings
+    function shortLabel(name: string | null | undefined, ph: string | null | undefined): string {
+      const raw = name ?? ph ?? 'A definir'
+      if (raw.startsWith('Bosnia')) return 'Bosnia'
       if (raw.startsWith('Mejor 3.º')) return 'Mejor 3.°'
-      if (/^1\.º Grupo (.+)/.test(raw)) return '1° Gr. ' + raw.replace(/^1\.º Grupo /, '')
-      if (/^2\.º Grupo (.+)/.test(raw)) return '2° Gr. ' + raw.replace(/^2\.º Grupo /, '')
+      if (/^1\.º Grupo (.+)/.test(raw)) return '1° ' + raw.replace(/^1\.º Grupo /, 'Gr. ')
+      if (/^2\.º Grupo (.+)/.test(raw)) return '2° ' + raw.replace(/^2\.º Grupo /, 'Gr. ')
       if (raw.startsWith('Gan. #'))  return 'Gan. '  + raw.slice(6)
       if (raw.startsWith('Perd. #')) return 'Perd. ' + raw.slice(7)
       return raw
     }
 
-    const TOTAL_W = ROUNDS.length * CARD_W + (ROUNDS.length - 1) * CONN_W
-    const m3rd    = KNOCKOUT_MATCHES.find(m => m.id === 'final-103')
-
-    // Card renderer — extracted to avoid duplication in 3rd-place card
-    function MatchCard({
-      m, ri, hasPick, pick, isOpen, isFinal,
-    }: {
-      m: KOMatch; ri: number; hasPick: boolean
-      pick: { home: number; away: number } | undefined
-      isOpen: boolean; isFinal: boolean
-    }) {
-      const homePh   = m.home.name === null
-      const awayPh   = m.away.name === null
+    // ── Inline card renderer (NOT a React component — avoids reconciliation issues) ──
+    function renderCard(
+      m: KOMatch,
+      hasPick: boolean,
+      pick: { home: number; away: number } | undefined,
+      isOpen: boolean,
+      isFinal: boolean,
+      cardHeightPx: number,
+    ) {
+      const homePh    = m.home.name === null
+      const awayPh    = m.away.name === null
       const homeLabel = shortLabel(m.home.name, m.home.placeholder)
       const awayLabel = shortLabel(m.away.name, m.away.placeholder)
 
-      // Colors
-      const bgCard    = isFinal
-        ? (hasPick ? '#3b1d03' : '#1a1205')
-        : (hasPick ? '#14532d' : '#1e293b')
-      const borderCard = isFinal
-        ? (hasPick ? '#d97706' : '#78350f')
-        : (hasPick ? '#16a34a' : '#2d3f55')
-      const bgMeta    = isFinal
-        ? (hasPick ? '#78350f' : '#261a07')
-        : (hasPick ? '#166534' : '#131c2b')
+      const bgCard    = isFinal ? (hasPick ? '#3b1d03' : '#1a1205') : (hasPick ? '#14532d' : '#1e293b')
+      const border    = isFinal ? (hasPick ? '#d97706' : '#78350f') : (hasPick ? '#16a34a' : '#2d3f55')
+      const bgMeta    = isFinal ? (hasPick ? '#78350f' : '#261a07') : (hasPick ? '#166534' : '#131c2b')
       const clrNum    = isFinal ? '#fbbf24' : (hasPick ? '#4ade80' : '#475569')
       const clrTime   = hasPick ? (isFinal ? '#fcd34d' : '#86efac') : '#374151'
-      const clrTeam   = (ph: boolean) =>
-        ph ? '#3d4f63' : (hasPick ? (isFinal ? '#fef3c7' : '#bbf7d0') : '#d1d5db')
+      const clrScore  = isFinal ? '#fbbf24' : '#4ade80'
+      const clrReal   = hasPick ? (isFinal ? '#fef3c7' : '#bbf7d0') : '#d1d5db'
+      const clrPh     = '#3d4f63'
       const shadow    = isFinal
-        ? '0 0 0 1px rgba(251,191,36,0.12), 0 4px 16px rgba(0,0,0,0.6)'
-        : (hasPick ? '0 0 0 1px rgba(34,197,94,0.08), 0 2px 8px rgba(0,0,0,0.35)' : '0 2px 6px rgba(0,0,0,0.3)')
-
-      const height = ri === -1 ? 56 : CARD_H  // ri=-1 for standalone 3rd place
+        ? '0 0 0 1px rgba(251,191,36,0.1), 0 4px 16px rgba(0,0,0,0.55)'
+        : hasPick ? '0 0 0 1px rgba(34,197,94,0.08), 0 2px 8px rgba(0,0,0,0.3)' : '0 2px 6px rgba(0,0,0,0.28)'
 
       return (
         <div
           onClick={() => isOpen ? setView('llenado') : undefined}
           style={{
-            height,
-            background: bgCard,
-            border: `1.5px solid ${borderCard}`,
-            borderRadius: 8,
-            overflow: 'hidden',
+            height: cardHeightPx, width: '100%',
+            background: bgCard, border: `1.5px solid ${border}`,
+            borderRadius: 8, overflow: 'hidden',
             cursor: isOpen ? 'pointer' : 'default',
             boxShadow: shadow,
+            display: 'flex', flexDirection: 'column' as const,
           }}
         >
           {/* Meta bar */}
           <div style={{
-            padding: '2px 7px',
-            background: bgMeta,
-            fontSize: 9, lineHeight: '14px',
+            flexShrink: 0,
+            padding: '0 7px', height: 16,
             display: 'flex', alignItems: 'center', gap: 4,
-            borderBottom: `1px solid ${isFinal ? 'rgba(120,53,15,0.6)' : 'rgba(0,0,0,0.4)'}`,
+            background: bgMeta,
+            borderBottom: '1px solid rgba(0,0,0,0.35)',
           }}>
-            <span style={{ fontWeight: 700, color: clrNum, flexShrink: 0 }}>
+            <span style={{ fontWeight: 700, fontSize: 9, color: clrNum, flexShrink: 0, lineHeight: 1 }}>
               {isFinal ? '🏆' : `#${m.fifaMatchNumber}`}
             </span>
-            <span style={{ color: clrTime, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
+            <span style={{ fontSize: 8.5, color: clrTime, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, flex: 1 }}>
               {isFinal ? 'Gran Final · ' : ''}{m.displayTime}
             </span>
             {isOpen && !hasPick && (
-              <span style={{ marginLeft: 'auto', color: '#22c55e', flexShrink: 0, fontSize: 8 }}>✏️</span>
+              <span style={{ fontSize: 7.5, color: '#22c55e', flexShrink: 0 }}>✏️</span>
             )}
           </div>
 
-          {/* Home */}
+          {/* Home team */}
           <div style={{
-            display: 'flex', alignItems: 'center', gap: 5,
-            padding: '5px 7px 2px',
-            opacity: homePh ? 0.55 : 1,
+            flex: 1, display: 'flex', alignItems: 'center', gap: 5,
+            padding: '2px 7px',
+            opacity: homePh && !hasPick ? 0.5 : 1,
           }}>
-            <span style={{ fontSize: 13, lineHeight: 1, width: 16, textAlign: 'center' as const, flexShrink: 0 }}>
-              {m.home.flag ?? (homePh ? '—' : '🛡️')}
+            <span style={{ fontSize: 14, lineHeight: 1, width: 18, textAlign: 'center' as const, flexShrink: 0, fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>
+              {m.home.flag ?? '🛡️'}
             </span>
             <span style={{
-              flex: 1, fontSize: 11.5, fontWeight: homePh ? 400 : 600,
+              flex: 1, fontSize: 11, lineHeight: 1.3,
+              fontWeight: homePh ? 400 : 600,
               fontStyle: homePh ? 'italic' : 'normal',
-              color: clrTeam(homePh),
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const,
+              color: homePh ? clrPh : clrReal,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical' as const,
+              overflow: 'hidden',
             }}>
               {homeLabel}
             </span>
-            {hasPick && pick && (
-              <span style={{ fontSize: 13, fontWeight: 800, color: isFinal ? '#fbbf24' : '#4ade80', flexShrink: 0, minWidth: 14, textAlign: 'center' as const }}>
+            {hasPick && pick !== undefined && (
+              <span style={{ fontSize: 13, fontWeight: 800, color: clrScore, flexShrink: 0, minWidth: 14, textAlign: 'right' as const }}>
                 {pick.home}
               </span>
             )}
           </div>
 
           {/* Divider */}
-          <div style={{ height: 1, margin: '0 7px', background: isFinal ? 'rgba(120,53,15,0.5)' : 'rgba(0,0,0,0.35)' }} />
+          <div style={{ height: 1, margin: '0 7px', background: 'rgba(0,0,0,0.3)', flexShrink: 0 }} />
 
-          {/* Away */}
+          {/* Away team */}
           <div style={{
-            display: 'flex', alignItems: 'center', gap: 5,
-            padding: '2px 7px 5px',
-            opacity: awayPh ? 0.55 : 1,
+            flex: 1, display: 'flex', alignItems: 'center', gap: 5,
+            padding: '2px 7px',
+            opacity: awayPh && !hasPick ? 0.5 : 1,
           }}>
-            <span style={{ fontSize: 13, lineHeight: 1, width: 16, textAlign: 'center' as const, flexShrink: 0 }}>
-              {m.away.flag ?? (awayPh ? '—' : '🛡️')}
+            <span style={{ fontSize: 14, lineHeight: 1, width: 18, textAlign: 'center' as const, flexShrink: 0, fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>
+              {m.away.flag ?? '🛡️'}
             </span>
             <span style={{
-              flex: 1, fontSize: 11.5, fontWeight: awayPh ? 400 : 600,
+              flex: 1, fontSize: 11, lineHeight: 1.3,
+              fontWeight: awayPh ? 400 : 600,
               fontStyle: awayPh ? 'italic' : 'normal',
-              color: clrTeam(awayPh),
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const,
+              color: awayPh ? clrPh : clrReal,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical' as const,
+              overflow: 'hidden',
             }}>
               {awayLabel}
             </span>
-            {hasPick && pick && (
-              <span style={{ fontSize: 13, fontWeight: 800, color: isFinal ? '#fbbf24' : '#4ade80', flexShrink: 0, minWidth: 14, textAlign: 'center' as const }}>
+            {hasPick && pick !== undefined && (
+              <span style={{ fontSize: 13, fontWeight: 800, color: clrScore, flexShrink: 0, minWidth: 14, textAlign: 'right' as const }}>
                 {pick.away}
               </span>
             )}
@@ -1548,144 +1691,148 @@ export default function PrototipoEliminatoriasV3() {
       )
     }
 
+    const TOTAL_W = ROUNDS.length * CARD_W + (ROUNDS.length - 1) * CONN_W
+    const m3rd    = KNOCKOUT_MATCHES.find(m => m.id === 'final-103')
+
     return (
       <div style={{ background: '#0f172a', minHeight: 'calc(100vh - 120px)' }}>
 
         {/* ── Header ── */}
-        <div style={{ padding: '18px 16px 6px', display: 'flex', alignItems: 'baseline', gap: 10 }}>
-          <h1 style={{ color: '#f1f5f9', fontSize: 19, fontWeight: 800, lineHeight: 1.2, margin: 0 }}>
+        <div style={{ padding: '18px 16px 4px', display: 'flex', alignItems: 'baseline', gap: 10 }}>
+          <h1 style={{ color: '#f1f5f9', fontSize: 19, fontWeight: 800, margin: 0 }}>
             Cuadro eliminatorio
           </h1>
           <span style={{ color: '#334155', fontSize: 10 }}>Mundial 2026 · desliza →</span>
         </div>
 
-        {/* ── Round tabs ── */}
+        {/* ── Phase tabs ── */}
         <div style={{ display: 'flex', gap: 5, padding: '8px 16px 14px', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
           {ROUNDS.map(r => {
             const active = bktRound === r.key
             return (
-              <button
-                key={r.key}
-                onClick={() => scrollToRound(r.key)}
-                style={{
-                  padding: '5px 13px', borderRadius: 999, fontSize: 10.5, fontWeight: 700,
-                  border: `1.5px solid ${active ? '#22c55e' : '#1e293b'}`,
-                  background: active ? '#22c55e' : '#1e293b',
-                  color: active ? '#0f172a' : '#475569',
-                  flexShrink: 0, cursor: 'pointer', transition: 'all .12s',
-                  lineHeight: 1,
-                }}
-              >
+              <button key={r.key} onClick={() => scrollToRound(r.key)} style={{
+                padding: '5px 13px', borderRadius: 999, fontSize: 10.5, fontWeight: 700,
+                border: `1.5px solid ${active ? '#22c55e' : '#1e293b'}`,
+                background: active ? '#22c55e' : '#1e293b',
+                color: active ? '#0f172a' : '#475569',
+                flexShrink: 0, cursor: 'pointer', transition: 'all .12s', lineHeight: 1,
+              }}>
                 {r.short}
-                {active && <span style={{ marginLeft: 5, fontSize: 8, opacity: 0.8 }}>{r.dates}</span>}
+                {active && <span style={{ marginLeft: 5, fontSize: 8, opacity: 0.75 }}>{r.dates}</span>}
               </button>
             )
           })}
         </div>
 
-        {/* ── Horizontal bracket ── */}
-        <div
-          ref={bracketScrollRef}
+        {/* ── Bracket — horizontal scroll ── */}
+        <div ref={bracketScrollRef}
           style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const, paddingBottom: 16 }}
         >
-          <div style={{ display: 'flex', paddingLeft: 16, paddingRight: 24, width: TOTAL_W + 40, alignItems: 'flex-start' }}>
+          {/* Inner row: all columns + connectors side by side */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            paddingLeft: 16, paddingRight: 24,
+            width: TOTAL_W + 40,
+          }}>
 
             {ROUNDS.map((round, ri) => {
-              const elements: React.ReactNode[] = []
+              const N     = round.ids.length          // cards in this column
+              const slotH = COL_H / N                 // height per slot (equal division)
 
-              elements.push(
+              const colEl = (
                 <div key={round.key} style={{ width: CARD_W, flexShrink: 0 }}>
 
                   {/* Column header */}
-                  <div style={{ height: HDR_H, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: 10 }}>
+                  <div style={{
+                    height: HDR_H,
+                    display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+                    paddingBottom: 10,
+                  }}>
                     <p style={{
                       color: bktRound === round.key ? '#22c55e' : '#94a3b8',
-                      fontSize: 11, fontWeight: 800, lineHeight: 1, margin: 0,
-                      letterSpacing: '0.03em',
+                      fontSize: 11, fontWeight: 800, margin: 0, lineHeight: 1,
+                      letterSpacing: '0.04em',
                     }}>
                       {round.label.toUpperCase()}
                     </p>
-                    <p style={{ color: '#334155', fontSize: 9.5, marginTop: 2 }}>{round.dates}</p>
+                    <p style={{ color: '#334155', fontSize: 9, marginTop: 2 }}>{round.dates}</p>
                   </div>
 
-                  {/* Cards */}
-                  <div style={{ position: 'relative', height: COL_H }}>
-                    {round.ids.map((id, ci) => {
+                  {/* Cards — FLEX COLUMN, equal slots, zero overlap guaranteed */}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column' as const,
+                    height: COL_H,          // exact same height for every column
+                  }}>
+                    {round.ids.map(id => {
                       const m = KNOCKOUT_MATCHES.find(x => x.id === id)
                       if (!m) return null
                       const pick    = picks[m.id]
                       const hasPick = !!pick
-                      const isOpen  = m.isOpenForPredictions
-                      const top     = cardTop(ri, ci)
 
                       return (
-                        <div key={id} style={{ position: 'absolute', left: 2, right: 2, top }}>
-                          <MatchCard
-                            m={m} ri={ri}
-                            hasPick={hasPick} pick={pick}
-                            isOpen={isOpen} isFinal={id === 'final-104'}
-                          />
+                        // Each slot is exactly slotH px, card is centered within it
+                        <div key={id} style={{
+                          height: slotH,
+                          flexShrink: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          padding: `0 2px`,
+                        }}>
+                          {renderCard(m, hasPick, pick, m.isOpenForPredictions, id === 'final-104', CARD_H)}
                         </div>
                       )
                     })}
                   </div>
+
                 </div>
               )
 
-              // Connector SVG between columns
-              if (ri < ROUNDS.length - 1) {
-                elements.push(
-                  <div key={`conn-${ri}`} style={{ flexShrink: 0, paddingTop: HDR_H }}>
-                    <svg
-                      width={CONN_W}
-                      height={COL_H}
-                      style={{ display: 'block', overflow: 'visible' }}
-                    >
-                      <path
-                        d={connPaths(ri)}
-                        fill="none"
-                        stroke="#22c55e"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        opacity="0.4"
-                      />
-                    </svg>
-                  </div>
-                )
-              }
+              // Connector SVG between this column and the next
+              const connEl = ri < ROUNDS.length - 1 ? (
+                <div key={`conn-${ri}`} style={{ flexShrink: 0, paddingTop: HDR_H }}>
+                  <svg width={CONN_W} height={COL_H} style={{ display: 'block', overflow: 'visible' }}>
+                    <path
+                      d={connPaths(ri)}
+                      fill="none"
+                      stroke="#22c55e"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      opacity="0.38"
+                    />
+                  </svg>
+                </div>
+              ) : null
 
-              return elements
+              return [colEl, connEl]
             })}
 
           </div>
         </div>
 
-        {/* ── 3rd place ── */}
+        {/* ── 3rd place — below the scroll, full-width section ── */}
         {m3rd && (() => {
           const pick3   = picks[m3rd.id]
           const hasPick = !!pick3
           return (
-            <div style={{ padding: '8px 16px 48px' }}>
-              {/* Divider */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+            <div style={{ padding: '12px 16px 56px' }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12,
+              }}>
                 <div style={{ flex: 1, height: 1, background: '#1e293b' }} />
                 <span style={{
                   color: '#64748b', fontSize: 9.5, fontWeight: 700,
-                  letterSpacing: '0.08em', textTransform: 'uppercase' as const,
+                  letterSpacing: '0.07em', textTransform: 'uppercase' as const,
                   whiteSpace: 'nowrap' as const,
                 }}>
                   🥉 Tercer puesto · 18 jul · Miami
                 </span>
                 <div style={{ flex: 1, height: 1, background: '#1e293b' }} />
               </div>
-
-              <div style={{ maxWidth: CARD_W }}>
-                <MatchCard
-                  m={m3rd} ri={-1}
-                  hasPick={hasPick} pick={pick3}
-                  isOpen={m3rd.isOpenForPredictions} isFinal={false}
-                />
+              <div style={{ maxWidth: CARD_W, paddingLeft: 2 }}>
+                {renderCard(m3rd, hasPick, pick3, m3rd.isOpenForPredictions, false, CARD_H)}
               </div>
             </div>
           )
@@ -1853,13 +2000,13 @@ export default function PrototipoEliminatoriasV3() {
                       const awayDisplay = m.away.name || m.away.placeholder
                       return (
                         <div key={m.id} className={`px-4 py-3 flex items-center gap-2 ${!pick ? 'opacity-40' : ''}`}>
-                          <span className="text-lg shrink-0 leading-none">{m.home.flag || '⬜'}</span>
+                          <span className="text-lg shrink-0 leading-none" style={{ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>{m.home.flag || '⬜'}</span>
                           <span className="flex-1 text-slate-600 text-xs truncate">{homeDisplay}</span>
                           <span className="font-extrabold text-slate-900 shrink-0 text-sm tabular-nums">
                             {pick ? `${pick.home} – ${pick.away}` : '—'}
                           </span>
                           <span className="flex-1 text-slate-600 text-xs truncate text-right">{awayDisplay}</span>
-                          <span className="text-lg shrink-0 leading-none">{m.away.flag || '⬜'}</span>
+                          <span className="text-lg shrink-0 leading-none" style={{ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>{m.away.flag || '⬜'}</span>
                         </div>
                       )
                     })}
@@ -1932,17 +2079,187 @@ export default function PrototipoEliminatoriasV3() {
     const podiumColors  = ['bg-slate-300', 'bg-yellow-400', 'bg-amber-300']
     const myDisplayName = registered ? regForm.nombre.split(' ').slice(0, 2).join(' ') : null
 
+    // ── Pronósticos del día helpers ──────────────────────────────────────────
+    const todayStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Caracas' })
+
+    function shortDateLabel(d: string) {
+      if (d === todayStr) return 'Hoy'
+      const [y, mo, dy] = d.split('-').map(Number)
+      const dt = new Date(`${y}-${String(mo).padStart(2,'0')}-${String(dy).padStart(2,'0')}T12:00:00-04:00`)
+      return dt.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
+    }
+
+    const allDates = [...new Set(KNOCKOUT_MATCHES.map(m => m.date))].sort()
+    const activeRankDay = allDates.includes(rankDay) ? rankDay : (allDates[0] ?? rankDay)
+    const dayMatchesRank = KNOCKOUT_MATCHES
+      .filter(m => m.date === activeRankDay)
+      .sort((a, b) => a.timeVet.localeCompare(b.timeVet))
+
+    const finishedDay = dayMatchesRank.filter(m => m.status === 'FINISHED').length
+    const liveDay     = dayMatchesRank.filter(m => m.status === 'LIVE').length
+    const pendingDay  = dayMatchesRank.filter(m => m.status === 'SCHEDULED').length
+    const totalPlayed = KNOCKOUT_MATCHES.filter(m => m.status === 'FINISHED').length
+
+    // Demo: each match has 12 predictors
+    const DEMO_PRED_COUNT = ranking.length
+
     return (
       <div className="min-h-screen bg-slate-50 pb-10">
         {/* Header */}
         <header className="bg-gradient-to-r from-green-700 to-blue-700 text-white shadow-lg">
           <div className="max-w-3xl mx-auto px-4 py-5">
             <h1 className="font-bold text-2xl">🏆 Ranking Eliminatorias</h1>
-            <p className="text-green-200 text-sm">Quiniela Mundial 2026 · Fase eliminatoria · Demo</p>
+            <p className="text-green-200 text-sm">Quiniela Mundial 2026 · Fase eliminatoria</p>
           </div>
         </header>
 
         <div className="max-w-3xl mx-auto px-4 mt-5 space-y-5">
+
+          {/* ── PRONÓSTICOS DEL DÍA ── */}
+          <section>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-1 h-5 bg-green-500 rounded-full shrink-0" />
+              <h2 className="font-extrabold text-slate-800 text-base">Pronósticos del día</h2>
+            </div>
+
+            {/* Date selector */}
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+              {allDates.map(d => (
+                <button key={d} onClick={() => setRankDay(d)}
+                  className={`shrink-0 px-3 py-2 rounded-xl text-xs font-bold border transition-all touch-manipulation ${
+                    d === activeRankDay
+                      ? 'bg-green-600 text-white border-green-600 shadow-sm'
+                      : d === todayStr
+                      ? 'bg-white text-green-700 border-green-300 hover:bg-green-50'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  {shortDateLabel(d)}
+                </button>
+              ))}
+            </div>
+
+            {/* Day summary */}
+            {dayMatchesRank.length > 0 && (
+              <div className="bg-white rounded-xl border border-slate-100 p-3 mt-2 mb-3">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm mb-2">
+                  <span className="text-slate-600"><strong className="text-slate-800">{dayMatchesRank.length}</strong> partido{dayMatchesRank.length !== 1 ? 's' : ''}</span>
+                  {finishedDay > 0 && <span className="text-green-700">✅ <strong>{finishedDay}</strong> finalizado{finishedDay !== 1 ? 's' : ''}</span>}
+                  {liveDay > 0 && <span className="text-blue-700 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse inline-block" /> <strong>{liveDay}</strong> en juego</span>}
+                  {pendingDay > 0 && <span className="text-slate-400">⏱️ <strong>{pendingDay}</strong> por jugar</span>}
+                </div>
+                <div className="text-xs text-slate-500">
+                  🏆 Líder: <span className="font-semibold text-slate-700">{top3[0] ? formatPublicName(top3[0].displayName) : 'Sin datos'}</span>
+                  {' · '}{top3[0]?.totalPoints ?? 0} pts
+                </div>
+              </div>
+            )}
+
+            {/* Match cards */}
+            {dayMatchesRank.length === 0 ? (
+              <div className="bg-white rounded-xl border border-slate-100 p-6 text-center text-slate-400">
+                <p className="text-2xl mb-2">📅</p>
+                <p className="text-sm">No hay partidos para esta fecha.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {dayMatchesRank.map(m => {
+                  const isFinished = m.status === 'FINISHED'
+                  const isLive     = m.status === 'LIVE'
+                  const myPick     = picks[m.id]
+                  const stageLabel = { R32: 'Dieciseisavos', R16: 'Octavos', QF: 'Cuartos', SF: 'Semis', FINAL: 'Final' }[m.stage]
+                  const homeName   = m.home.name ?? m.home.placeholder
+                  const awayName   = m.away.name ?? m.away.placeholder
+
+                  return (
+                    <div key={m.id} className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+                      {/* Top bar */}
+                      <div className={`px-3 py-1.5 flex items-center justify-between text-xs ${
+                        isLive ? 'bg-blue-600 text-white' :
+                        isFinished ? 'bg-slate-700 text-white' :
+                        'bg-slate-100 text-slate-500'
+                      }`}>
+                        <span className="font-bold">{stageLabel} · #{m.fifaMatchNumber}</span>
+                        <span className="font-semibold">
+                          {isLive ? '🔴 En juego' : isFinished ? '✅ Finalizado' : m.displayTime + ' VET'}
+                        </span>
+                      </div>
+
+                      {/* Teams */}
+                      <div className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          {/* Home */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span style={{ fontSize: 22, lineHeight: 1, fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>
+                                {m.home.flag ?? '🛡️'}
+                              </span>
+                              <span className="font-bold text-slate-800 text-sm leading-tight truncate">{homeName}</span>
+                            </div>
+                          </div>
+
+                          {/* Score / vs */}
+                          <div className="shrink-0 text-center w-16">
+                            {isFinished || isLive ? (
+                              <span className="font-extrabold text-lg text-slate-800">? — ?</span>
+                            ) : (
+                              <span className="text-xs text-slate-300 font-bold">vs</span>
+                            )}
+                          </div>
+
+                          {/* Away */}
+                          <div className="flex-1 min-w-0 flex flex-col items-end">
+                            <div className="flex items-center gap-2 flex-row-reverse">
+                              <span style={{ fontSize: 22, lineHeight: 1, fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>
+                                {m.away.flag ?? '🛡️'}
+                              </span>
+                              <span className="font-bold text-slate-800 text-sm leading-tight truncate">{awayName}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Venue */}
+                        <p className="text-xs text-slate-400 mt-1.5 truncate">📍 {m.venue} · {m.city}</p>
+
+                        {/* My pick */}
+                        {myPick && (
+                          <div className="mt-2 bg-green-50 border border-green-200 rounded-lg px-3 py-1.5 text-xs text-green-700">
+                            Mi pronóstico: <strong>{homeName.split(' ')[0]} {myPick.home} – {myPick.away} {awayName.split(' ')[0]}</strong>
+                            {myPick.penaltyWinner && (
+                              <span className="ml-2 text-amber-600">· Penales: {myPick.penaltyWinner === 'home' ? homeName.split(' ')[0] : awayName.split(' ')[0]}</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action button */}
+                      <div className="px-4 pb-3">
+                        <button
+                          onClick={() => setView('resultados')}
+                          className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all touch-manipulation ${
+                            isFinished
+                              ? 'bg-yellow-400 hover:bg-yellow-500 text-slate-900'
+                              : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                          }`}
+                        >
+                          {isFinished
+                            ? `🏆 Ver puntos (${DEMO_PRED_COUNT})`
+                            : `👁️ Ver pronósticos (${DEMO_PRED_COUNT})`
+                          }
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </section>
+
+          {/* ── RANKING GENERAL ── */}
+          <div className="flex items-center gap-2 pt-2">
+            <span className="w-1 h-5 bg-yellow-400 rounded-full shrink-0" />
+            <h2 className="font-extrabold text-slate-800 text-base">Ranking general</h2>
+          </div>
 
           {/* Stats bar */}
           <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 grid grid-cols-3 gap-3 text-center">
@@ -1951,7 +2268,7 @@ export default function PrototipoEliminatoriasV3() {
               <p className="text-xs text-slate-500 mt-0.5">Participantes</p>
             </div>
             <div>
-              <p className="text-2xl font-extrabold text-slate-700">0</p>
+              <p className="text-2xl font-extrabold text-slate-700">{totalPlayed}</p>
               <p className="text-xs text-slate-500 mt-0.5">Partidos jugados</p>
             </div>
             <div>
@@ -1982,7 +2299,7 @@ export default function PrototipoEliminatoriasV3() {
                       <div className="text-center mb-2">
                         <p className="font-bold text-slate-800 text-sm leading-tight">{formatPublicName(entry.displayName)}</p>
                         <p className="text-xs text-slate-500">{entry.totalPoints} pts</p>
-                        <p className="text-xs text-green-600">🎯 {entry.exactScores}</p>
+                        <p className="text-xs text-green-600">🏆 {entry.correctResults} · 🎯 {entry.exactScores}</p>
                       </div>
                       <div className={`${podiumHeights[i]} w-24 ${podiumColors[i]} rounded-t-xl flex items-center justify-center font-bold text-lg text-white`}>
                         {i === 1 ? 1 : i === 0 ? 2 : 3}
@@ -1994,22 +2311,23 @@ export default function PrototipoEliminatoriasV3() {
             </section>
           )}
 
-          {/* Scoring legend */}
+          {/* Scoring legend — updated to KO scoring */}
           <div className="bg-white rounded-xl border border-slate-100 p-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
-            <span>🎯 Exacto = <strong>3 pts</strong></span>
-            <span>✅ Correcto = <strong>1 pt</strong></span>
+            <span>🏆 Clasificado correcto = <strong>2 pts</strong></span>
+            <span>🎯 Marcador exacto = <strong>+2 pts</strong></span>
             <span>❌ Fallo = <strong>0 pts</strong></span>
+            <span className="text-slate-400">· Máximo 4 pts por partido</span>
           </div>
 
           {/* Ranking table */}
           <section>
             <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
               <div className="bg-slate-50 border-b border-slate-100 px-3 py-2 grid grid-cols-12 text-xs font-medium text-slate-400">
-                <div className="col-span-2 text-center"># Mov.</div>
-                <div className="col-span-4">Participante</div>
+                <div className="col-span-1 text-center">#</div>
+                <div className="col-span-5">Participante</div>
                 <div className="col-span-2 text-center">Pts</div>
-                <div className="col-span-2 text-center" title="Puntos por marcador exacto (×3)">🎯 Exac.</div>
-                <div className="col-span-2 text-center" title="Puntos por resultado correcto (×1)">✅ Corr.</div>
+                <div className="col-span-2 text-center" title="Clasificados correctos (2 pts c/u)">🏆 Clas.</div>
+                <div className="col-span-2 text-center" title="Marcadores exactos (+2 pts c/u)">🎯 Exac.</div>
               </div>
 
               {ranking.map(entry => {
@@ -2020,28 +2338,28 @@ export default function PrototipoEliminatoriasV3() {
                       isMe ? 'bg-yellow-50 border-l-4 border-l-yellow-400' : entry.position <= 3 ? 'bg-yellow-50/50' : 'hover:bg-slate-50'
                     }`}
                   >
-                    <div className="col-span-2 text-center flex flex-col items-center leading-none gap-0.5">
+                    <div className="col-span-1 text-center">
                       <span className="font-bold text-slate-700 text-sm">
                         {entry.position <= 3 ? ['🥇','🥈','🥉'][entry.position - 1] : entry.position}
                       </span>
-                      {entry.movement > 0
-                        ? <span className="text-green-600 text-xs font-medium">↑{entry.movement}</span>
-                        : entry.movement < 0
-                        ? <span className="text-red-500 text-xs font-medium">↓{Math.abs(entry.movement)}</span>
-                        : <span className="text-slate-300 text-xs">—</span>}
                     </div>
-                    <div className="col-span-4">
+                    <div className="col-span-5">
                       <p className="font-semibold text-slate-800 text-sm leading-tight">{formatPublicName(entry.displayName)}</p>
-                      {isMe && <span className="text-[10px] text-yellow-600 font-bold">← tú</span>}
+                      {entry.movement > 0
+                        ? <span className="text-green-600 text-[10px] font-medium">↑{entry.movement}</span>
+                        : entry.movement < 0
+                        ? <span className="text-red-500 text-[10px] font-medium">↓{Math.abs(entry.movement)}</span>
+                        : null}
+                      {isMe && <span className="text-[10px] text-yellow-600 font-bold ml-1">← tú</span>}
                     </div>
                     <div className="col-span-2 text-center">
                       <span className="font-bold text-green-600 text-base">{entry.totalPoints}</span>
                     </div>
                     <div className="col-span-2 text-center">
-                      <span className="text-sm font-semibold text-slate-700">{entry.exactScores * 3}</span>
+                      <span className="text-sm font-semibold text-slate-700">{entry.correctResults}</span>
                     </div>
                     <div className="col-span-2 text-center">
-                      <span className="text-sm text-slate-600">{entry.correctResults}</span>
+                      <span className="text-sm text-slate-600">{entry.exactScores}</span>
                     </div>
                   </div>
                 )
@@ -2053,14 +2371,14 @@ export default function PrototipoEliminatoriasV3() {
               <p className="text-xs text-slate-600 font-semibold mb-1">Criterios de desempate:</p>
               <ol className="text-xs text-slate-500 space-y-0.5 list-decimal list-inside">
                 <li>Más puntos totales.</li>
+                <li>Más clasificados correctos.</li>
                 <li>Más marcadores exactos.</li>
-                <li>Más resultados correctos.</li>
                 <li>Registro más temprano.</li>
               </ol>
             </div>
 
             <p className="text-xs text-slate-400 text-center mt-3">
-              {ranking.length} participante{ranking.length !== 1 ? 's' : ''} · Se actualizará con resultados reales al inicio del torneo · Demo
+              {ranking.length} participante{ranking.length !== 1 ? 's' : ''} · Se actualizará con resultados reales al inicio del torneo
             </p>
           </section>
 
@@ -2996,7 +3314,7 @@ export default function PrototipoEliminatoriasV3() {
                       {/* Teams */}
                       <div className="flex items-center gap-3">
                         <div className="flex-1 flex items-center gap-2 min-w-0">
-                          <span className="text-2xl shrink-0">{m.home.flag ?? '🏳️'}</span>
+                          <span className="text-2xl shrink-0" style={{ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>{m.home.flag ?? '🏳️'}</span>
                           <span className="font-semibold text-slate-800 text-sm truncate">{m.home.name ?? m.home.placeholder}</span>
                         </div>
 
@@ -3017,7 +3335,7 @@ export default function PrototipoEliminatoriasV3() {
 
                         <div className="flex-1 flex items-center gap-2 justify-end min-w-0">
                           <span className="font-semibold text-slate-800 text-sm truncate text-right">{m.away.name ?? m.away.placeholder}</span>
-                          <span className="text-2xl shrink-0">{m.away.flag ?? '🏳️'}</span>
+                          <span className="text-2xl shrink-0" style={{ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>{m.away.flag ?? '🏳️'}</span>
                         </div>
                       </div>
 
