@@ -683,18 +683,20 @@ export default function PrototipoEliminatoriasV3() {
                 style={{ textShadow: '0 2px 20px rgba(0,0,0,0.8), 0 4px 40px rgba(0,0,0,0.5)' }}>
               Quiniela{' '}
               <span className="text-yellow-300" style={{ textShadow: '0 0 30px rgba(251,191,36,0.6), 0 2px 20px rgba(0,0,0,0.8)' }}>
-                Eliminatorias 2026
+                Dieciseisavos 2026
               </span>
             </h1>
 
             <p className="text-base sm:text-xl text-white/90 mb-3 max-w-lg mx-auto leading-relaxed"
                style={{ textShadow: '0 1px 8px rgba(0,0,0,0.8)' }}>
-              Predice los <strong className="text-yellow-300 font-bold">32 partidos</strong> de la fase eliminatoria,
+              Predice los <strong className="text-yellow-300 font-bold">16 partidos</strong> de Dieciseisavos,
               compite con tus amigos y gana el pozo acumulado.
             </p>
 
             <p className="text-white/55 text-sm mb-8" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
-              Dieciseisavos · Octavos · Cuartos · Semifinales · Final
+              🟢 Quiniela activa: <strong className="text-yellow-300/80">Dieciseisavos</strong>
+              <span className="mx-2 opacity-40">·</span>
+              ⏳ Próxima: <span className="opacity-70">Octavos → Final</span>
             </p>
 
             {/* Progress bar if started */}
@@ -757,7 +759,7 @@ export default function PrototipoEliminatoriasV3() {
         <div className="bg-white border-b border-slate-200 shadow-sm ko-rise-d1">
           <div className="max-w-4xl mx-auto px-4 py-5 grid grid-cols-3 sm:grid-cols-5 gap-4 text-center">
             {[
-              { value: '32',      label: 'Partidos',         color: 'text-green-600' },
+              { value: '16',      label: 'Partidos',         color: 'text-green-600' },
               { value: '32',      label: 'Equipos',          color: 'text-blue-600' },
               { value: '20 USD',  label: 'Entrada',          color: 'text-yellow-600' },
               { value: '14.600',  label: 'Monto en Bs',      color: 'text-amber-600' },
@@ -773,52 +775,133 @@ export default function PrototipoEliminatoriasV3() {
 
         <main className="flex-1 max-w-4xl mx-auto px-4 py-14 w-full space-y-20">
 
-          {/* ── ETAPAS (único del prototipo) ── */}
+          {/* ── DOS QUINIELAS SEPARADAS ── */}
           <section className="ko-rise-d2">
             <div className="text-center mb-8">
-              <span className="inline-block bg-green-100 text-green-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Tu quiniela</span>
+              <span className="inline-block bg-green-100 text-green-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Tus quinielas</span>
               <h2 className="text-3xl font-extrabold text-slate-900">
-                Etapas de la <span className="text-green-600">eliminatoria</span>
+                Las Eliminatorias en <span className="text-green-600">dos quinielas</span>
               </h2>
-              <p className="text-slate-500 mt-2 text-sm">Llena y guarda los marcadores de cada etapa del torneo.</p>
+              <p className="text-slate-500 mt-2 text-sm max-w-md mx-auto">
+                Las eliminatorias se dividen en dos quinielas independientes,<br className="hidden sm:block" />
+                cada una con su propia inscripción, ranking y premios.
+              </p>
             </div>
-            <div className="space-y-3">
-              {STAGES.map(s => {
-                const meta = STAGE_META[s]
-                const open = openMatches(s)
-                const filled = open.filter(m => picks[m.id] !== undefined).length
-                const done = stageComplete(s, picks)
-                const partial = stagePartial(s, picks)
-                const locked = open.length === 0
+
+            <div className="space-y-5">
+
+              {/* ── BLOQUE 1: QUINIELA DIECISEISAVOS (ACTIVA) ── */}
+              {(() => {
+                const open = openMatches('R32')
+                const filled = open.filter(m => pickComplete(picks[m.id])).length
+                const done   = stageComplete('R32', picks)
+                const partial = stagePartial('R32', picks)
                 return (
-                  <div key={s} className={`rounded-2xl border-2 p-4 flex items-center justify-between gap-3 transition-all ${
-                    done    ? 'border-green-300 bg-green-50' :
-                    partial ? 'border-amber-300 bg-amber-50/60' :
-                    locked  ? 'border-slate-200 bg-slate-50 opacity-60' :
-                    'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
-                  }`}>
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="text-xl shrink-0">{done ? '✅' : partial ? '📝' : locked ? '🔒' : '⚽'}</span>
-                      <div className="min-w-0">
-                        <p className="font-bold text-slate-800 text-sm truncate">{meta.label}</p>
-                        <p className="text-xs text-slate-500">{meta.dates} · {meta.matches} partidos</p>
-                      </div>
+                  <div className="rounded-2xl border-2 border-green-400 bg-white shadow-md overflow-hidden">
+                    {/* Badge activa */}
+                    <div className="bg-green-600 text-white px-4 py-2 flex items-center justify-between">
+                      <span className="text-xs font-extrabold uppercase tracking-widest">🟢 Quiniela activa</span>
+                      <span className="text-xs font-semibold text-green-200">Inscripciones abiertas</span>
                     </div>
-                    <div className="shrink-0">
-                      {locked ? (
-                        <span className="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full font-semibold">Por definir</span>
-                      ) : (
-                        <button
-                          onClick={() => { setActiveStage(s); setView('llenado') }}
-                          className="text-xs font-bold px-3.5 py-2 rounded-xl transition-all active:scale-95 touch-manipulation bg-green-600 text-white hover:bg-green-700"
-                        >
-                          {done ? `${filled}/${open.length} ✓` : `${filled}/${open.length} → Llenar`}
-                        </button>
+
+                    <div className="p-5">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <h3 className="text-xl font-extrabold text-slate-900 leading-tight">Quiniela Dieciseisavos</h3>
+                          <p className="text-sm text-slate-500 mt-1">16 partidos · 28 jun – 3 jul 2026</p>
+                          <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                            Esta quiniela es <strong className="text-slate-600">independiente</strong>. Solo incluye los 16 partidos de Dieciseisavos de final.
+                            Tiene su propio ranking y sus propios premios.
+                          </p>
+                        </div>
+                        <div className="shrink-0 text-center">
+                          <div className={`text-3xl font-extrabold leading-none ${done ? 'text-green-600' : partial ? 'text-amber-500' : 'text-slate-800'}`}>
+                            {filled}<span className="text-lg text-slate-400">/{open.length}</span>
+                          </div>
+                          <p className="text-[10px] text-slate-400 mt-0.5">pronósticos</p>
+                        </div>
+                      </div>
+
+                      {/* Barra de progreso */}
+                      {open.length > 0 && (
+                        <div className="mt-4">
+                          <div className="w-full bg-slate-100 rounded-full h-2 mb-1">
+                            <div className={`h-2 rounded-full transition-all duration-500 ${done ? 'bg-green-500' : partial ? 'bg-amber-400' : 'bg-slate-300'}`}
+                              style={{ width: `${Math.round((filled / open.length) * 100)}%` }} />
+                          </div>
+                          <p className="text-xs text-slate-400">{Math.round((filled / open.length) * 100)}% completado</p>
+                        </div>
                       )}
+
+                      {/* Partido único: R32 */}
+                      <div className={`mt-4 rounded-xl border px-4 py-3 flex items-center justify-between ${
+                        done ? 'border-green-200 bg-green-50' : partial ? 'border-amber-200 bg-amber-50/60' : 'border-slate-200 bg-slate-50'
+                      }`}>
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-lg">{done ? '✅' : partial ? '📝' : '⚽'}</span>
+                          <div>
+                            <p className="font-bold text-slate-800 text-sm">Dieciseisavos de final</p>
+                            <p className="text-xs text-slate-500">16 partidos · 28 jun – 3 jul</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => { setActiveStage('R32'); setView('llenado') }}
+                          className={`text-sm font-bold px-4 py-2.5 rounded-xl transition-all active:scale-95 touch-manipulation ${
+                            done ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-green-600 text-white hover:bg-green-700'
+                          }`}
+                        >
+                          {done ? '✓ Editando' : 'Llenar'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )
-              })}
+              })()}
+
+              {/* ── BLOQUE 2: QUINIELA OCTAVOS A FINAL (PRÓXIMAMENTE) ── */}
+              <div className="rounded-2xl border-2 border-slate-200 bg-slate-50 overflow-hidden opacity-80">
+                {/* Badge próxima */}
+                <div className="bg-slate-600 text-white px-4 py-2 flex items-center justify-between">
+                  <span className="text-xs font-extrabold uppercase tracking-widest">⏳ Próxima quiniela</span>
+                  <span className="text-xs font-semibold text-slate-300">Se abre en julio</span>
+                </div>
+
+                <div className="p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <h3 className="text-xl font-extrabold text-slate-700 leading-tight">Quiniela Octavos a Final</h3>
+                      <p className="text-sm text-slate-500 mt-1">Octavos · Cuartos · Semifinales · Final · 4 – 19 jul</p>
+                      <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                        Se abrirá cuando estén definidos los 16 clasificados de Dieciseisavos.
+                        Tendrá <strong className="text-slate-500">nueva inscripción</strong>, nuevo llenado y
+                        <strong className="text-slate-500"> ranking separado</strong>. No se mezcla con esta quiniela.
+                      </p>
+                    </div>
+                    <div className="shrink-0">
+                      <span className="text-xs font-bold text-slate-400 bg-slate-200 px-3 py-1.5 rounded-full">Por definir</span>
+                    </div>
+                  </div>
+
+                  {/* Etapas futuras */}
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    {(['R16','QF','SF','FINAL'] as const).map(s => (
+                      <div key={s} className="rounded-lg border border-slate-200 bg-white/60 px-3 py-2 flex items-center gap-2">
+                        <span className="text-base">🔒</span>
+                        <div>
+                          <p className="text-xs font-semibold text-slate-600">{STAGE_META[s].label}</p>
+                          <p className="text-[10px] text-slate-400">{STAGE_META[s].dates} · {STAGE_META[s].matches} partidos</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button disabled
+                    className="mt-4 w-full py-2.5 rounded-xl text-sm font-bold bg-slate-200 text-slate-400 cursor-not-allowed">
+                    Próximamente — nueva inscripción
+                  </button>
+                </div>
+              </div>
+
             </div>
           </section>
 
@@ -843,7 +926,7 @@ export default function PrototipoEliminatoriasV3() {
                 {
                   num: 2,
                   icon: (<svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>),
-                  title: 'Llena tu quiniela', desc: 'Predice los 32 marcadores.',
+                  title: 'Llena tu quiniela', desc: 'Predice los 16 partidos de Dieciseisavos.',
                   color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200',
                 },
                 {
