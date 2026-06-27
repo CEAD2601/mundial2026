@@ -2817,13 +2817,6 @@ export default function PrototipoEliminatoriasV3() {
   // ── RESULTADOS ───────────────────────────────────────────────────────────────
 
   function renderResultados() {
-    // Agrupar partidos por fecha
-    const matchesByDate: Record<string, KOMatch[]> = {}
-    KNOCKOUT_MATCHES.forEach(m => {
-      if (!matchesByDate[m.date]) matchesByDate[m.date] = []
-      matchesByDate[m.date].push(m)
-    })
-    const allDates = Object.keys(matchesByDate).sort()
     const todayStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Caracas' })
 
     function shortDateLabel(d: string) {
@@ -2833,11 +2826,22 @@ export default function PrototipoEliminatoriasV3() {
       return dt.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })
     }
 
+    // Filter matches by selected phase
     const filteredByPhase = resultPhaseFilter === 'all'
       ? KNOCKOUT_MATCHES
       : KNOCKOUT_MATCHES.filter(m => m.stage === resultPhaseFilter)
 
-    const dayMatches = filteredByPhase.filter(m => m.date === resultDay)
+    // Available dates come ONLY from matches in the current phase — no stale dates from other phases
+    const availableDates = [...new Set(filteredByPhase.map(m => m.date))].sort()
+
+    // If the current resultDay has no matches in this phase, auto-pick the first valid date
+    const activeDate = availableDates.includes(resultDay) ? resultDay : (availableDates[0] ?? resultDay)
+
+    // Matches for the active date + phase, ordered by time
+    const dayMatches = filteredByPhase
+      .filter(m => m.date === activeDate)
+      .sort((a, b) => a.timeVet.localeCompare(b.timeVet))
+
     const finishedCount = KNOCKOUT_MATCHES.filter(m => m.status === 'FINISHED').length
     const inPlayCount   = KNOCKOUT_MATCHES.filter(m => m.status === 'LIVE').length
     const totalCount    = KNOCKOUT_MATCHES.length
@@ -2851,6 +2855,16 @@ export default function PrototipoEliminatoriasV3() {
       { key: 'FINAL', label: 'Final' },
     ]
 
+    function handlePhaseChange(key: Stage | 'all') {
+      setResultPhaseFilter(key)
+      // Recalculate available dates for the new phase and jump to first valid date
+      const newMatches = key === 'all' ? KNOCKOUT_MATCHES : KNOCKOUT_MATCHES.filter(m => m.stage === key)
+      const newDates = [...new Set(newMatches.map(m => m.date))].sort()
+      if (newDates.length > 0 && !newDates.includes(resultDay)) {
+        setResultDay(newDates[0])
+      }
+    }
+
     // Mock demo picks for display (my predictions)
     const myPicks = picks
 
@@ -2860,6 +2874,8 @@ export default function PrototipoEliminatoriasV3() {
       const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h
       return `${h12}:${String(m).padStart(2,'0')} ${ampm} VET`
     }
+
+    const activePhaseLabel = PHASE_TABS.find(t => t.key === resultPhaseFilter)?.label ?? 'Todos'
 
     return (
       <div className="min-h-screen bg-slate-50 pb-10">
@@ -2874,30 +2890,42 @@ export default function PrototipoEliminatoriasV3() {
           </div>
         </header>
 
-        <div className="max-w-3xl mx-auto px-4 mt-4 space-y-4">
+        <div className="max-w-3xl mx-auto px-4 mt-4 space-y-3">
 
           {/* Phase filter tabs */}
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {PHASE_TABS.map(t => (
-              <button key={t.key} onClick={() => setResultPhaseFilter(t.key)}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                  resultPhaseFilter === t.key ? 'bg-green-600 text-white border-green-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                }`}>{t.label}</button>
-            ))}
+          <div>
+            <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mb-1.5 px-0.5">
+              1. Elige la fase
+            </p>
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+              {PHASE_TABS.map(t => (
+                <button key={t.key} onClick={() => handlePhaseChange(t.key)}
+                  className={`shrink-0 px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+                    resultPhaseFilter === t.key
+                      ? 'bg-green-600 text-white border-green-600 shadow-sm'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  }`}>{t.label}</button>
+              ))}
+            </div>
           </div>
 
-          {/* Date tabs */}
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {allDates.map(d => (
-              <button key={d} onClick={() => setResultDay(d)}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                  d === resultDay
-                    ? 'bg-green-600 text-white border-green-600'
-                    : d === todayStr
-                    ? 'bg-white text-green-700 border-green-300 hover:bg-green-50'
-                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                }`}>{shortDateLabel(d)}</button>
-            ))}
+          {/* Date tabs — only dates for the selected phase */}
+          <div>
+            <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mb-1.5 px-0.5">
+              2. Elige el día · <span className="normal-case font-normal text-slate-400">Días con partidos de {activePhaseLabel}</span>
+            </p>
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+              {availableDates.map(d => (
+                <button key={d} onClick={() => setResultDay(d)}
+                  className={`shrink-0 px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+                    d === activeDate
+                      ? 'bg-green-600 text-white border-green-600 shadow-sm'
+                      : d === todayStr
+                      ? 'bg-white text-green-700 border-green-300 hover:bg-green-50'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  }`}>{shortDateLabel(d)}</button>
+              ))}
+            </div>
           </div>
 
           {/* Day summary */}
