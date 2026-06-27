@@ -18,13 +18,18 @@ import {
   type KOMatch, type Stage,
 } from '@/lib/prototype/knockout-data'
 import {
+  PREV_PARTICIPANTS, KO_DEMO_RANKING, lookupPrevParticipant, loadKOEnrolled, saveKOEnrolled, findEnrolled,
+  type KOParticipant,
+} from '@/lib/prototype/knockout-participants'
+import {
   STAT_CATEGORIES, DEMO_GOALS, DEMO_STATS, DEMO_TEAM_STATS, DEMO_PENDING_EVENTS, SIMULATED_MATCH,
   type StatCategory, type StatCategoryId, type PendingMatchEvent,
 } from '@/lib/prototype/knockout-stats'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type View = 'home' | 'llenado' | 'bracket' | 'mi-quiniela' | 'ranking' | 'estadisticas' | 'admin' | 'registro'
+type View = 'home' | 'llenado' | 'bracket' | 'mi-quiniela' | 'ranking' | 'estadisticas' | 'admin' | 'registro' | 'resultados'
+type RegStep = 'choose' | 'lookup' | 'found' | 'not-found' | 'already-enrolled' | 'new'
 type Pick = { home: number; away: number }
 type Picks = Record<string, Pick>
 
@@ -261,6 +266,23 @@ export default function PrototipoEliminatoriasV3() {
   const [regForm, setRegForm] = useState({ nombre: '', cedula: '', whatsapp: '', ciudad: '', email: '' })
   const [regErrors, setRegErrors] = useState<Record<string, string>>({})
 
+  // Registration flow (Part 1)
+  const [regStep, setRegStep] = useState<RegStep>('choose')
+  const [lookupQuery, setLookupQuery] = useState('')
+  const [lookupResult, setLookupResult] = useState<KOParticipant | null>(null)
+  const [koEnrolled, setKoEnrolled] = useState<KOParticipant[]>([])
+
+  // Results view
+  const [resultDay, setResultDay] = useState(() => {
+    const d = new Date()
+    return d.toLocaleDateString('sv-SE', { timeZone: 'America/Caracas' })
+  })
+  const [resultMatchExpanded, setResultMatchExpanded] = useState<string | null>(null)
+  const [resultPhaseFilter, setResultPhaseFilter] = useState<Stage | 'all'>('all')
+
+  // Ranking phase filter
+  const [rankingPhase, setRankingPhase] = useState<Stage | 'all'>('all')
+
   // Mi Quiniela — búsqueda
   const [miqQuery, setMiqQuery] = useState('')
   const [miqFound, setMiqFound] = useState(false)
@@ -316,6 +338,7 @@ export default function PrototipoEliminatoriasV3() {
   const [pendingEvents, setPendingEvents] = useState<PendingMatchEvent[]>(DEMO_PENDING_EVENTS)
 
   useEffect(() => { setPicks(loadPicks()) }, [])
+  useEffect(() => { setKoEnrolled(loadKOEnrolled()) }, [])
 
   useEffect(() => {
     if (!toast) return
@@ -378,8 +401,8 @@ export default function PrototipoEliminatoriasV3() {
     { id: 'llenado',       label: 'Llenar',      emoji: '⚽' },
     { id: 'mi-quiniela',   label: 'Mi quiniela', emoji: '📋' },
     { id: 'ranking',       label: 'Ranking',     emoji: '🏆' },
+    { id: 'resultados',    label: 'Resultados',  emoji: '📅' },
     { id: 'bracket',       label: 'Cuadro',      emoji: '📊' },
-    { id: 'estadisticas',  label: 'Stats',       emoji: '📈' },
   ]
 
   // ── HOME ────────────────────────────────────────────────────────────────────
@@ -1706,162 +1729,174 @@ export default function PrototipoEliminatoriasV3() {
   // ── RANKING ─────────────────────────────────────────────────────────────────
 
   function renderRanking() {
-    const top3 = DEMO_RANKING.slice(0, 3)
-    const rest = DEMO_RANKING.slice(3)
+    const PHASE_FILTERS: { key: Stage | 'all'; label: string }[] = [
+      { key: 'all',   label: 'Acumulado' },
+      { key: 'R32',   label: 'Dieciseisavos' },
+      { key: 'R16',   label: 'Octavos' },
+      { key: 'QF',    label: 'Cuartos' },
+      { key: 'SF',    label: 'Semis' },
+      { key: 'FINAL', label: 'Final' },
+    ]
+
+    const baseRanking = [...KO_DEMO_RANKING]
+    koEnrolled.filter(p => p.paymentStatus !== 'rejected').forEach(ep => {
+      if (!baseRanking.find(r => r.cedula === ep.cedula)) {
+        baseRanking.push({ cedula: ep.cedula, displayName: ep.displayName, ciudad: ep.ciudad, totalPoints: 0, exactScores: 0, correctResults: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: ep.paymentStatus })
+      }
+    })
+    const ranking = baseRanking.map((r, i) => ({ ...r, position: i + 1 }))
+    const top3 = ranking.slice(0, 3)
+    const podiumOrder = [top3[1] ?? null, top3[0] ?? null, top3[2] ?? null]
+    const podiumMedals = ['🥈', '🥇', '🥉']
+    const podiumHeights = ['h-20', 'h-28', 'h-16']
+    const podiumColors  = ['bg-slate-300', 'bg-yellow-400', 'bg-amber-300']
+    const myDisplayName = registered ? regForm.nombre.split(' ').slice(0, 2).join(' ') : null
 
     return (
-      <div className="max-w-2xl mx-auto px-4 py-6">
+      <div className="min-h-screen bg-slate-50 pb-10">
         {/* Header */}
-        <div className="bg-gradient-to-r from-green-700 to-blue-700 rounded-2xl p-5 text-white mb-5 shadow-lg">
-          <h1 className="text-xl font-extrabold mb-0.5">🏆 Ranking Eliminatorias</h1>
-          <p className="text-green-200 text-sm mb-4">Mundial 2026 · Fase eliminatoria · Demo</p>
-          <div className="grid grid-cols-3 gap-3 text-center">
+        <header className="bg-gradient-to-r from-green-700 to-blue-700 text-white shadow-lg">
+          <div className="max-w-3xl mx-auto px-4 py-5">
+            <h1 className="font-bold text-2xl">🏆 Ranking Eliminatorias</h1>
+            <p className="text-green-200 text-sm">Quiniela Mundial 2026 · Fase eliminatoria · Demo</p>
+          </div>
+        </header>
+
+        <div className="max-w-3xl mx-auto px-4 mt-5 space-y-5">
+
+          {/* Stats bar */}
+          <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 grid grid-cols-3 gap-3 text-center">
             <div>
-              <p className="text-2xl font-extrabold text-yellow-400">{DEMO_RANKING.length}</p>
-              <p className="text-xs text-green-200 mt-0.5">Participantes</p>
+              <p className="text-2xl font-extrabold text-green-600">{ranking.length}</p>
+              <p className="text-xs text-slate-500 mt-0.5">Participantes</p>
             </div>
             <div>
-              <p className="text-2xl font-extrabold text-yellow-400">0</p>
-              <p className="text-xs text-green-200 mt-0.5">Partidos jugados</p>
+              <p className="text-2xl font-extrabold text-slate-700">0</p>
+              <p className="text-xs text-slate-500 mt-0.5">Partidos jugados</p>
             </div>
             <div>
-              <p className="text-2xl font-extrabold text-yellow-400 truncate">{top3[0].name.split(' ')[0]}</p>
-              <p className="text-xs text-green-200 mt-0.5">Líder actual</p>
+              <p className="text-sm font-extrabold text-yellow-600 truncate">{top3[0]?.displayName.split(' ')[0] ?? '—'}</p>
+              <p className="text-xs text-slate-500 mt-0.5">Líder actual</p>
             </div>
           </div>
-        </div>
 
-        {/* Podium */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 mb-5 shadow-sm">
-          <h2 className="text-sm font-extrabold text-slate-600 mb-5 text-center uppercase tracking-wide">Pódio</h2>
-          <div className="flex items-end justify-center gap-4">
-            {/* 2nd place */}
-            <div className="flex flex-col items-center gap-2" style={{ flex: 1 }}>
-              <div className="w-11 h-11 rounded-full bg-slate-200 border-2 border-slate-300 flex items-center justify-center font-extrabold text-slate-600 text-base">
-                {top3[1].name[0]}
-              </div>
-              <div className="text-center">
-                <p className="text-xs font-bold text-slate-700">{top3[1].name.split(' ')[0]}</p>
-                <p className="text-sm font-extrabold text-slate-500">{top3[1].pts}</p>
-                <p className="text-xs text-slate-400">pts</p>
-              </div>
-              <div className="w-full bg-slate-200 rounded-t-xl flex items-center justify-center" style={{ height: 64 }}>
-                <span className="text-2xl">🥈</span>
-              </div>
-            </div>
-
-            {/* 1st place */}
-            <div className="flex flex-col items-center gap-2" style={{ flex: 1 }}>
-              <Trophy size={18} className="text-yellow-500" />
-              <div className="w-14 h-14 rounded-full bg-yellow-400 border-4 border-yellow-300 flex items-center justify-center font-extrabold text-slate-900 text-xl shadow-lg">
-                {top3[0].name[0]}
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-extrabold text-slate-800">{top3[0].name.split(' ')[0]}</p>
-                <p className="text-base font-extrabold text-yellow-600">{top3[0].pts}</p>
-                <p className="text-xs text-slate-400">pts</p>
-              </div>
-              <div className="w-full bg-yellow-400 rounded-t-xl flex items-center justify-center shadow-md" style={{ height: 96 }}>
-                <span className="text-3xl">🥇</span>
-              </div>
-            </div>
-
-            {/* 3rd place */}
-            <div className="flex flex-col items-center gap-2" style={{ flex: 1 }}>
-              <div className="w-11 h-11 rounded-full bg-amber-100 border-2 border-amber-300 flex items-center justify-center font-extrabold text-amber-700 text-base">
-                {top3[2].name[0]}
-              </div>
-              <div className="text-center">
-                <p className="text-xs font-bold text-slate-700">{top3[2].name.split(' ')[0]}</p>
-                <p className="text-sm font-extrabold text-amber-600">{top3[2].pts}</p>
-                <p className="text-xs text-slate-400">pts</p>
-              </div>
-              <div className="w-full bg-amber-200 rounded-t-xl flex items-center justify-center" style={{ height: 44 }}>
-                <span className="text-2xl">🥉</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Full table */}
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-          {/* Table header */}
-          <div className="grid gap-0 text-xs font-bold text-slate-500 bg-slate-50 border-b border-slate-200 px-3 py-2.5"
-            style={{ gridTemplateColumns: '52px 1fr 44px 30px 30px 36px' }}>
-            <span>#</span>
-            <span>Participante</span>
-            <span className="text-center">Pts</span>
-            <span className="text-center">🎯</span>
-            <span className="text-center">✅</span>
-            <span className="text-center text-[9px]">DG</span>
+          {/* Phase filters */}
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {PHASE_FILTERS.map(f => (
+              <button key={f.key} onClick={() => setRankingPhase(f.key)}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+                  rankingPhase === f.key ? 'bg-green-600 text-white border-green-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                }`}>{f.label}</button>
+            ))}
           </div>
 
-          {/* Top 3 */}
-          {top3.map(r => {
-            const isMe = r.name === DEMO_NAME
-            return (
-              <div
-                key={`${r.pos}-${r.name}`}
-                className={`grid gap-0 px-3 py-3 items-center border-b border-slate-100 ${
-                  isMe ? 'bg-yellow-50 border-l-4 border-l-yellow-400' : r.pos === 1 ? 'bg-yellow-50/50' : ''
-                }`}
-                style={{ gridTemplateColumns: '52px 1fr 44px 30px 30px 36px' }}
-              >
-                {/* Pos + move arrow together */}
-                <div className="flex items-center gap-1">
-                  <span className="font-extrabold text-base">
-                    {r.pos === 1 ? '🥇' : r.pos === 2 ? '🥈' : '🥉'}
-                  </span>
-                  {r.move > 0 ? <TrendingUp size={11} className="text-green-500" /> :
-                   r.move < 0 ? <TrendingDown size={11} className="text-red-400" /> :
-                   <span className="text-slate-300 text-[9px]">—</span>}
-                </div>
-                <span className="font-semibold text-slate-800 text-xs truncate">{r.name}</span>
-                <span className="text-center font-extrabold text-slate-900 text-sm">{r.pts}</span>
-                <span className="text-center text-slate-600 text-xs">{r.exact}</span>
-                <span className="text-center text-slate-600 text-xs">{r.correct}</span>
-                <span className={`text-center text-xs font-extrabold tabular-nums ${
-                  (r.goalDiff ?? 0) > 0 ? 'text-green-600' : (r.goalDiff ?? 0) < 0 ? 'text-red-400' : 'text-slate-400'
-                }`}>
-                  {(r.goalDiff ?? 0) > 0 ? `+${r.goalDiff}` : r.goalDiff ?? '—'}
-                </span>
+          {/* Podium */}
+          {top3.length >= 2 && (
+            <section>
+              <div className="flex items-end justify-center gap-3 pt-4">
+                {podiumOrder.map((entry, i) => {
+                  if (!entry) return <div key={i} className="w-24" />
+                  return (
+                    <div key={entry.cedula} className="flex flex-col items-center">
+                      <div className="text-2xl mb-1">{podiumMedals[i]}</div>
+                      <div className="text-center mb-2">
+                        <p className="font-bold text-slate-800 text-sm leading-tight">{entry.displayName.split(' ')[0]}</p>
+                        <p className="text-xs text-slate-500">{entry.totalPoints} pts</p>
+                        <p className="text-xs text-green-600">🎯 {entry.exactScores}</p>
+                      </div>
+                      <div className={`${podiumHeights[i]} w-24 ${podiumColors[i]} rounded-t-xl flex items-center justify-center font-bold text-lg text-white`}>
+                        {i === 1 ? 1 : i === 0 ? 2 : 3}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
-            )
-          })}
+            </section>
+          )}
 
-          {/* Rest */}
-          {rest.map(r => {
-            const isMe = r.name === DEMO_NAME
-            return (
-              <div
-                key={`${r.pos}-${r.name}`}
-                className={`grid gap-0 px-3 py-3 items-center border-b border-slate-100 last:border-b-0 ${isMe ? 'bg-yellow-50 border-l-4 border-l-yellow-400' : ''}`}
-                style={{ gridTemplateColumns: '52px 1fr 44px 30px 30px 36px' }}
-              >
-                {/* Pos + move arrow together */}
-                <div className="flex items-center gap-1">
-                  <span className="font-bold text-slate-500 text-xs w-4 shrink-0">{r.pos}</span>
-                  {r.move > 0 ? <TrendingUp size={11} className="text-green-500" /> :
-                   r.move < 0 ? <TrendingDown size={11} className="text-red-400" /> :
-                   <span className="text-slate-300 text-[9px]">—</span>}
-                </div>
-                <span className="font-medium text-slate-700 text-xs truncate">{r.name}</span>
-                <span className="text-center font-extrabold text-slate-900 text-sm">{r.pts}</span>
-                <span className="text-center text-slate-500 text-xs">{r.exact}</span>
-                <span className="text-center text-slate-500 text-xs">{r.correct}</span>
-                <span className={`text-center text-xs font-extrabold tabular-nums ${
-                  (r.goalDiff ?? 0) > 0 ? 'text-green-600' : (r.goalDiff ?? 0) < 0 ? 'text-red-400' : 'text-slate-400'
-                }`}>
-                  {(r.goalDiff ?? 0) > 0 ? `+${r.goalDiff}` : r.goalDiff ?? '—'}
-                </span>
+          {/* Scoring legend */}
+          <div className="bg-white rounded-xl border border-slate-100 p-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+            <span>🎯 Exacto = <strong>3 pts</strong></span>
+            <span>✅ Correcto = <strong>1 pt</strong></span>
+            <span>❌ Fallo = <strong>0 pts</strong></span>
+          </div>
+
+          {/* Ranking table */}
+          <section>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+              <div className="bg-slate-50 border-b border-slate-100 px-3 py-2 grid grid-cols-12 text-xs font-medium text-slate-400">
+                <div className="col-span-2 text-center"># Mov.</div>
+                <div className="col-span-4">Participante</div>
+                <div className="col-span-2 text-center">Pts</div>
+                <div className="col-span-2 text-center" title="Puntos por marcador exacto (×3)">🎯 Exac.</div>
+                <div className="col-span-2 text-center" title="Puntos por resultado correcto (×1)">✅ Corr.</div>
               </div>
-            )
-          })}
+
+              {ranking.map(entry => {
+                const isMe = myDisplayName && entry.displayName === myDisplayName
+                return (
+                  <div key={entry.cedula}
+                    className={`px-3 py-3 grid grid-cols-12 items-center border-b border-slate-50 last:border-0 ${
+                      isMe ? 'bg-yellow-50 border-l-4 border-l-yellow-400' : entry.position <= 3 ? 'bg-yellow-50/50' : 'hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="col-span-2 text-center flex flex-col items-center leading-none gap-0.5">
+                      <span className="font-bold text-slate-700 text-sm">
+                        {entry.position <= 3 ? ['🥇','🥈','🥉'][entry.position - 1] : entry.position}
+                      </span>
+                      {entry.movement > 0
+                        ? <span className="text-green-600 text-xs font-medium">↑{entry.movement}</span>
+                        : entry.movement < 0
+                        ? <span className="text-red-500 text-xs font-medium">↓{Math.abs(entry.movement)}</span>
+                        : <span className="text-slate-300 text-xs">—</span>}
+                    </div>
+                    <div className="col-span-4">
+                      <p className="font-semibold text-slate-800 text-sm leading-tight">{entry.displayName}</p>
+                      {entry.ciudad && <p className="text-xs text-slate-400">{entry.ciudad}</p>}
+                      {isMe && <span className="text-[10px] text-yellow-600 font-bold">← tú</span>}
+                    </div>
+                    <div className="col-span-2 text-center">
+                      <span className="font-bold text-green-600 text-base">{entry.totalPoints}</span>
+                    </div>
+                    <div className="col-span-2 text-center">
+                      <span className="text-sm font-semibold text-slate-700">{entry.exactScores * 3}</span>
+                    </div>
+                    <div className="col-span-2 text-center">
+                      <span className="text-sm text-slate-600">{entry.correctResults}</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Tiebreaker */}
+            <div className="mt-3 bg-slate-100 rounded-xl p-3">
+              <p className="text-xs text-slate-600 font-semibold mb-1">Criterios de desempate:</p>
+              <ol className="text-xs text-slate-500 space-y-0.5 list-decimal list-inside">
+                <li>Más puntos totales.</li>
+                <li>Más marcadores exactos.</li>
+                <li>Más resultados correctos.</li>
+                <li>Registro más temprano.</li>
+              </ol>
+            </div>
+
+            <p className="text-xs text-slate-400 text-center mt-3">
+              {ranking.length} participante{ranking.length !== 1 ? 's' : ''} · Se actualizará con resultados reales al inicio del torneo · Demo
+            </p>
+          </section>
+
+          {/* Link to group stage ranking */}
+          <div className="bg-slate-800 rounded-xl p-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-white font-bold text-sm">Ranking Fase de Grupos</p>
+              <p className="text-slate-400 text-xs">Ver posiciones de la ronda anterior</p>
+            </div>
+            <a href="/ranking" target="_blank" rel="noreferrer"
+              className="shrink-0 bg-white text-slate-900 font-bold text-xs px-4 py-2 rounded-lg hover:bg-slate-100 transition-colors">
+              Ver ranking →
+            </a>
+          </div>
         </div>
-
-        <p className="text-xs text-slate-400 text-center mt-4 pb-4">
-          Se actualizará con resultados reales al inicio del torneo
-        </p>
       </div>
     )
   }
@@ -2312,100 +2347,501 @@ export default function PrototipoEliminatoriasV3() {
   // ── REGISTRO ────────────────────────────────────────────────────────────────
 
   function renderRegistro() {
-    function validate() {
+
+    // ── helpers ────────────────────────────────────────────────────────────────
+
+    function handleLookup() {
+      if (!lookupQuery.trim()) return
+      const found = lookupPrevParticipant(lookupQuery)
+      if (!found) { setRegStep('not-found'); return }
+      const alreadyIn = findEnrolled(found.cedula, koEnrolled)
+      if (alreadyIn) { setLookupResult(found); setRegStep('already-enrolled'); return }
+      setLookupResult(found)
+      setRegStep('found')
+    }
+
+    function handleConfirmExisting() {
+      if (!lookupResult) return
+      const entry: KOParticipant = { ...lookupResult, enrolledInKO: true, registeredAt: new Date().toISOString() }
+      const next = [...koEnrolled.filter(p => p.cedula !== entry.cedula), entry]
+      setKoEnrolled(next); saveKOEnrolled(next)
+      setRegistered(true)
+      setRegForm({ nombre: entry.nombre, cedula: entry.cedula, whatsapp: entry.whatsapp, ciudad: entry.ciudad ?? '', email: entry.email ?? '' })
+      setToast('✅ ¡Inscripción confirmada! Ahora llena tu quiniela.')
+      setRegStep('choose'); setLookupQuery(''); setLookupResult(null)
+      setView('llenado')
+    }
+
+    function validateNew() {
       const errs: Record<string, string> = {}
       if (!regForm.nombre.trim()) errs.nombre = 'El nombre es obligatorio'
-      if (!regForm.cedula.trim()) {
-        errs.cedula = 'La cédula es obligatoria'
-      } else if (!/^\d{6,10}$/.test(regForm.cedula.trim())) {
-        errs.cedula = 'Solo números, entre 6 y 10 dígitos'
-      }
-      if (!regForm.whatsapp.trim()) {
-        errs.whatsapp = 'El WhatsApp es obligatorio'
-      } else if (!/^04\d{9}$/.test(regForm.whatsapp.replace(/[\s\-]/g, ''))) {
-        errs.whatsapp = 'Formato venezolano: 04XXXXXXXXX'
-      }
+      if (!regForm.cedula.trim()) errs.cedula = 'La cédula es obligatoria'
+      else if (!/^\d{6,10}$/.test(regForm.cedula.trim())) errs.cedula = 'Solo números, 6-10 dígitos'
+      if (!regForm.whatsapp.trim()) errs.whatsapp = 'El WhatsApp es obligatorio'
+      else if (!/^04\d{9}$/.test(regForm.whatsapp.replace(/[\s\-]/g, ''))) errs.whatsapp = 'Formato: 04XXXXXXXXX'
       return errs
     }
 
-    function handleSubmit() {
-      const errs = validate()
-      setRegErrors(errs)
-      if (Object.keys(errs).length === 0) {
-        setRegistered(true)
-        setToast('✅ ¡Inscripción exitosa! Ahora llena tu quiniela.')
-        setView('llenado')
+    function handleNewSubmit() {
+      const errs = validateNew(); setRegErrors(errs)
+      if (Object.keys(errs).length > 0) return
+      // Check duplicate
+      if (findEnrolled(regForm.cedula.trim(), koEnrolled)) {
+        setRegErrors({ cedula: 'Esta cédula ya está inscrita en Eliminatorias.' }); return
       }
+      const entry: KOParticipant = {
+        cedula: regForm.cedula.trim(), nombre: regForm.nombre.trim(),
+        displayName: regForm.nombre.trim().split(' ').slice(0, 2).join(' '),
+        whatsapp: regForm.whatsapp.trim(), ciudad: regForm.ciudad.trim() || null,
+        email: regForm.email.trim() || null, previousRound: null,
+        registeredAt: new Date().toISOString(), paymentStatus: 'pending', enrolledInKO: true,
+      }
+      const next = [...koEnrolled, entry]
+      setKoEnrolled(next); saveKOEnrolled(next)
+      setRegistered(true)
+      setToast('✅ ¡Inscripción exitosa! Ahora llena tu quiniela.')
+      setRegStep('choose'); setRegErrors({})
+      setView('llenado')
     }
 
-    const field = (
-      id: keyof typeof regForm,
-      label: string,
-      placeholder: string,
-      required: boolean,
-      hint?: string,
-      type = 'text'
-    ) => (
+    const field = (id: keyof typeof regForm, label: string, placeholder: string, required: boolean, hint?: string, type = 'text') => (
       <div>
-        <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-          {label} {required && <span className="text-red-500">*</span>}
-        </label>
-        <input
-          type={type}
-          value={regForm[id]}
-          onChange={e => setRegForm(f => ({ ...f, [id]: e.target.value }))}
+        <label className="block text-xs font-semibold text-slate-600 mb-1.5">{label} {required && <span className="text-red-500">*</span>}</label>
+        <input type={type} value={regForm[id]} onChange={e => setRegForm(f => ({ ...f, [id]: e.target.value }))}
           placeholder={placeholder}
-          className={`w-full border-2 rounded-xl px-4 py-3 text-sm focus:outline-none transition-colors ${
-            regErrors[id] ? 'border-red-300 focus:border-red-400' : 'border-slate-200 focus:border-green-500'
-          }`}
+          className={`w-full border-2 rounded-xl px-4 py-3 text-sm focus:outline-none transition-colors ${regErrors[id] ? 'border-red-300 focus:border-red-400' : 'border-slate-200 focus:border-green-500'}`}
         />
         {hint && !regErrors[id] && <p className="text-[10px] text-slate-400 mt-1">{hint}</p>}
         {regErrors[id] && <p className="text-[10px] text-red-500 mt-1">⚠ {regErrors[id]}</p>}
       </div>
     )
 
-    return (
-      <div className="max-w-2xl mx-auto px-4 py-6 pb-10">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-green-700 to-blue-700 rounded-2xl p-5 text-white mb-6 shadow-lg">
-          <button
-            onClick={() => setView('home')}
-            className="text-green-200 text-xs mb-3 flex items-center gap-1 hover:text-white"
-          >
-            ← Volver
+    // ── Header ─────────────────────────────────────────────────────────────────
+    const header = (
+      <div className="bg-gradient-to-r from-green-700 to-blue-700 rounded-2xl p-5 text-white mb-6 shadow-lg">
+        <button onClick={() => { setRegStep('choose'); setLookupQuery(''); setLookupResult(null); setRegErrors({}); setView('home') }}
+          className="text-green-200 text-xs mb-3 flex items-center gap-1 hover:text-white">← Volver</button>
+        <h1 className="text-xl font-extrabold mb-0.5">📝 Inscripción</h1>
+        <p className="text-green-200 text-sm">Quiniela Eliminatorias 2026 · Mundial 2026</p>
+      </div>
+    )
+
+    // ── STEP: choose ───────────────────────────────────────────────────────────
+    if (regStep === 'choose') return (
+      <div className="max-w-lg mx-auto px-4 py-6 pb-10">
+        {header}
+        <div className="space-y-4">
+          {/* Option A — already participated */}
+          <button onClick={() => setRegStep('lookup')}
+            className="w-full bg-white border-2 border-green-300 hover:border-green-500 rounded-2xl p-5 text-left shadow-sm hover:shadow-md transition-all group">
+            <div className="flex items-start gap-4">
+              <div className="bg-green-100 rounded-xl p-3 shrink-0 group-hover:bg-green-200 transition-colors">
+                <span className="text-2xl">🔄</span>
+              </div>
+              <div>
+                <p className="font-extrabold text-slate-800 text-base mb-1">Ya participé antes</p>
+                <p className="text-sm text-slate-500 leading-relaxed">Jugué en la Fase de Grupos 2026. Quiero continuar con mis datos guardados.</p>
+                <p className="text-xs text-green-600 font-semibold mt-2">→ Busca por cédula o WhatsApp</p>
+              </div>
+            </div>
           </button>
-          <h1 className="text-xl font-extrabold mb-0.5">📝 Inscripción</h1>
-          <p className="text-green-200 text-sm">Quiniela Eliminatorias 2026 · Mundial 2026</p>
+
+          {/* Option B — new participant */}
+          <button onClick={() => { setRegStep('new'); setRegForm({ nombre: '', cedula: '', whatsapp: '', ciudad: '', email: '' }); setRegErrors({}) }}
+            className="w-full bg-white border-2 border-blue-200 hover:border-blue-400 rounded-2xl p-5 text-left shadow-sm hover:shadow-md transition-all group">
+            <div className="flex items-start gap-4">
+              <div className="bg-blue-50 rounded-xl p-3 shrink-0 group-hover:bg-blue-100 transition-colors">
+                <span className="text-2xl">✨</span>
+              </div>
+              <div>
+                <p className="font-extrabold text-slate-800 text-base mb-1">Soy nuevo participante</p>
+                <p className="text-sm text-slate-500 leading-relaxed">Es mi primera vez. Quiero registrarme para participar en Eliminatorias.</p>
+                <p className="text-xs text-blue-600 font-semibold mt-2">→ Crear nueva cuenta</p>
+              </div>
+            </div>
+          </button>
         </div>
 
-        {/* Notice */}
+        <p className="text-[10px] text-slate-400 text-center mt-6">
+          🔒 Tu cédula es tu identificador · No se comparte públicamente
+        </p>
+      </div>
+    )
+
+    // ── STEP: lookup ───────────────────────────────────────────────────────────
+    if (regStep === 'lookup') return (
+      <div className="max-w-lg mx-auto px-4 py-6 pb-10">
+        {header}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm mb-4">
+          <h2 className="font-extrabold text-slate-800 text-base mb-1">Buscar mis datos</h2>
+          <p className="text-sm text-slate-500 mb-4">Ingresa tu cédula o número de WhatsApp tal como te registraste en la Fase de Grupos.</p>
+          <label className="block text-xs font-semibold text-slate-600 mb-1.5">Cédula o WhatsApp <span className="text-red-500">*</span></label>
+          <input type="text" value={lookupQuery} onChange={e => setLookupQuery(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleLookup()}
+            placeholder="Ej: 12345678 o 04141234567"
+            className="w-full border-2 border-slate-200 focus:border-green-500 rounded-xl px-4 py-3 text-sm focus:outline-none mb-4"
+          />
+          <button onClick={handleLookup} disabled={!lookupQuery.trim()}
+            className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white font-bold py-3 rounded-xl transition-all active:scale-95 touch-manipulation">
+            Buscar mis datos
+          </button>
+        </div>
+        <button onClick={() => setRegStep('choose')} className="w-full text-slate-500 text-sm py-2 hover:text-slate-700">← Volver</button>
+      </div>
+    )
+
+    // ── STEP: found ────────────────────────────────────────────────────────────
+    if (regStep === 'found' && lookupResult) return (
+      <div className="max-w-lg mx-auto px-4 py-6 pb-10">
+        {header}
+        <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-5 shadow-sm mb-4">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-full bg-green-600 text-white flex items-center justify-center text-xl font-extrabold shrink-0">
+              {lookupResult.displayName[0]}
+            </div>
+            <div>
+              <p className="text-xs text-green-700 font-semibold">✅ Datos encontrados</p>
+              <p className="font-extrabold text-slate-800 text-base">{lookupResult.displayName}</p>
+              <p className="text-xs text-green-600">Participó en la Fase de Grupos 2026</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl p-4 space-y-2 text-sm mb-4">
+            <p className="text-slate-800"><span className="text-slate-500 text-xs w-20 inline-block">Nombre</span> <strong>{lookupResult.nombre}</strong></p>
+            <p className="text-slate-800"><span className="text-slate-500 text-xs w-20 inline-block">Cédula</span> <strong>{maskCedula(lookupResult.cedula)}</strong></p>
+            <p className="text-slate-800"><span className="text-slate-500 text-xs w-20 inline-block">WhatsApp</span> <strong>{lookupResult.whatsapp}</strong></p>
+            {lookupResult.ciudad && <p className="text-slate-800"><span className="text-slate-500 text-xs w-20 inline-block">Ciudad</span> <strong>{lookupResult.ciudad}</strong></p>}
+          </div>
+          <p className="text-xs text-slate-600 mb-4 text-center">Ya tenemos tus datos de la fase anterior. Confirma para inscribirte en <strong>Quiniela Eliminatorias 2026</strong>.</p>
+          <button onClick={handleConfirmExisting}
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-extrabold py-3.5 rounded-xl transition-all active:scale-95 touch-manipulation mb-2">
+            ✅ Confirmar inscripción a Eliminatorias
+          </button>
+          <button onClick={() => { setRegStep('new'); setRegForm({ nombre: lookupResult!.nombre, cedula: lookupResult!.cedula, whatsapp: lookupResult!.whatsapp, ciudad: lookupResult!.ciudad ?? '', email: lookupResult!.email ?? '' }); setRegErrors({}) }}
+            className="w-full bg-white border border-slate-200 text-slate-700 font-semibold py-3 rounded-xl transition-all hover:bg-slate-50 mb-2">
+            ✏️ Editar datos antes de confirmar
+          </button>
+          <button onClick={() => { setRegStep('choose'); setLookupQuery(''); setLookupResult(null) }}
+            className="w-full text-slate-400 text-sm py-2 hover:text-slate-600">Cancelar</button>
+        </div>
+      </div>
+    )
+
+    // ── STEP: already-enrolled ─────────────────────────────────────────────────
+    if (regStep === 'already-enrolled' && lookupResult) return (
+      <div className="max-w-lg mx-auto px-4 py-6 pb-10">
+        {header}
+        <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-5 shadow-sm mb-4 text-center">
+          <div className="text-4xl mb-3">🏆</div>
+          <h2 className="font-extrabold text-slate-800 text-lg mb-1">¡Ya estás inscrito!</h2>
+          <p className="text-slate-600 text-sm mb-1">{lookupResult.displayName}</p>
+          <p className="text-blue-600 text-sm mb-5">Ya estás inscrito en <strong>Quiniela Eliminatorias 2026</strong>. No puedes inscribirte dos veces.</p>
+          <div className="space-y-2">
+            <button onClick={() => { setRegistered(true); setRegForm({ nombre: lookupResult!.nombre, cedula: lookupResult!.cedula, whatsapp: lookupResult!.whatsapp, ciudad: lookupResult!.ciudad ?? '', email: lookupResult!.email ?? '' }); setRegStep('choose'); setView('mi-quiniela') }}
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition-all">
+              📋 Ver mi quiniela
+            </button>
+            <button onClick={() => { setRegistered(true); setRegStep('choose'); setView('llenado') }}
+              className="w-full bg-white border border-slate-200 text-slate-700 font-semibold py-3 rounded-xl hover:bg-slate-50">
+              ⚽ Continuar llenando
+            </button>
+            <button onClick={() => { setRegStep('choose'); setView('ranking') }}
+              className="w-full text-blue-600 text-sm py-2 hover:text-blue-700 font-semibold">
+              🏆 Ver ranking
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+
+    // ── STEP: not-found ────────────────────────────────────────────────────────
+    if (regStep === 'not-found') return (
+      <div className="max-w-lg mx-auto px-4 py-6 pb-10">
+        {header}
+        <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-5 shadow-sm mb-4 text-center">
+          <div className="text-4xl mb-3">🔍</div>
+          <h2 className="font-extrabold text-slate-800 text-lg mb-2">No encontramos datos previos</h2>
+          <p className="text-slate-600 text-sm mb-1">No encontramos ningún participante con la cédula o WhatsApp:</p>
+          <p className="font-mono font-bold text-slate-800 mb-4 bg-white border rounded-lg px-3 py-1.5 inline-block">{lookupQuery}</p>
+          <p className="text-xs text-slate-500 mb-5">Puede que nunca hayas participado antes, o que hayas usado un número diferente.</p>
+          <div className="space-y-2">
+            <button onClick={() => { setRegStep('new'); setRegForm({ nombre: '', cedula: lookupQuery.length <= 10 ? lookupQuery : '', whatsapp: lookupQuery.startsWith('04') ? lookupQuery : '', ciudad: '', email: '' }); setRegErrors({}) }}
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition-all">
+              ✨ Registrarme como nuevo participante
+            </button>
+            <button onClick={() => { setRegStep('lookup'); setLookupQuery('') }}
+              className="w-full bg-white border border-slate-200 text-slate-700 font-semibold py-3 rounded-xl hover:bg-slate-50">
+              🔄 Buscar con otro dato
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+
+    // ── STEP: new ──────────────────────────────────────────────────────────────
+    return (
+      <div className="max-w-lg mx-auto px-4 py-6 pb-10">
+        {header}
         <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-5 text-xs text-blue-700">
-          <strong>Tu cédula es tu identificador.</strong> La usarás para acceder a tu quiniela en cualquier momento. No necesitas recordar ningún código adicional.
+          <strong>Tu cédula es tu identificador.</strong> La usarás para acceder a tu quiniela. No necesitas recordar ningún código adicional.
         </div>
-
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4 mb-6">
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4 mb-4">
           {field('nombre',   'Nombre completo',     'Ej: Carlos Eduardo Acosta',    true)}
           {field('cedula',   'Cédula de identidad', 'Ej: 12345678',                 true,  'Solo números, sin V- ni E-')}
           {field('whatsapp', 'WhatsApp',             'Ej: 04141234567',              true,  'Número venezolano: 04XXXXXXXXX', 'tel')}
           {field('ciudad',   'Ciudad',               'Ej: Caracas',                  false)}
           {field('email',    'Email',                'Ej: correo@ejemplo.com',       false, undefined, 'email')}
         </div>
-
-        {/* Privacy note */}
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 mb-5 text-xs text-slate-500 space-y-1">
-          <p>🔒 <strong>Privacidad:</strong> tu cédula no se mostrará completa en el ranking público.</p>
-          <p>🚫 Una cédula puede inscribirse <strong>una sola vez</strong> en esta quiniela eliminatoria.</p>
+          <p>🔒 Tu cédula no se mostrará completa en el ranking público.</p>
+          <p>🚫 Una cédula puede inscribirse <strong>una sola vez</strong> en esta quiniela.</p>
         </div>
-
-        <button
-          onClick={handleSubmit}
-          className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-extrabold py-4 rounded-2xl text-base shadow-lg transition-all active:scale-95 touch-manipulation"
-        >
+        <button onClick={handleNewSubmit}
+          className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-extrabold py-4 rounded-2xl text-base shadow-lg transition-all active:scale-95 touch-manipulation mb-3">
           ✅ Inscribirme en la quiniela
         </button>
-        <p className="text-[10px] text-slate-400 text-center mt-3">
-          Vista previa interna · Datos de prueba
-        </p>
+        <button onClick={() => setRegStep('choose')} className="w-full text-slate-500 text-sm py-2 hover:text-slate-700">← Volver</button>
+        <p className="text-[10px] text-slate-400 text-center mt-2">Vista previa interna · Datos de prueba</p>
+      </div>
+    )
+  }
+
+  // ── RESULTADOS ───────────────────────────────────────────────────────────────
+
+  function renderResultados() {
+    // Agrupar partidos por fecha
+    const matchesByDate: Record<string, KOMatch[]> = {}
+    KNOCKOUT_MATCHES.forEach(m => {
+      if (!matchesByDate[m.date]) matchesByDate[m.date] = []
+      matchesByDate[m.date].push(m)
+    })
+    const allDates = Object.keys(matchesByDate).sort()
+    const todayStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Caracas' })
+
+    function shortDateLabel(d: string) {
+      if (d === todayStr) return 'Hoy'
+      const [y, mo, dy] = d.split('-').map(Number)
+      const dt = new Date(`${y}-${String(mo).padStart(2,'0')}-${String(dy).padStart(2,'0')}T12:00:00-04:00`)
+      return dt.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })
+    }
+
+    const filteredByPhase = resultPhaseFilter === 'all'
+      ? KNOCKOUT_MATCHES
+      : KNOCKOUT_MATCHES.filter(m => m.stage === resultPhaseFilter)
+
+    const dayMatches = filteredByPhase.filter(m => m.date === resultDay)
+    const finishedCount = KNOCKOUT_MATCHES.filter(m => m.status === 'FINISHED').length
+    const inPlayCount   = KNOCKOUT_MATCHES.filter(m => m.status === 'LIVE').length
+    const totalCount    = KNOCKOUT_MATCHES.length
+
+    const PHASE_TABS: { key: Stage | 'all'; label: string }[] = [
+      { key: 'all',   label: 'Todos' },
+      { key: 'R32',   label: 'Dieciseisavos' },
+      { key: 'R16',   label: 'Octavos' },
+      { key: 'QF',    label: 'Cuartos' },
+      { key: 'SF',    label: 'Semis' },
+      { key: 'FINAL', label: 'Final' },
+    ]
+
+    // Mock demo picks for display (my predictions)
+    const myPicks = picks
+
+    function vetTime(timeVet: string) {
+      const [h, m] = timeVet.split(':').map(Number)
+      const ampm = h < 12 ? 'a. m.' : 'p. m.'
+      const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h
+      return `${h12}:${String(m).padStart(2,'0')} ${ampm} VET`
+    }
+
+    return (
+      <div className="min-h-screen bg-slate-50 pb-10">
+        {/* Header */}
+        <header className="bg-gradient-to-r from-green-700 to-blue-700 text-white shadow-lg">
+          <div className="max-w-3xl mx-auto px-4 py-5">
+            <h1 className="font-bold text-2xl">⚽ Resultados Eliminatorias</h1>
+            <p className="text-green-200 text-sm">
+              {finishedCount} de {totalCount} partidos jugados
+              {inPlayCount > 0 && <> · <span className="text-blue-200 font-semibold">{inPlayCount} en juego ahora</span></>}
+            </p>
+          </div>
+        </header>
+
+        <div className="max-w-3xl mx-auto px-4 mt-4 space-y-4">
+
+          {/* Phase filter tabs */}
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {PHASE_TABS.map(t => (
+              <button key={t.key} onClick={() => setResultPhaseFilter(t.key)}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                  resultPhaseFilter === t.key ? 'bg-green-600 text-white border-green-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                }`}>{t.label}</button>
+            ))}
+          </div>
+
+          {/* Date tabs */}
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {allDates.map(d => (
+              <button key={d} onClick={() => setResultDay(d)}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                  d === resultDay
+                    ? 'bg-green-600 text-white border-green-600'
+                    : d === todayStr
+                    ? 'bg-white text-green-700 border-green-300 hover:bg-green-50'
+                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                }`}>{shortDateLabel(d)}</button>
+            ))}
+          </div>
+
+          {/* Day summary */}
+          {dayMatches.length > 0 && (
+            <div className="bg-white rounded-xl border border-slate-100 p-3">
+              <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm">
+                <span className="text-slate-600">
+                  <span className="font-bold text-slate-800">{dayMatches.length}</span> partido{dayMatches.length !== 1 ? 's' : ''}
+                </span>
+                {dayMatches.filter(m => m.status === 'FINISHED').length > 0 && (
+                  <span className="text-green-700">✅ <span className="font-bold">{dayMatches.filter(m => m.status === 'FINISHED').length}</span> finalizado{dayMatches.filter(m => m.status === 'FINISHED').length !== 1 ? 's' : ''}</span>
+                )}
+                {dayMatches.filter(m => m.status === 'LIVE').length > 0 && (
+                  <span className="text-blue-700 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                    <span className="font-bold">{dayMatches.filter(m => m.status === 'LIVE').length}</span> en juego
+                  </span>
+                )}
+                {dayMatches.filter(m => m.status === 'SCHEDULED').length > 0 && (
+                  <span className="text-slate-400">🕐 <span className="font-bold">{dayMatches.filter(m => m.status === 'SCHEDULED').length}</span> por jugar</span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Legend */}
+          <div className="bg-white rounded-xl border border-slate-100 px-3 py-2 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-slate-500">
+            <span>🎯 <strong>+3</strong> marcador exacto</span>
+            <span>✅ <strong>+1</strong> resultado correcto</span>
+            <span>❌ <strong>0</strong> incorrecto</span>
+            <span className="text-slate-400">· Puntos pendientes hasta que se cargue el resultado final</span>
+          </div>
+
+          {/* Match cards */}
+          {dayMatches.length === 0 ? (
+            <div className="bg-white rounded-xl border border-slate-100 p-8 text-center">
+              <div className="text-3xl mb-2">📅</div>
+              <p className="text-sm text-slate-400">No hay partidos para esta fecha{resultPhaseFilter !== 'all' ? ' en esta fase' : ''}.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {dayMatches.map(m => {
+                const isExpanded = resultMatchExpanded === m.id
+                const myPick = myPicks[m.id]
+                const isFinished = m.status === 'FINISHED'
+                const isLive     = m.status === 'LIVE'
+
+                // Demo predictions for this match
+                const demoPreds = KO_DEMO_RANKING.slice(0, 6).map((r, i) => ({
+                  name: r.displayName,
+                  home: Math.floor(Math.random() * 4),
+                  away: Math.floor(Math.random() * 3),
+                }))
+
+                return (
+                  <div key={m.id} className={`bg-white rounded-xl border shadow-sm overflow-hidden transition-all ${
+                    isFinished ? 'border-green-100' : isLive ? 'border-blue-200' : 'border-slate-100'
+                  }`}>
+                    <div className="p-4">
+                      {/* Match header */}
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs text-slate-400">{m.stageLabel} · #{m.fifaMatchNumber}</span>
+                        {isFinished && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Finalizado</span>}
+                        {isLive && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full flex items-center gap-1 font-medium"><span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" /> En juego</span>}
+                        {!isFinished && !isLive && <span className="text-xs text-slate-400">{vetTime(m.timeVet)}</span>}
+                      </div>
+
+                      {/* Teams */}
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 flex items-center gap-2 min-w-0">
+                          <span className="text-2xl shrink-0">{m.home.flag ?? '🏳️'}</span>
+                          <span className="font-semibold text-slate-800 text-sm truncate">{m.home.name ?? m.home.placeholder}</span>
+                        </div>
+
+                        {isFinished ? (
+                          <div className="shrink-0 text-center">
+                            <div className="flex items-center gap-2 bg-slate-800 text-white rounded-lg px-3 py-1.5">
+                              <span className="text-lg font-bold">—</span>
+                              <span className="text-slate-400 text-sm">—</span>
+                              <span className="text-lg font-bold">—</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="shrink-0 text-center px-2">
+                            <div className="text-slate-500 font-bold text-sm">vs</div>
+                            <div className="text-xs text-slate-400">{vetTime(m.timeVet)}</div>
+                          </div>
+                        )}
+
+                        <div className="flex-1 flex items-center gap-2 justify-end min-w-0">
+                          <span className="font-semibold text-slate-800 text-sm truncate text-right">{m.away.name ?? m.away.placeholder}</span>
+                          <span className="text-2xl shrink-0">{m.away.flag ?? '🏳️'}</span>
+                        </div>
+                      </div>
+
+                      {/* My prediction */}
+                      {myPick && (
+                        <div className="mt-2 bg-blue-50 rounded-lg px-3 py-1.5 text-xs text-blue-700 flex items-center gap-2">
+                          <span>📋 Mi pronóstico:</span>
+                          <span className="font-bold tabular-nums">{myPick.home} – {myPick.away}</span>
+                        </div>
+                      )}
+
+                      {/* Venue */}
+                      <div className="mt-2 text-[10px] text-slate-400 text-center">{m.venue} · {m.city}</div>
+
+                      {/* Toggle */}
+                      <div className="mt-3 pt-3 border-t border-slate-100">
+                        <button onClick={() => setResultMatchExpanded(isExpanded ? null : m.id)}
+                          className={`w-full flex items-center justify-center gap-2 text-sm font-semibold py-1.5 rounded-lg transition-colors ${
+                            isFinished ? 'text-green-700 hover:bg-green-50' : 'text-blue-700 hover:bg-blue-50'
+                          }`}>
+                          {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          {isExpanded ? 'Ocultar' : isFinished ? `🏆 Ver puntos (${demoPreds.length})` : `👁 Ver pronósticos (${demoPreds.length})`}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Expanded predictions */}
+                    {isExpanded && (
+                      <div className="border-t border-slate-100 px-4 pb-4">
+                        <div className="space-y-1.5 mt-3 max-h-72 overflow-y-auto pr-1">
+                          {demoPreds.map((p, i) => (
+                            <div key={i} className="rounded-xl px-3 py-2 flex items-center justify-between gap-2 bg-white border border-slate-100">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="text-slate-400 text-xs font-mono w-5 text-right shrink-0">{i + 1}</span>
+                                <p className="font-semibold text-slate-800 text-sm truncate">{p.name}</p>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <div className="bg-slate-700 text-white text-sm font-bold rounded-lg px-2.5 py-1 tabular-nums">
+                                  {p.home}–{p.away}
+                                </div>
+                                {isFinished && (
+                                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">— pts</span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        {!isFinished && (
+                          <p className="text-xs text-slate-400 text-center mt-2">
+                            Puntos pendientes hasta que se cargue el resultado final.
+                          </p>
+                        )}
+                        <p className="text-[10px] text-slate-300 text-center mt-1">Demo · Los pronósticos reales se cargarán del backend</p>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
       </div>
     )
   }
@@ -2456,6 +2892,7 @@ export default function PrototipoEliminatoriasV3() {
         {view === 'bracket'       && renderBracket()}
         {view === 'mi-quiniela'   && renderMiQuiniela()}
         {view === 'ranking'       && renderRanking()}
+        {view === 'resultados'    && renderResultados()}
         {view === 'estadisticas'  && renderEstadisticas()}
         {view === 'admin'         && renderAdmin()}
       </main>
