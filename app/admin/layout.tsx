@@ -83,15 +83,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname()
   const router = useRouter()
 
-  // Check admin session on mount and on every route change
+  // Auth is now handled server-side by middleware.ts — just mark as checked
   useEffect(() => {
-    // /admin/login doesn't need auth
-    if (pathname === '/admin/login') { setAuthChecked(true); return }
-    fetch('/api/admin/auth/check')
-      .then(r => { if (!r.ok) router.replace('/admin/login') })
-      .catch(() => router.replace('/admin/login'))
-      .finally(() => setAuthChecked(true))
-  }, [pathname, router])
+    setAuthChecked(true)
+  }, [])
 
   useEffect(() => { setDrawerOpen(false) }, [pathname])
 
