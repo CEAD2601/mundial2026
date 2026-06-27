@@ -49,6 +49,27 @@ function maskCedula(c: string) {
   return 'V-' + c.slice(0, 2) + '••••' + c.slice(-2)
 }
 
+// ── Participant session ────────────────────────────────────────────────────────
+
+interface ParticipantSession {
+  cedula: string
+  displayName: string
+  phase: 'knockout_r32'
+  savedAt: string
+}
+const PARTICIPANT_SESSION_KEY = 'ko-proto-v3-session'
+
+function loadParticipantSession(): ParticipantSession | null {
+  if (typeof window === 'undefined') return null
+  try { return JSON.parse(localStorage.getItem(PARTICIPANT_SESSION_KEY) || 'null') } catch { return null }
+}
+function saveParticipantSession(s: ParticipantSession) {
+  localStorage.setItem(PARTICIPANT_SESSION_KEY, JSON.stringify(s))
+}
+function clearParticipantSession() {
+  localStorage.removeItem(PARTICIPANT_SESSION_KEY)
+}
+
 // ── Storage ────────────────────────────────────────────────────────────────────
 
 function loadPicks(): Picks {
@@ -465,6 +486,9 @@ export default function PrototipoEliminatoriasV3() {
   const [adminModule, setAdminModule] = useState<AdminModule>('dashboard')
   const [adminReview, setAdminReview] = useState(false)  // modo revisión: navegación libre sin completar picks
 
+  // Sesión de participante — persiste en localStorage
+  const [participantSession, setParticipantSession] = useState<ParticipantSession | null>(null)
+
   // Admin — búsqueda participantes
   const [adminSearch, setAdminSearch] = useState('')
 
@@ -517,6 +541,17 @@ export default function PrototipoEliminatoriasV3() {
 
   useEffect(() => { setPicks(loadPicks()) }, [])
   useEffect(() => { setKoEnrolled(loadKOEnrolled()) }, [])
+  useEffect(() => {
+    const s = loadParticipantSession()
+    if (s) {
+      setParticipantSession(s)
+      // Restaurar estado de registered si la sesión coincide con el participante demo
+      if (s.cedula === DEMO_CEDULA) {
+        setRegistered(true)
+        setRegForm(f => ({ ...f, nombre: s.displayName, cedula: s.cedula }))
+      }
+    }
+  }, [])
   useEffect(() => {
     if (typeof window !== 'undefined' && localStorage.getItem(ADMIN_SESSION_KEY) === 'ok') {
       setAdminUnlocked(true)
@@ -611,6 +646,17 @@ export default function PrototipoEliminatoriasV3() {
     { id: 'bracket',       label: 'Cuadro',      emoji: '📊' },
     { id: 'estadisticas',  label: 'Stats',       emoji: '📈' },
   ]
+
+  // ── Sesión participante — activar / limpiar ───────────────────────────────
+  function activateSession(p: { cedula: string; displayName: string }) {
+    const s: ParticipantSession = { cedula: p.cedula, displayName: p.displayName, phase: 'knockout_r32', savedAt: new Date().toISOString() }
+    saveParticipantSession(s)
+    setParticipantSession(s)
+  }
+  function deactivateSession() {
+    clearParticipantSession()
+    setParticipantSession(null)
+  }
 
   // ── Formateador de nombre público ──────────────────────────────────────────
   // Regla: primer nombre + primer apellido.
@@ -2178,6 +2224,7 @@ export default function PrototipoEliminatoriasV3() {
       const q = miqQuery.trim()
       if (q === DEMO_CEDULA || q === DEMO_WA || q === '04141234567' || q.toLowerCase() === 'carlos') {
         setMiqFound(true)
+        activateSession({ cedula: DEMO_CEDULA, displayName: DEMO_NAME })
       } else {
         setToast('❌ No se encontró ninguna quiniela con ese dato')
       }
@@ -2402,6 +2449,18 @@ export default function PrototipoEliminatoriasV3() {
               ← Buscar otra quiniela
             </button>
           )}
+          {participantSession && (
+            <button
+              onClick={() => {
+                deactivateSession()
+                setMiqFound(false); setMiqQuery(''); setRegistered(false)
+                setToast('Sesión de participante cerrada')
+              }}
+              className="w-full text-slate-400 hover:text-red-500 text-xs py-2 transition-colors"
+            >
+              🔄 Cambiar participante
+            </button>
+          )}
         </div>
       </div>
     )
@@ -2431,7 +2490,7 @@ export default function PrototipoEliminatoriasV3() {
     const podiumMedals = ['🥈', '🥇', '🥉']
     const podiumHeights = ['h-20', 'h-28', 'h-16']
     const podiumColors  = ['bg-slate-300', 'bg-yellow-400', 'bg-amber-300']
-    const myDisplayName = registered ? regForm.nombre.split(' ').slice(0, 2).join(' ') : null
+    const mySession = participantSession
 
     // ── Pronósticos del día helpers ──────────────────────────────────────────
     const todayStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Caracas' })
@@ -2643,12 +2702,14 @@ export default function PrototipoEliminatoriasV3() {
               <div className="flex items-end justify-center gap-3 pt-4">
                 {podiumOrder.map((entry, i) => {
                   if (!entry) return <div key={i} className="w-24" />
+                  const isPodiumMe = mySession ? entry.cedula === mySession.cedula : false
                   return (
                     <div key={entry.cedula} className="flex flex-col items-center">
                       <div className="text-2xl mb-1">{podiumMedals[i]}</div>
                       <div className="text-center mb-2">
                         <p className="font-bold text-slate-800 text-sm leading-tight">{formatPublicName(entry.displayName)}</p>
-                        <p className="text-xs text-slate-500">{entry.totalPoints} pts</p>
+                        {isPodiumMe && <span className="inline-block text-[10px] bg-yellow-400 text-slate-900 font-extrabold px-2 py-0.5 rounded-full mt-0.5">Tú</span>}
+                        <p className="text-xs text-slate-500 mt-0.5">{entry.totalPoints} pts</p>
                         <p className="text-xs text-green-600">🏆 {entry.correctResults} · 🎯 {entry.exactScores}</p>
                       </div>
                       <div className={`${podiumHeights[i]} w-24 ${podiumColors[i]} rounded-t-xl flex items-center justify-center font-bold text-lg text-white`}>
@@ -2681,10 +2742,10 @@ export default function PrototipoEliminatoriasV3() {
               </div>
 
               {ranking.map(entry => {
-                const isMe = myDisplayName && entry.displayName === myDisplayName
+                const isMe = mySession ? entry.cedula === mySession.cedula : false
                 return (
                   <div key={entry.cedula}
-                    className={`px-3 py-3 grid grid-cols-12 items-center border-b border-slate-50 last:border-0 ${
+                    className={`px-3 py-3 grid grid-cols-12 items-center border-b border-slate-50 last:border-0 transition-colors ${
                       isMe ? 'bg-yellow-50 border-l-4 border-l-yellow-400' : entry.position <= 3 ? 'bg-yellow-50/50' : 'hover:bg-slate-50'
                     }`}
                   >
@@ -2694,13 +2755,15 @@ export default function PrototipoEliminatoriasV3() {
                       </span>
                     </div>
                     <div className="col-span-5">
-                      <p className="font-semibold text-slate-800 text-sm leading-tight">{formatPublicName(entry.displayName)}</p>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <p className="font-semibold text-slate-800 text-sm leading-tight">{formatPublicName(entry.displayName)}</p>
+                        {isMe && <span className="text-[10px] bg-yellow-400 text-slate-900 font-extrabold px-1.5 py-0.5 rounded-full leading-none">Tú</span>}
+                      </div>
                       {entry.movement > 0
                         ? <span className="text-green-600 text-[10px] font-medium">↑{entry.movement}</span>
                         : entry.movement < 0
                         ? <span className="text-red-500 text-[10px] font-medium">↓{Math.abs(entry.movement)}</span>
                         : null}
-                      {isMe && <span className="text-[10px] text-yellow-600 font-bold ml-1">← tú</span>}
                     </div>
                     <div className="col-span-2 text-center">
                       <span className="font-bold text-green-600 text-base">{entry.totalPoints}</span>
@@ -2730,6 +2793,26 @@ export default function PrototipoEliminatoriasV3() {
             <p className="text-xs text-slate-400 text-center mt-3">
               {ranking.length} participante{ranking.length !== 1 ? 's' : ''} · Se actualizará con resultados reales al inicio del torneo
             </p>
+
+            {!mySession && (
+              <div className="mt-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                <p className="text-xs text-slate-500">Busca tu quiniela para resaltar tu posición.</p>
+                <button onClick={() => setView('mi-quiniela')} className="shrink-0 text-xs font-bold text-green-700 hover:text-green-800 transition-colors">
+                  Ver la mía →
+                </button>
+              </div>
+            )}
+            {mySession && (
+              <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                <p className="text-xs text-yellow-700 font-semibold">Sesión: {mySession.displayName}</p>
+                <button
+                  onClick={() => { deactivateSession(); setToast('Sesión de participante cerrada') }}
+                  className="shrink-0 text-xs text-slate-500 hover:text-red-500 transition-colors"
+                >
+                  Cambiar participante
+                </button>
+              </div>
+            )}
           </section>
 
           {/* Link to group stage ranking */}
@@ -3608,6 +3691,7 @@ export default function PrototipoEliminatoriasV3() {
       setKoEnrolled(next); saveKOEnrolled(next)
       setRegistered(true)
       setRegForm({ nombre: entry.nombre, cedula: entry.cedula, whatsapp: entry.whatsapp, ciudad: entry.ciudad ?? '', email: entry.email ?? '' })
+      activateSession({ cedula: entry.cedula, displayName: entry.displayName })
       setToast('✅ ¡Inscripción confirmada! Ahora llena tu quiniela.')
       setRegStep('choose'); setLookupQuery(''); setLookupResult(null)
       setView('llenado')
@@ -3640,6 +3724,7 @@ export default function PrototipoEliminatoriasV3() {
       const next = [...koEnrolled, entry]
       setKoEnrolled(next); saveKOEnrolled(next)
       setRegistered(true)
+      activateSession({ cedula: entry.cedula, displayName: entry.displayName })
       setToast('✅ ¡Inscripción exitosa! Ahora llena tu quiniela.')
       setRegStep('choose'); setRegErrors({})
       setView('llenado')
@@ -3781,11 +3866,11 @@ export default function PrototipoEliminatoriasV3() {
           <p className="text-slate-600 text-sm mb-1">{lookupResult.displayName}</p>
           <p className="text-blue-600 text-sm mb-5">Ya estás inscrito en <strong>Quiniela Eliminatorias 2026</strong>. No puedes inscribirte dos veces.</p>
           <div className="space-y-2">
-            <button onClick={() => { setRegistered(true); setRegForm({ nombre: lookupResult!.nombre, cedula: lookupResult!.cedula, whatsapp: lookupResult!.whatsapp, ciudad: lookupResult!.ciudad ?? '', email: lookupResult!.email ?? '' }); setRegStep('choose'); setView('mi-quiniela') }}
+            <button onClick={() => { setRegistered(true); setRegForm({ nombre: lookupResult!.nombre, cedula: lookupResult!.cedula, whatsapp: lookupResult!.whatsapp, ciudad: lookupResult!.ciudad ?? '', email: lookupResult!.email ?? '' }); activateSession({ cedula: lookupResult!.cedula, displayName: lookupResult!.displayName }); setRegStep('choose'); setView('mi-quiniela') }}
               className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition-all">
               📋 Ver mi quiniela
             </button>
-            <button onClick={() => { setRegistered(true); setRegStep('choose'); setView('llenado') }}
+            <button onClick={() => { setRegistered(true); activateSession({ cedula: lookupResult!.cedula, displayName: lookupResult!.displayName }); setRegStep('choose'); setView('llenado') }}
               className="w-full bg-white border border-slate-200 text-slate-700 font-semibold py-3 rounded-xl hover:bg-slate-50">
               ⚽ Continuar llenando
             </button>
