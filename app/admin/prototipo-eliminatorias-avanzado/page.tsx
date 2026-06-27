@@ -403,7 +403,36 @@ export default function PrototipoEliminatoriasV3() {
     { id: 'ranking',       label: 'Ranking',     emoji: '🏆' },
     { id: 'resultados',    label: 'Resultados',  emoji: '📅' },
     { id: 'bracket',       label: 'Cuadro',      emoji: '📊' },
+    { id: 'estadisticas',  label: 'Stats',       emoji: '📈' },
   ]
+
+  // ── Formateador de nombre público ──────────────────────────────────────────
+  // Regla: primer nombre + primer apellido.
+  // Cuidado con apellidos compuestos: "De Sá", "Del Valle", "De la Cruz"
+  function formatPublicName(fullName: string): string {
+    if (!fullName.trim()) return fullName
+    const COMPOUND_PREFIXES = ['de', 'del', 'de la', 'de las', 'de los', 'van', 'von', 'da', 'das', 'do', 'dos']
+    const parts = fullName.trim().split(/\s+/)
+    if (parts.length <= 2) return fullName.trim()
+    const firstName = parts[0]
+    // Find first surname (index 1+), skipping second names if we detect compound structure
+    // Simple heuristic: take parts[1] as surname; if it's a compound prefix, take parts[1]+parts[2]
+    const surnameParts: string[] = []
+    let i = 1
+    // Skip what looks like a second given name: if parts[1] is short and part[2] is not a compound prefix
+    // Strategy: take the last two "words" groups starting at index 1 as surname candidates
+    // Actually simpler: take parts[1] as surname start; if lowercase compound prefix grab the next word too
+    surnameParts.push(parts[i])
+    i++
+    if (i < parts.length) {
+      const nextLower = parts[i].toLowerCase()
+      // If what we just took is a compound prefix, grab one more word
+      if (COMPOUND_PREFIXES.includes(surnameParts[0].toLowerCase())) {
+        surnameParts.push(parts[i])
+      }
+    }
+    return `${firstName} ${surnameParts.join(' ')}`
+  }
 
   // ── HOME ────────────────────────────────────────────────────────────────────
 
@@ -1237,18 +1266,13 @@ export default function PrototipoEliminatoriasV3() {
 
   function renderBracket() {
     // ── Layout constants ────────────────────────────────────────────────────────
-    const SLOT_H   = 72   // height per 1 R32 slot (= spacing unit)
-    const CARD_H   = 62   // card height  (must be < SLOT_H)
-    const CARD_W   = 184  // card width
-    const CONN_W   = 30   // connector column width
-    const HDR_H    = 44   // column header height (label + dates)
-    const COL_H    = 16 * SLOT_H   // 1152 — same for every column
+    const SLOT_H   = 80   // height per 1 R32 slot (= spacing unit)
+    const CARD_H   = 76   // card height  (must be < SLOT_H)
+    const CARD_W   = 204  // card width
+    const CONN_W   = 32   // connector column width
+    const HDR_H    = 48   // column header height
+    const COL_H    = 16 * SLOT_H   // 1280 — same for every column
 
-    // ── Bracket round definitions (ordered for proper pair alignment) ───────────
-    // R32 pairs: [0,1]→R16[0], [2,3]→R16[1], …, [14,15]→R16[7]
-    // R16 pairs: [0,1]→QF[0],  [2,3]→QF[1],  [4,5]→QF[2],  [6,7]→QF[3]
-    // QF  pairs: [0,1]→SF[0],  [2,3]→SF[1]
-    // SF  pair:  [0,1]→F[0]
     const ROUNDS = [
       { key:'r32', short:'R32',   label:'Dieciseisavos', dates:'28 jun – 3 jul',
         ids:['r32-73','r32-74','r32-75','r32-76','r32-77','r32-78','r32-79','r32-80',
@@ -1263,43 +1287,43 @@ export default function PrototipoEliminatoriasV3() {
         ids:['final-104'] },
     ]
 
-    // ── Card vertical center for a given round + card index ─────────────────────
-    // slotsPerCard doubles each round: R32=1, R16=2, QF=4, SF=8, F=16
-    function cardCenter(roundIdx: number, cardIdx: number): number {
-      const spc = Math.pow(2, roundIdx)
-      return (cardIdx + 0.5) * spc * SLOT_H
-    }
     function cardTop(roundIdx: number, cardIdx: number): number {
-      return Math.round(cardCenter(roundIdx, cardIdx) - CARD_H / 2)
+      const spc = Math.pow(2, roundIdx)
+      return Math.round((cardIdx + 0.5) * spc * SLOT_H - CARD_H / 2)
     }
 
-    // ── SVG connector path between round r and r+1 ──────────────────────────────
-    // Draws bracket lines: two left-column cards connect to one right-column card.
     function connPaths(roundIdx: number): string {
-      const spc      = Math.pow(2, roundIdx)
-      const pairCnt  = 8 / spc   // 8, 4, 2, 1
-      const hw       = CONN_W / 2
+      const spc     = Math.pow(2, roundIdx)
+      const pairCnt = 8 / spc
+      const hw      = CONN_W / 2
       return Array.from({ length: pairCnt }, (_, j) => {
-        const y1 = (2 * j + 0.5) * spc * SLOT_H    // center of left card A
-        const y2 = (2 * j + 1.5) * spc * SLOT_H    // center of left card B
-        const yM = (y1 + y2) / 2                    // center of right card
+        const y1 = (2 * j + 0.5) * spc * SLOT_H
+        const y2 = (2 * j + 1.5) * spc * SLOT_H
+        const yM = (y1 + y2) / 2
         return [
-          `M0,${y1} H${hw}`,          // horizontal from card A right edge
-          `M0,${y2} H${hw}`,          // horizontal from card B right edge
-          `M${hw},${y1} V${y2}`,      // vertical connecting A and B
-          `M${hw},${yM} H${CONN_W}`,  // horizontal to next card left edge
+          `M0,${y1} H${hw}`,
+          `M0,${y2} H${hw}`,
+          `M${hw},${y1} V${y2}`,
+          `M${hw},${yM} H${CONN_W}`,
         ].join(' ')
       }).join(' ')
     }
 
-    // ── Scroll bracket to a round column ────────────────────────────────────────
     function scrollToRound(key: string) {
       setBktRound(key)
       const idx = ROUNDS.findIndex(r => r.key === key)
       bracketScrollRef.current?.scrollTo({ left: idx * (CARD_W + CONN_W), behavior: 'smooth' })
     }
 
-    const TOTAL_W = ROUNDS.length * CARD_W + (ROUNDS.length - 1) * CONN_W  // 1012
+    // Shorten very long placeholder strings for tight cards
+    function shortLabel(name: string | undefined, placeholder: string | undefined): string {
+      const raw = name ?? placeholder ?? 'A definir'
+      // "Mejor 3.º A/B/C/D/F" → "Mejor 3.º"
+      if (raw.startsWith('Mejor 3.º')) return 'Mejor 3.º'
+      return raw
+    }
+
+    const TOTAL_W = ROUNDS.length * CARD_W + (ROUNDS.length - 1) * CONN_W
 
     const m3rd = KNOCKOUT_MATCHES.find(m => m.id === 'final-103')
 
@@ -1316,7 +1340,7 @@ export default function PrototipoEliminatoriasV3() {
           </p>
         </div>
 
-        {/* ── Round tabs (scroll to column) ── */}
+        {/* ── Round tabs ── */}
         <div style={{ display: 'flex', gap: 6, padding: '8px 16px 12px', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
           {ROUNDS.map(r => {
             const active = bktRound === r.key
@@ -1336,7 +1360,7 @@ export default function PrototipoEliminatoriasV3() {
               </button>
             )
           })}
-          <span style={{ color: '#334155', fontSize: 11, alignSelf: 'center', paddingLeft: 8, flexShrink: 0 }}>
+          <span style={{ color: '#4b5563', fontSize: 12, alignSelf: 'center', paddingLeft: 10, flexShrink: 0, letterSpacing: '0.04em' }}>
             ← desliza →
           </span>
         </div>
@@ -1346,23 +1370,21 @@ export default function PrototipoEliminatoriasV3() {
           ref={bracketScrollRef}
           style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const, paddingBottom: 120 }}
         >
-          {/* Inner flex row: all 5 columns + 4 connector SVGs */}
           <div style={{ display: 'flex', paddingLeft: 16, paddingRight: 24, width: TOTAL_W + 40 }}>
 
             {ROUNDS.map((round, ri) => {
               const elements: React.ReactNode[] = []
 
-              // ── Column ──────────────────────────────────────────────────────
               elements.push(
                 <div key={round.key} style={{ width: CARD_W, flexShrink: 0 }}>
 
                   {/* Column header */}
-                  <div style={{ height: HDR_H, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: 8 }}>
-                    <p style={{ color: '#e2e8f0', fontSize: 11, fontWeight: 700, lineHeight: 1 }}>{round.label}</p>
-                    <p style={{ color: '#475569', fontSize: 10, marginTop: 2 }}>{round.dates}</p>
+                  <div style={{ height: HDR_H, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: 10 }}>
+                    <p style={{ color: '#e2e8f0', fontSize: 12, fontWeight: 700, lineHeight: 1 }}>{round.label}</p>
+                    <p style={{ color: '#475569', fontSize: 10, marginTop: 3 }}>{round.dates}</p>
                   </div>
 
-                  {/* Cards — absolutely positioned within COL_H container */}
+                  {/* Cards */}
                   <div style={{ position: 'relative', height: COL_H }}>
                     {round.ids.map((id, ci) => {
                       const m = KNOCKOUT_MATCHES.find(x => x.id === id)
@@ -1371,6 +1393,8 @@ export default function PrototipoEliminatoriasV3() {
                       const hasPick = !!pick
                       const isOpen  = m.isOpenForPredictions
                       const top     = cardTop(ri, ci)
+                      const homeName = shortLabel(m.home.name, m.home.placeholder)
+                      const awayName = shortLabel(m.away.name, m.away.placeholder)
 
                       return (
                         <div
@@ -1380,37 +1404,42 @@ export default function PrototipoEliminatoriasV3() {
                             position: 'absolute', left: 2, right: 2, top,
                             height: CARD_H,
                             background: hasPick ? '#14532d' : '#1e293b',
-                            border: `1px solid ${hasPick ? '#15803d' : '#334155'}`,
-                            borderRadius: 8,
+                            border: `1.5px solid ${hasPick ? '#16a34a' : '#334155'}`,
+                            borderRadius: 10,
                             overflow: 'hidden',
                             cursor: isOpen ? 'pointer' : 'default',
-                            boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
+                            boxShadow: hasPick
+                              ? '0 0 0 1px rgba(34,197,94,0.15), 0 4px 10px rgba(0,0,0,0.4)'
+                              : '0 2px 8px rgba(0,0,0,0.4)',
                           }}
                         >
                           {/* Match meta */}
                           <div style={{
-                            padding: '3px 7px 2px',
-                            borderBottom: '1px solid #0f172a',
-                            fontSize: 9, color: '#475569',
+                            padding: '3px 8px 3px',
+                            borderBottom: `1px solid ${hasPick ? '#166534' : '#0f172a'}`,
+                            background: hasPick ? '#166534' : '#141f30',
+                            fontSize: 9.5, color: hasPick ? '#86efac' : '#475569',
                             whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis',
+                            lineHeight: '14px',
                           }}>
-                            #{m.fifaMatchNumber} · {m.displayTime} VET · {m.city}
+                            <span style={{ fontWeight: 700, color: hasPick ? '#4ade80' : '#64748b' }}>#{m.fifaMatchNumber}</span>
+                            {' · '}{m.displayTime} VET · {m.city}
                           </div>
 
                           {/* Home */}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 7px 2px' }}>
-                            <span style={{ fontSize: 13, lineHeight: 1, flexShrink: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px 3px' }}>
+                            <span style={{ fontSize: 15, lineHeight: 1, flexShrink: 0 }}>
                               {m.home.flag ?? '🛡️'}
                             </span>
                             <span style={{
-                              flex: 1, fontSize: 11, fontWeight: 600,
-                              color: hasPick ? '#86efac' : '#e2e8f0',
+                              flex: 1, fontSize: 12, fontWeight: 600,
+                              color: hasPick ? '#bbf7d0' : '#e2e8f0',
                               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const,
                             }}>
-                              {m.home.name ?? m.home.placeholder}
+                              {homeName}
                             </span>
                             {hasPick && (
-                              <span style={{ fontSize: 12, fontWeight: 800, color: '#4ade80', flexShrink: 0 }}>
+                              <span style={{ fontSize: 14, fontWeight: 800, color: '#4ade80', flexShrink: 0, minWidth: 16, textAlign: 'center' as const }}>
                                 {pick.home}
                               </span>
                             )}
@@ -1420,22 +1449,22 @@ export default function PrototipoEliminatoriasV3() {
                           </div>
 
                           {/* Divider */}
-                          <div style={{ height: 1, background: '#0f172a', margin: '0 7px' }} />
+                          <div style={{ height: 1, background: hasPick ? '#166534' : '#0f172a', margin: '0 8px' }} />
 
                           {/* Away */}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '2px 7px 4px' }}>
-                            <span style={{ fontSize: 13, lineHeight: 1, flexShrink: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 8px 6px' }}>
+                            <span style={{ fontSize: 15, lineHeight: 1, flexShrink: 0 }}>
                               {m.away.flag ?? '🛡️'}
                             </span>
                             <span style={{
-                              flex: 1, fontSize: 11, fontWeight: 600,
-                              color: hasPick ? '#86efac' : '#e2e8f0',
+                              flex: 1, fontSize: 12, fontWeight: 600,
+                              color: hasPick ? '#bbf7d0' : '#e2e8f0',
                               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const,
                             }}>
-                              {m.away.name ?? m.away.placeholder}
+                              {awayName}
                             </span>
                             {hasPick && (
-                              <span style={{ fontSize: 12, fontWeight: 800, color: '#4ade80', flexShrink: 0 }}>
+                              <span style={{ fontSize: 14, fontWeight: 800, color: '#4ade80', flexShrink: 0, minWidth: 16, textAlign: 'center' as const }}>
                                 {pick.away}
                               </span>
                             )}
@@ -1447,7 +1476,7 @@ export default function PrototipoEliminatoriasV3() {
                 </div>
               )
 
-              // ── Connector SVG between this round and the next ──────────────
+              // Connector SVG
               if (ri < ROUNDS.length - 1) {
                 elements.push(
                   <div key={`conn-${ri}`} style={{ flexShrink: 0, paddingTop: HDR_H }}>
@@ -1460,10 +1489,10 @@ export default function PrototipoEliminatoriasV3() {
                         d={connPaths(ri)}
                         fill="none"
                         stroke="#22c55e"
-                        strokeWidth="1.5"
+                        strokeWidth="2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        opacity="0.35"
+                        opacity="0.55"
                       />
                     </svg>
                   </div>
@@ -1481,30 +1510,41 @@ export default function PrototipoEliminatoriasV3() {
           const pick3   = picks[m3rd.id]
           const hasPick = !!pick3
           return (
-            <div style={{ padding: '0 16px 32px', marginTop: -80 }}>
-              <p style={{ color: '#475569', fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.06em', marginBottom: 8 }}>
-                3.er y 4.º Lugar · 18 jul · Hard Rock Stadium · Miami
+            <div style={{ padding: '0 16px 40px', marginTop: -96 }}>
+              <p style={{ color: '#64748b', fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.07em', marginBottom: 8 }}>
+                🥉 Tercer puesto · 18 jul
               </p>
               <div style={{
                 background: hasPick ? '#14532d' : '#1e293b',
-                border: `1px solid ${hasPick ? '#15803d' : '#334155'}`,
+                border: `1.5px solid ${hasPick ? '#16a34a' : '#334155'}`,
                 borderRadius: 10, overflow: 'hidden',
                 maxWidth: CARD_W,
-                boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
               }}>
-                <div style={{ padding: '3px 8px 2px', borderBottom: '1px solid #0f172a', fontSize: 9, color: '#475569' }}>
-                  #{m3rd.fifaMatchNumber} · {m3rd.displayTime} VET · {m3rd.city}
+                <div style={{
+                  padding: '3px 8px 3px',
+                  borderBottom: `1px solid ${hasPick ? '#166534' : '#0f172a'}`,
+                  background: hasPick ? '#166534' : '#141f30',
+                  fontSize: 9.5, color: hasPick ? '#86efac' : '#475569',
+                  lineHeight: '14px',
+                }}>
+                  <span style={{ fontWeight: 700, color: hasPick ? '#4ade80' : '#64748b' }}>#{m3rd.fifaMatchNumber}</span>
+                  {' · '}{m3rd.displayTime} VET · {m3rd.city}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 8px 3px' }}>
-                  <span style={{ fontSize: 14 }}>{m3rd.home.flag ?? '🛡️'}</span>
-                  <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: '#e2e8f0' }}>{m3rd.home.placeholder}</span>
-                  {hasPick && <span style={{ fontSize: 13, fontWeight: 800, color: '#4ade80' }}>{pick3.home}</span>}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px 3px' }}>
+                  <span style={{ fontSize: 15 }}>{m3rd.home.flag ?? '🛡️'}</span>
+                  <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: hasPick ? '#bbf7d0' : '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
+                    {shortLabel(m3rd.home.name, m3rd.home.placeholder)}
+                  </span>
+                  {hasPick && <span style={{ fontSize: 14, fontWeight: 800, color: '#4ade80' }}>{pick3.home}</span>}
                 </div>
-                <div style={{ height: 1, background: '#0f172a', margin: '0 8px' }} />
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 8px 5px' }}>
-                  <span style={{ fontSize: 14 }}>{m3rd.away.flag ?? '🛡️'}</span>
-                  <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: '#e2e8f0' }}>{m3rd.away.placeholder}</span>
-                  {hasPick && <span style={{ fontSize: 13, fontWeight: 800, color: '#4ade80' }}>{pick3.away}</span>}
+                <div style={{ height: 1, background: hasPick ? '#166534' : '#0f172a', margin: '0 8px' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 8px 6px' }}>
+                  <span style={{ fontSize: 15 }}>{m3rd.away.flag ?? '🛡️'}</span>
+                  <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: hasPick ? '#bbf7d0' : '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
+                    {shortLabel(m3rd.away.name, m3rd.away.placeholder)}
+                  </span>
+                  {hasPick && <span style={{ fontSize: 14, fontWeight: 800, color: '#4ade80' }}>{pick3.away}</span>}
                 </div>
               </div>
             </div>
@@ -1775,7 +1815,7 @@ export default function PrototipoEliminatoriasV3() {
               <p className="text-xs text-slate-500 mt-0.5">Partidos jugados</p>
             </div>
             <div>
-              <p className="text-sm font-extrabold text-yellow-600 truncate">{top3[0]?.displayName.split(' ')[0] ?? '—'}</p>
+              <p className="text-sm font-extrabold text-yellow-600 truncate">{top3[0] ? formatPublicName(top3[0].displayName) : '—'}</p>
               <p className="text-xs text-slate-500 mt-0.5">Líder actual</p>
             </div>
           </div>
@@ -1800,7 +1840,7 @@ export default function PrototipoEliminatoriasV3() {
                     <div key={entry.cedula} className="flex flex-col items-center">
                       <div className="text-2xl mb-1">{podiumMedals[i]}</div>
                       <div className="text-center mb-2">
-                        <p className="font-bold text-slate-800 text-sm leading-tight">{entry.displayName.split(' ')[0]}</p>
+                        <p className="font-bold text-slate-800 text-sm leading-tight">{formatPublicName(entry.displayName)}</p>
                         <p className="text-xs text-slate-500">{entry.totalPoints} pts</p>
                         <p className="text-xs text-green-600">🎯 {entry.exactScores}</p>
                       </div>
@@ -1851,8 +1891,7 @@ export default function PrototipoEliminatoriasV3() {
                         : <span className="text-slate-300 text-xs">—</span>}
                     </div>
                     <div className="col-span-4">
-                      <p className="font-semibold text-slate-800 text-sm leading-tight">{entry.displayName}</p>
-                      {entry.ciudad && <p className="text-xs text-slate-400">{entry.ciudad}</p>}
+                      <p className="font-semibold text-slate-800 text-sm leading-tight">{formatPublicName(entry.displayName)}</p>
                       {isMe && <span className="text-[10px] text-yellow-600 font-bold">← tú</span>}
                     </div>
                     <div className="col-span-2 text-center">

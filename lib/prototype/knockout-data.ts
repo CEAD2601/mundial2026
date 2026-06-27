@@ -143,7 +143,7 @@ export const KNOCKOUT_MATCHES: KOMatch[] = [
     date: '2026-07-01', timeVet: '20:00', displayTime: '8:00 p. m.',
     venue: "Levi's Stadium", city: 'Santa Clara', country: 'Estados Unidos',
     home: team('Estados Unidos', 'USA', '🇺🇸', 'USA'),
-    away: team('Bosnia y Herzegovina', 'BIH', '🇧🇦', 'BIH'),
+    away: team('Bosnia', 'BIH', '🇧🇦', 'BIH'),
     status: 'SCHEDULED', isOpenForPredictions: true,
     sourceNotes: 'USA vs Bosnia confirmados | Match 81',
   },

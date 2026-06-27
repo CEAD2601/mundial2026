@@ -84,15 +84,40 @@ export function saveKOEnrolled(list: KOParticipant[]) {
   sessionStorage.setItem(KO_ENROLLED_KEY, JSON.stringify(list))
 }
 
-// Busca en lista previa por cédula o WhatsApp
+// ── Normalización ────────────────────────────────────────────────────────────
+
+// Normaliza cédula venezolana a solo dígitos.
+// Acepta: 12345678 · V12345678 · V-12345678 · v-12345678 · 12.345.678 · V-12.345.678
+export function normalizeCedula(value: string): string {
+  return value.trim()
+    .toUpperCase()
+    .replace(/\./g, '')    // quitar puntos
+    .replace(/[\s\-]/g, '') // quitar espacios y guiones
+    .replace(/^V/i, '')    // quitar prefijo V
+}
+
+// Normaliza número de teléfono a últimos 10 dígitos.
+// Acepta: 04141234567 · +584141234567 · 58 414 1234567 · 0414-123-4567 · 4141234567
+export function normalizePhone(value: string): string {
+  const digits = value.replace(/\D/g, '')
+  if (digits.startsWith('58') && digits.length === 12) return digits.slice(2)
+  if (digits.startsWith('0') && digits.length === 11) return digits.slice(1)
+  return digits.slice(-10)
+}
+
+// Busca en lista previa (Fase de Grupos) por cédula o WhatsApp
+// Producción: conectaría a la tabla real de Participant/PoolEntry de Prisma.
 export function lookupPrevParticipant(query: string): KOParticipant | null {
-  const q = query.trim().replace(/[\s\-]/g, '')
+  const qCed   = normalizeCedula(query)
+  const qPhone = normalizePhone(query)
   return PREV_PARTICIPANTS.find(p =>
-    p.cedula === q || p.whatsapp.replace(/[\s\-]/g, '') === q
+    normalizeCedula(p.cedula) === qCed ||
+    normalizePhone(p.whatsapp) === qPhone
   ) ?? null
 }
 
-// Busca en inscritos de Eliminatorias por cédula
+// Busca en inscritos de Eliminatorias por cédula (solo dígitos)
 export function findEnrolled(cedula: string, enrolled: KOParticipant[]): KOParticipant | null {
-  return enrolled.find(p => p.cedula === cedula) ?? null
+  const norm = normalizeCedula(cedula)
+  return enrolled.find(p => normalizeCedula(p.cedula) === norm) ?? null
 }
