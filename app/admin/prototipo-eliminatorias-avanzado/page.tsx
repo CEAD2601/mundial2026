@@ -252,7 +252,8 @@ export default function PrototipoEliminatoriasV3() {
   const [toast, setToast] = useState<string | null>(null)
   const [highlightId, setHighlightId] = useState<string | null>(null)
   const [confirmed, setConfirmed] = useState(false)
-  const matchListTopRef = useRef<HTMLDivElement>(null)
+  const matchListTopRef   = useRef<HTMLDivElement>(null)
+  const bracketScrollRef  = useRef<HTMLDivElement>(null)
 
   // Registro demo
   const [registered, setRegistered] = useState(false)
@@ -1060,210 +1061,281 @@ export default function PrototipoEliminatoriasV3() {
   // ── BRACKET ─────────────────────────────────────────────────────────────────
 
   function renderBracket() {
-    const ROUNDS: Array<{ key: string; label: string; short: string; dates: string; color: string; ids: string[] }> = [
-      { key: 'r32', label: 'Dieciseisavos de final', short: 'R32', dates: '28 jun – 3 jul', color: '#16a34a',
-        ids: ['r32-73','r32-74','r32-75','r32-76','r32-77','r32-78','r32-79','r32-80',
-              'r32-81','r32-82','r32-83','r32-84','r32-85','r32-86','r32-87','r32-88'] },
-      { key: 'r16', label: 'Octavos de final', short: 'R16', dates: '4 – 7 jul', color: '#0891b2',
-        ids: ['r16-89','r16-90','r16-91','r16-92','r16-93','r16-94','r16-95','r16-96'] },
-      { key: 'qf',  label: 'Cuartos de final',  short: 'QF',  dates: '9 – 11 jul', color: '#7c3aed',
-        ids: ['qf-97','qf-98','qf-99','qf-100'] },
-      { key: 'sf',  label: 'Semifinales',        short: 'SF',  dates: '14 – 15 jul', color: '#db2777',
-        ids: ['sf-101','sf-102'] },
-      { key: 'f',   label: 'Final',              short: 'FINAL', dates: '19 jul',    color: '#d97706',
-        ids: ['f-104'] },
+    // ── Layout constants ────────────────────────────────────────────────────────
+    const SLOT_H   = 72   // height per 1 R32 slot (= spacing unit)
+    const CARD_H   = 62   // card height  (must be < SLOT_H)
+    const CARD_W   = 184  // card width
+    const CONN_W   = 30   // connector column width
+    const HDR_H    = 44   // column header height (label + dates)
+    const COL_H    = 16 * SLOT_H   // 1152 — same for every column
+
+    // ── Bracket round definitions (ordered for proper pair alignment) ───────────
+    // R32 pairs: [0,1]→R16[0], [2,3]→R16[1], …, [14,15]→R16[7]
+    // R16 pairs: [0,1]→QF[0],  [2,3]→QF[1],  [4,5]→QF[2],  [6,7]→QF[3]
+    // QF  pairs: [0,1]→SF[0],  [2,3]→SF[1]
+    // SF  pair:  [0,1]→F[0]
+    const ROUNDS = [
+      { key:'r32', short:'R32',   label:'Dieciseisavos', dates:'28 jun – 3 jul',
+        ids:['r32-73','r32-74','r32-75','r32-76','r32-77','r32-78','r32-79','r32-80',
+             'r32-81','r32-82','r32-83','r32-84','r32-85','r32-86','r32-87','r32-88'] },
+      { key:'r16', short:'R16',   label:'Octavos',       dates:'4 – 7 jul',
+        ids:['r16-89','r16-90','r16-91','r16-92','r16-93','r16-94','r16-95','r16-96'] },
+      { key:'qf',  short:'QF',    label:'Cuartos',       dates:'9 – 11 jul',
+        ids:['qf-97','qf-98','qf-99','qf-100'] },
+      { key:'sf',  short:'SF',    label:'Semifinales',   dates:'14 – 15 jul',
+        ids:['sf-101','sf-102'] },
+      { key:'f',   short:'FINAL', label:'Final',         dates:'19 jul',
+        ids:['f-104'] },
     ]
 
-    const activeRound = ROUNDS.find(r => r.key === bktRound) ?? ROUNDS[0]
-    const m3rd = KNOCKOUT_MATCHES.find(m => m.id === 'f-103')
-
-    // Reusable match card (used in both mobile list and desktop bracket)
-    function MatchCard({ id, compact = false }: { id: string; compact?: boolean }) {
-      const m = KNOCKOUT_MATCHES.find(x => x.id === id)
-      if (!m) return null
-      const pick = picks[m.id]
-      const homeDisplay = m.home.name ?? m.home.placeholder
-      const awayDisplay = m.away.name ?? m.away.placeholder
-      const isPending = m.isOpenForPredictions
-      return (
-        <div
-          onClick={() => isPending ? setView('llenado') : undefined}
-          style={{
-            background: pick ? '#f0fdf4' : 'white',
-            border: `1.5px solid ${pick ? '#86efac' : '#e2e8f0'}`,
-            borderRadius: compact ? 8 : 12,
-            padding: compact ? '4px 8px' : '10px 12px',
-            cursor: isPending ? 'pointer' : 'default',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-            transition: 'box-shadow .15s',
-          }}
-        >
-          {/* meta row */}
-          <div style={{ fontSize: compact ? 8 : 10, color: '#94a3b8', marginBottom: compact ? 2 : 5,
-            whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            #{m.fifaMatchNumber} · {m.displayTime} VET · {m.city}
-          </div>
-          {/* home */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: compact ? 4 : 6 }}>
-            <span style={{ fontSize: compact ? 14 : 18, lineHeight: 1, flexShrink: 0 }}>{m.home.flag ?? '🛡️'}</span>
-            <span style={{ flex: 1, fontSize: compact ? 10 : 13, fontWeight: 600, color: '#1e293b',
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{homeDisplay}</span>
-            {pick
-              ? <span style={{ fontSize: compact ? 11 : 14, fontWeight: 700, color: '#15803d', flexShrink: 0 }}>{pick.home}</span>
-              : isPending && <span style={{ fontSize: 10, color: '#22c55e', fontWeight: 600, flexShrink: 0 }}>✏️</span>
-            }
-          </div>
-          <div style={{ height: 1, background: '#f1f5f9', margin: compact ? '2px 0' : '5px 0' }} />
-          {/* away */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: compact ? 4 : 6 }}>
-            <span style={{ fontSize: compact ? 14 : 18, lineHeight: 1, flexShrink: 0 }}>{m.away.flag ?? '🛡️'}</span>
-            <span style={{ flex: 1, fontSize: compact ? 10 : 13, fontWeight: 600, color: '#1e293b',
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{awayDisplay}</span>
-            {pick && <span style={{ fontSize: compact ? 11 : 14, fontWeight: 700, color: '#15803d', flexShrink: 0 }}>{pick.away}</span>}
-          </div>
-        </div>
-      )
+    // ── Card vertical center for a given round + card index ─────────────────────
+    // slotsPerCard doubles each round: R32=1, R16=2, QF=4, SF=8, F=16
+    function cardCenter(roundIdx: number, cardIdx: number): number {
+      const spc = Math.pow(2, roundIdx)
+      return (cardIdx + 0.5) * spc * SLOT_H
+    }
+    function cardTop(roundIdx: number, cardIdx: number): number {
+      return Math.round(cardCenter(roundIdx, cardIdx) - CARD_H / 2)
     }
 
-    // Desktop column width depends on round (fewer matches = wider cards)
-    const COL_W = 180
-    const CONN_W = 28
-    const SLOT_H = 96   // px per card slot on desktop
+    // ── SVG connector path between round r and r+1 ──────────────────────────────
+    // Draws bracket lines: two left-column cards connect to one right-column card.
+    function connPaths(roundIdx: number): string {
+      const spc      = Math.pow(2, roundIdx)
+      const pairCnt  = 8 / spc   // 8, 4, 2, 1
+      const hw       = CONN_W / 2
+      return Array.from({ length: pairCnt }, (_, j) => {
+        const y1 = (2 * j + 0.5) * spc * SLOT_H    // center of left card A
+        const y2 = (2 * j + 1.5) * spc * SLOT_H    // center of left card B
+        const yM = (y1 + y2) / 2                    // center of right card
+        return [
+          `M0,${y1} H${hw}`,          // horizontal from card A right edge
+          `M0,${y2} H${hw}`,          // horizontal from card B right edge
+          `M${hw},${y1} V${y2}`,      // vertical connecting A and B
+          `M${hw},${yM} H${CONN_W}`,  // horizontal to next card left edge
+        ].join(' ')
+      }).join(' ')
+    }
+
+    // ── Scroll bracket to a round column ────────────────────────────────────────
+    function scrollToRound(key: string) {
+      setBktRound(key)
+      const idx = ROUNDS.findIndex(r => r.key === key)
+      bracketScrollRef.current?.scrollTo({ left: idx * (CARD_W + CONN_W), behavior: 'smooth' })
+    }
+
+    const TOTAL_W = ROUNDS.length * CARD_W + (ROUNDS.length - 1) * CONN_W  // 1012
+
+    const m3rd = KNOCKOUT_MATCHES.find(m => m.id === 'f-103')
 
     return (
-      <div className="py-4">
+      <div style={{ background: '#0f172a', minHeight: 'calc(100vh - 120px)' }}>
 
         {/* ── Header ── */}
-        <div className="px-4 mb-4">
-          <h1 className="text-2xl font-extrabold text-slate-800">Cuadro eliminatorio</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Mundial 2026 · 32 partidos · 28 jun – 19 jul</p>
+        <div style={{ padding: '20px 16px 8px' }}>
+          <h1 style={{ color: '#f1f5f9', fontSize: 22, fontWeight: 800, lineHeight: 1.2 }}>
+            Cuadro eliminatorio
+          </h1>
+          <p style={{ color: '#475569', fontSize: 11, marginTop: 3 }}>
+            Mundial 2026 · 32 partidos · 28 jun – 19 jul
+          </p>
         </div>
 
-        {/* ── MOBILE: round tabs + vertical list ── */}
-        <div className="lg:hidden">
-          {/* Tabs strip */}
-          <div className="flex overflow-x-auto gap-2 px-4 pb-1 mb-4" style={{ scrollbarWidth: 'none' }}>
-            {ROUNDS.map(r => (
+        {/* ── Round tabs (scroll to column) ── */}
+        <div style={{ display: 'flex', gap: 6, padding: '8px 16px 12px', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
+          {ROUNDS.map(r => {
+            const active = bktRound === r.key
+            return (
               <button
                 key={r.key}
-                onClick={() => setBktRound(r.key)}
-                className="shrink-0 touch-manipulation"
+                onClick={() => scrollToRound(r.key)}
                 style={{
-                  padding: '6px 14px',
-                  borderRadius: 999,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  border: `2px solid ${bktRound === r.key ? r.color : '#e2e8f0'}`,
-                  background: bktRound === r.key ? r.color : 'white',
-                  color: bktRound === r.key ? 'white' : '#475569',
-                  transition: 'all .15s',
+                  padding: '5px 14px', borderRadius: 999, fontSize: 11, fontWeight: 700,
+                  border: `1.5px solid ${active ? '#22c55e' : '#1e293b'}`,
+                  background: active ? '#22c55e' : '#1e293b',
+                  color: active ? '#0f172a' : '#64748b',
+                  flexShrink: 0, cursor: 'pointer', transition: 'all .15s',
                 }}
               >
                 {r.short}
               </button>
-            ))}
-          </div>
-
-          {/* Round info */}
-          <div className="px-4 mb-3 flex items-center justify-between">
-            <div>
-              <p className="text-base font-extrabold text-slate-800">{activeRound.label}</p>
-              <p className="text-xs text-slate-400">{activeRound.dates}</p>
-            </div>
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full text-white"
-              style={{ background: activeRound.color }}>
-              {activeRound.ids.length} partidos
-            </span>
-          </div>
-
-          {/* Match list for active round */}
-          <div className="px-4 space-y-3 pb-28">
-            {activeRound.ids.map(id => (
-              <MatchCard key={id} id={id} />
-            ))}
-            {activeRound.key === 'f' && m3rd && (
-              <div className="mt-2 pt-4 border-t border-slate-100">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                  3.er y 4.º Lugar · 18 jul
-                </p>
-                <MatchCard id="f-103" />
-              </div>
-            )}
-          </div>
+            )
+          })}
+          <span style={{ color: '#334155', fontSize: 11, alignSelf: 'center', paddingLeft: 8, flexShrink: 0 }}>
+            ← desliza →
+          </span>
         </div>
 
-        {/* ── DESKTOP: horizontal bracket columns ── */}
-        <div className="hidden lg:block overflow-x-auto px-4 pb-6" style={{ WebkitOverflowScrolling: 'touch' as const }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start',
-            minWidth: ROUNDS.length * COL_W + (ROUNDS.length - 1) * CONN_W }}>
+        {/* ── Horizontal bracket ── */}
+        <div
+          ref={bracketScrollRef}
+          style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const, paddingBottom: 120 }}
+        >
+          {/* Inner flex row: all 5 columns + 4 connector SVGs */}
+          <div style={{ display: 'flex', paddingLeft: 16, paddingRight: 24, width: TOTAL_W + 40 }}>
 
-            {ROUNDS.map((round, ci) => {
-              const count = round.ids.length
-              const colH  = count * SLOT_H
-              return (
-                <div key={round.key} style={{ display: 'flex', alignItems: 'flex-start' }}>
-                  {/* Column */}
-                  <div style={{ width: COL_W, flexShrink: 0 }}>
-                    {/* Column header */}
-                    <div style={{
-                      background: round.color, color: 'white',
-                      borderRadius: '8px 8px 0 0', padding: '6px 10px',
-                      fontSize: 11, fontWeight: 700,
-                    }}>
-                      {round.label}
-                      <span style={{ display: 'block', fontSize: 10, fontWeight: 400, opacity: .85 }}>{round.dates}</span>
-                    </div>
-                    {/* Cards positioned vertically */}
-                    <div style={{ position: 'relative', height: colH }}>
-                      {round.ids.map((id, idx) => {
-                        const top = Math.round((idx + 0.5) * SLOT_H - 38)
-                        return (
-                          <div key={id} style={{ position: 'absolute', left: 4, right: 4, top }}>
-                            <MatchCard id={id} compact />
-                          </div>
-                        )
-                      })}
-                    </div>
+            {ROUNDS.map((round, ri) => {
+              const elements: React.ReactNode[] = []
+
+              // ── Column ──────────────────────────────────────────────────────
+              elements.push(
+                <div key={round.key} style={{ width: CARD_W, flexShrink: 0 }}>
+
+                  {/* Column header */}
+                  <div style={{ height: HDR_H, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: 8 }}>
+                    <p style={{ color: '#e2e8f0', fontSize: 11, fontWeight: 700, lineHeight: 1 }}>{round.label}</p>
+                    <p style={{ color: '#475569', fontSize: 10, marginTop: 2 }}>{round.dates}</p>
                   </div>
 
-                  {/* SVG connector bracket */}
-                  {ci < ROUNDS.length - 1 && (() => {
-                    const leftCount = count
-                    const nextCount = ROUNDS[ci + 1].ids.length
-                    const leftH = leftCount * SLOT_H
-                    const rightH = nextCount * SLOT_H
-                    // Draw lines: each pair of left slots connects to one right slot
-                    const pairCount = Math.min(leftCount / 2, nextCount)
-                    const svgH = Math.max(leftH, rightH)
-                    const paths = Array.from({ length: pairCount }, (_, i) => {
-                      const y1 = (2 * i + 0.5) * (leftH / leftCount)
-                      const y2 = (2 * i + 1.5) * (leftH / leftCount)
-                      const yMid = (y1 + y2) / 2
-                      const yRight = (i + 0.5) * (rightH / nextCount)
-                      return `M0,${y1} H${CONN_W/2} V${y2} H0 M${CONN_W/2},${yMid} H${CONN_W}`
-                    }).join(' ')
-                    return (
-                      <svg width={CONN_W} height={svgH} style={{ display: 'block', flexShrink: 0 }}>
-                        <path d={paths} fill="none" stroke={round.color} strokeWidth="1.5"
-                          strokeLinecap="round" strokeLinejoin="round" opacity=".5" />
-                      </svg>
-                    )
-                  })()}
+                  {/* Cards — absolutely positioned within COL_H container */}
+                  <div style={{ position: 'relative', height: COL_H }}>
+                    {round.ids.map((id, ci) => {
+                      const m = KNOCKOUT_MATCHES.find(x => x.id === id)
+                      if (!m) return null
+                      const pick    = picks[m.id]
+                      const hasPick = !!pick
+                      const isOpen  = m.isOpenForPredictions
+                      const top     = cardTop(ri, ci)
+
+                      return (
+                        <div
+                          key={id}
+                          onClick={() => isOpen ? setView('llenado') : undefined}
+                          style={{
+                            position: 'absolute', left: 2, right: 2, top,
+                            height: CARD_H,
+                            background: hasPick ? '#14532d' : '#1e293b',
+                            border: `1px solid ${hasPick ? '#15803d' : '#334155'}`,
+                            borderRadius: 8,
+                            overflow: 'hidden',
+                            cursor: isOpen ? 'pointer' : 'default',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
+                          }}
+                        >
+                          {/* Match meta */}
+                          <div style={{
+                            padding: '3px 7px 2px',
+                            borderBottom: '1px solid #0f172a',
+                            fontSize: 9, color: '#475569',
+                            whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis',
+                          }}>
+                            #{m.fifaMatchNumber} · {m.displayTime} VET · {m.city}
+                          </div>
+
+                          {/* Home */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 7px 2px' }}>
+                            <span style={{ fontSize: 13, lineHeight: 1, flexShrink: 0 }}>
+                              {m.home.flag ?? '🛡️'}
+                            </span>
+                            <span style={{
+                              flex: 1, fontSize: 11, fontWeight: 600,
+                              color: hasPick ? '#86efac' : '#e2e8f0',
+                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const,
+                            }}>
+                              {m.home.name ?? m.home.placeholder}
+                            </span>
+                            {hasPick && (
+                              <span style={{ fontSize: 12, fontWeight: 800, color: '#4ade80', flexShrink: 0 }}>
+                                {pick.home}
+                              </span>
+                            )}
+                            {!hasPick && isOpen && (
+                              <span style={{ fontSize: 9, color: '#22c55e', flexShrink: 0 }}>✏️</span>
+                            )}
+                          </div>
+
+                          {/* Divider */}
+                          <div style={{ height: 1, background: '#0f172a', margin: '0 7px' }} />
+
+                          {/* Away */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '2px 7px 4px' }}>
+                            <span style={{ fontSize: 13, lineHeight: 1, flexShrink: 0 }}>
+                              {m.away.flag ?? '🛡️'}
+                            </span>
+                            <span style={{
+                              flex: 1, fontSize: 11, fontWeight: 600,
+                              color: hasPick ? '#86efac' : '#e2e8f0',
+                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const,
+                            }}>
+                              {m.away.name ?? m.away.placeholder}
+                            </span>
+                            {hasPick && (
+                              <span style={{ fontSize: 12, fontWeight: 800, color: '#4ade80', flexShrink: 0 }}>
+                                {pick.away}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
               )
-            })}
-          </div>
 
-          {/* 3rd place row below */}
-          {m3rd && (
-            <div className="mt-6 pt-4 border-t border-slate-100" style={{ maxWidth: COL_W }}>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                3.er y 4.º Lugar · 18 jul
-              </p>
-              <MatchCard id="f-103" compact />
-            </div>
-          )}
+              // ── Connector SVG between this round and the next ──────────────
+              if (ri < ROUNDS.length - 1) {
+                elements.push(
+                  <div key={`conn-${ri}`} style={{ flexShrink: 0, paddingTop: HDR_H }}>
+                    <svg
+                      width={CONN_W}
+                      height={COL_H}
+                      style={{ display: 'block', overflow: 'visible' }}
+                    >
+                      <path
+                        d={connPaths(ri)}
+                        fill="none"
+                        stroke="#22c55e"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        opacity="0.35"
+                      />
+                    </svg>
+                  </div>
+                )
+              }
+
+              return elements
+            })}
+
+          </div>
         </div>
+
+        {/* ── 3rd place match ── */}
+        {m3rd && (() => {
+          const pick3   = picks[m3rd.id]
+          const hasPick = !!pick3
+          return (
+            <div style={{ padding: '0 16px 32px', marginTop: -80 }}>
+              <p style={{ color: '#475569', fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.06em', marginBottom: 8 }}>
+                3.er y 4.º Lugar · 18 jul · Hard Rock Stadium · Miami
+              </p>
+              <div style={{
+                background: hasPick ? '#14532d' : '#1e293b',
+                border: `1px solid ${hasPick ? '#15803d' : '#334155'}`,
+                borderRadius: 10, overflow: 'hidden',
+                maxWidth: CARD_W,
+                boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
+              }}>
+                <div style={{ padding: '3px 8px 2px', borderBottom: '1px solid #0f172a', fontSize: 9, color: '#475569' }}>
+                  #{m3rd.fifaMatchNumber} · {m3rd.displayTime} VET · {m3rd.city}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 8px 3px' }}>
+                  <span style={{ fontSize: 14 }}>{m3rd.home.flag ?? '🛡️'}</span>
+                  <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: '#e2e8f0' }}>{m3rd.home.placeholder}</span>
+                  {hasPick && <span style={{ fontSize: 13, fontWeight: 800, color: '#4ade80' }}>{pick3.home}</span>}
+                </div>
+                <div style={{ height: 1, background: '#0f172a', margin: '0 8px' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 8px 5px' }}>
+                  <span style={{ fontSize: 14 }}>{m3rd.away.flag ?? '🛡️'}</span>
+                  <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: '#e2e8f0' }}>{m3rd.away.placeholder}</span>
+                  {hasPick && <span style={{ fontSize: 13, fontWeight: 800, color: '#4ade80' }}>{pick3.away}</span>}
+                </div>
+              </div>
+            </div>
+          )
+        })()}
+
       </div>
     )
   }
