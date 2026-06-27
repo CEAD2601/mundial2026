@@ -33,27 +33,13 @@ export interface KORankingEntry {
   paymentStatus: 'pending' | 'verified' | 'rejected'
 }
 
-// ── Participantes previos de la Fase de Grupos ───────────────────────────────
-// Estos se pueden "encontrar" cuando alguien busca por cédula o WhatsApp
-
-// En producción esta lista se reemplaza por una consulta a la tabla Participant de Prisma
-// (solo lectura, sin modificar datos reales).
-export const PREV_PARTICIPANTS: KOParticipant[] = [
-  // Participantes reales de la Fase de Grupos (lectura; en producción viene de Prisma)
-  { cedula: '24974565', nombre: 'Carlos Eduardo Acosta Delgado', displayName: 'Carlos Acosta',   whatsapp: '04265205461', ciudad: 'El Hatillo', email: 'acostac2601@gmail.com', previousRound: 'grupos', registeredAt: '2026-05-01T09:00:00-04:00', paymentStatus: 'verified', enrolledInKO: false },
-  { cedula: '12345678', nombre: 'Demo Participante García',      displayName: 'Demo García',      whatsapp: '04141234567', ciudad: 'Caracas',   email: null,                   previousRound: 'grupos', registeredAt: '2026-05-01T10:00:00-04:00', paymentStatus: 'verified', enrolledInKO: false },
-  { cedula: '8765432',  nombre: 'María Fernanda López Ríos',     displayName: 'María López',      whatsapp: '04241112233', ciudad: 'Valencia',   email: null,               previousRound: 'grupos', registeredAt: '2026-05-02T11:30:00-04:00', paymentStatus: 'verified', enrolledInKO: false },
-  { cedula: '15234567', nombre: 'José Antonio Ramírez Blanco',   displayName: 'José Ramírez',     whatsapp: '04121234567', ciudad: 'Maracaibo',  email: null,               previousRound: 'grupos', registeredAt: '2026-05-03T09:00:00-04:00', paymentStatus: 'verified', enrolledInKO: false },
-  { cedula: '11987654', nombre: 'Luisa Margarita Torres Cruz',   displayName: 'Luisa Torres',     whatsapp: '04161234567', ciudad: 'Barquisimeto',email: null,              previousRound: 'grupos', registeredAt: '2026-05-04T14:00:00-04:00', paymentStatus: 'verified', enrolledInKO: false },
-  { cedula: '9876543',  nombre: 'Andrés Felipe Morales Vega',    displayName: 'Andrés Morales',   whatsapp: '04241234567', ciudad: 'Caracas',    email: null,               previousRound: 'grupos', registeredAt: '2026-05-05T16:00:00-04:00', paymentStatus: 'verified', enrolledInKO: false },
-  { cedula: '14321987', nombre: 'Valentina Díaz Hernández',      displayName: 'Valentina Díaz',   whatsapp: '04261234567', ciudad: 'Mérida',     email: null,               previousRound: 'grupos', registeredAt: '2026-05-06T10:00:00-04:00', paymentStatus: 'verified', enrolledInKO: false },
-  { cedula: '6789012',  nombre: 'Roberto Carlos Jiménez Pinto',  displayName: 'Roberto Jiménez',  whatsapp: '04141123456', ciudad: 'Caracas',    email: null,               previousRound: 'grupos', registeredAt: '2026-05-07T09:30:00-04:00', paymentStatus: 'verified', enrolledInKO: false },
-  { cedula: '13456789', nombre: 'Gabriela Elena Suárez Montoya', displayName: 'Gabriela Suárez',  whatsapp: '04121323456', ciudad: 'Valencia',   email: null,               previousRound: 'grupos', registeredAt: '2026-05-08T11:00:00-04:00', paymentStatus: 'verified', enrolledInKO: false },
-  { cedula: '20123456', nombre: 'Daniel Eduardo Pérez Ávila',    displayName: 'Daniel Pérez',     whatsapp: '04241453456', ciudad: 'Maracay',    email: null,               previousRound: 'grupos', registeredAt: '2026-05-09T12:00:00-04:00', paymentStatus: 'verified', enrolledInKO: false },
-  { cedula: '18765432', nombre: 'Sofía Alejandra Castillo Ruiz', displayName: 'Sofía Castillo',   whatsapp: '04141823456', ciudad: 'Caracas',    email: null,               previousRound: 'grupos', registeredAt: '2026-05-10T15:00:00-04:00', paymentStatus: 'verified', enrolledInKO: false },
-  { cedula: '7654321',  nombre: 'Miguel Ángel Herrera Soto',     displayName: 'Miguel Herrera',   whatsapp: '04261353456', ciudad: 'Barinas',    email: null,               previousRound: 'grupos', registeredAt: '2026-05-11T10:00:00-04:00', paymentStatus: 'verified', enrolledInKO: false },
-  { cedula: '16543210', nombre: 'Paola Andrea Rojas Mendoza',    displayName: 'Paola Rojas',      whatsapp: '04141453256', ciudad: 'Maturín',    email: null,               previousRound: 'grupos', registeredAt: '2026-05-12T09:00:00-04:00', paymentStatus: 'verified', enrolledInKO: false },
-]
+// ── Participantes previos ─────────────────────────────────────────────────────
+// ATENCIÓN: Este array es SOLO para datos de demo del ranking y UI del prototipo.
+// NO se usa para el flujo "Ya participé antes" — ese flujo consulta la DB real
+// a través de /api/admin/ko-prototype/lookup (solo lectura, nunca modifica datos).
+//
+// Las cédulas y nombres aquí son ficticios. No representan participantes reales.
+export const PREV_PARTICIPANTS: KOParticipant[] = []
 
 // ── Ranking mock para Eliminatorias ──────────────────────────────────────────
 // Con movimientos de posición (demo con 0 partidos jugados = todos empatan)
@@ -107,17 +93,6 @@ export function normalizePhone(value: string): string {
   if (digits.startsWith('58') && digits.length === 12) return digits.slice(2)
   if (digits.startsWith('0') && digits.length === 11) return digits.slice(1)
   return digits.slice(-10)
-}
-
-// Busca en lista previa (Fase de Grupos) por cédula o WhatsApp
-// Producción: conectaría a la tabla real de Participant/PoolEntry de Prisma.
-export function lookupPrevParticipant(query: string): KOParticipant | null {
-  const qCed   = normalizeCedula(query)
-  const qPhone = normalizePhone(query)
-  return PREV_PARTICIPANTS.find(p =>
-    normalizeCedula(p.cedula) === qCed ||
-    normalizePhone(p.whatsapp) === qPhone
-  ) ?? null
 }
 
 // Busca en inscritos de Eliminatorias por cédula (solo dígitos)

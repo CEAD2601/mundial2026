@@ -18,7 +18,7 @@ import {
   type KOMatch, type Stage,
 } from '@/lib/prototype/knockout-data'
 import {
-  PREV_PARTICIPANTS, KO_DEMO_RANKING, lookupPrevParticipant, loadKOEnrolled, saveKOEnrolled, findEnrolled,
+  KO_DEMO_RANKING, loadKOEnrolled, saveKOEnrolled, findEnrolled,
   type KOParticipant,
 } from '@/lib/prototype/knockout-participants'
 import {
@@ -270,6 +270,7 @@ export default function PrototipoEliminatoriasV3() {
   const [regStep, setRegStep] = useState<RegStep>('choose')
   const [lookupQuery, setLookupQuery] = useState('')
   const [lookupResult, setLookupResult] = useState<KOParticipant | null>(null)
+  const [lookupLoading, setLookupLoading] = useState(false)
   const [koEnrolled, setKoEnrolled] = useState<KOParticipant[]>([])
 
   // Results view
@@ -2488,14 +2489,40 @@ export default function PrototipoEliminatoriasV3() {
 
     // ── helpers ────────────────────────────────────────────────────────────────
 
-    function handleLookup() {
-      if (!lookupQuery.trim()) return
-      const found = lookupPrevParticipant(lookupQuery)
-      if (!found) { setRegStep('not-found'); return }
-      const alreadyIn = findEnrolled(found.cedula, koEnrolled)
-      if (alreadyIn) { setLookupResult(found); setRegStep('already-enrolled'); return }
-      setLookupResult(found)
-      setRegStep('found')
+    async function handleLookup() {
+      const q = lookupQuery.trim()
+      if (!q) return
+      setLookupLoading(true)
+
+      // Decide whether the query looks like a cédula or a phone number.
+      // A query with ≥ 9 digits that starts with 04, +58, 58, or 0 is a phone.
+      const digits = q.replace(/\D/g, '')
+      const isPhone =
+        digits.length >= 9 &&
+        (digits.startsWith('04') || digits.startsWith('58') || digits.startsWith('0'))
+
+      const param = isPhone ? `phone=${encodeURIComponent(q)}` : `cedula=${encodeURIComponent(q)}`
+
+      try {
+        const res  = await fetch(`/api/admin/ko-prototype/lookup?${param}`)
+        const data = await res.json()
+
+        if (!data.found) {
+          setLookupLoading(false)
+          setRegStep('not-found')
+          return
+        }
+
+        const found: KOParticipant = data.participant
+        const alreadyIn = findEnrolled(found.cedula, koEnrolled)
+        setLookupLoading(false)
+        if (alreadyIn) { setLookupResult(found); setRegStep('already-enrolled'); return }
+        setLookupResult(found)
+        setRegStep('found')
+      } catch {
+        setLookupLoading(false)
+        setRegStep('not-found')
+      }
     }
 
     function handleConfirmExisting() {
@@ -2619,9 +2646,9 @@ export default function PrototipoEliminatoriasV3() {
             placeholder="Ej: 12345678 o 04141234567"
             className="w-full border-2 border-slate-200 focus:border-green-500 rounded-xl px-4 py-3 text-sm focus:outline-none mb-4"
           />
-          <button onClick={handleLookup} disabled={!lookupQuery.trim()}
+          <button onClick={handleLookup} disabled={!lookupQuery.trim() || lookupLoading}
             className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white font-bold py-3 rounded-xl transition-all active:scale-95 touch-manipulation">
-            Buscar mis datos
+            {lookupLoading ? '🔍 Buscando…' : 'Buscar mis datos'}
           </button>
         </div>
         <button onClick={() => setRegStep('choose')} className="w-full text-slate-500 text-sm py-2 hover:text-slate-700">← Volver</button>
@@ -2647,8 +2674,12 @@ export default function PrototipoEliminatoriasV3() {
             <p className="text-slate-800"><span className="text-slate-500 text-xs w-20 inline-block">Nombre</span> <strong>{lookupResult.nombre}</strong></p>
             <p className="text-slate-800"><span className="text-slate-500 text-xs w-20 inline-block">Cédula</span> <strong>{maskCedula(lookupResult.cedula)}</strong></p>
             <p className="text-slate-800"><span className="text-slate-500 text-xs w-20 inline-block">WhatsApp</span> <strong>{lookupResult.whatsapp}</strong></p>
-            {lookupResult.ciudad && <p className="text-slate-800"><span className="text-slate-500 text-xs w-20 inline-block">Ciudad</span> <strong>{lookupResult.ciudad}</strong></p>}
+            <p className="text-slate-800"><span className="text-slate-500 text-xs w-20 inline-block">Ciudad</span> <strong>{lookupResult.ciudad ?? <span className="text-slate-400 font-normal italic">No registrada</span>}</strong></p>
+            <p className="text-slate-800"><span className="text-slate-500 text-xs w-20 inline-block">Email</span> <strong>{lookupResult.email ?? <span className="text-slate-400 font-normal italic">No registrado</span>}</strong></p>
           </div>
+          <p className="text-[10px] text-green-700 bg-green-100 rounded-lg px-3 py-1 mb-3 text-center font-mono">
+            📡 Fuente: base de datos real · Fase de Grupos 2026
+          </p>
           <p className="text-xs text-slate-600 mb-4 text-center">Ya tenemos tus datos de la fase anterior. Confirma para inscribirte en <strong>Quiniela Eliminatorias 2026</strong>.</p>
           <button onClick={handleConfirmExisting}
             className="w-full bg-green-600 hover:bg-green-700 text-white font-extrabold py-3.5 rounded-xl transition-all active:scale-95 touch-manipulation mb-2">
