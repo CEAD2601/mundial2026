@@ -269,6 +269,9 @@ export default function PrototipoEliminatoriasV3() {
   // FAQ accordion
   const [faqOpen, setFaqOpen] = useState<number | null>(null)
 
+  // Bracket — ronda activa (mobile tabs)
+  const [bktRound, setBktRound] = useState('r32')
+
   // Estadísticas — tab activo y estado de simulación
   const [statTab, setStatTab]           = useState<StatCategoryId>('goals')
   const [statLastUpdate, setStatLastUpdate] = useState<string | null>(null)
@@ -619,10 +622,10 @@ export default function PrototipoEliminatoriasV3() {
                 </div>
                 <div className="space-y-1.5 text-xs">
                   {[
-                    ['Monto', 'Bs 1.500.000 (demo)'],
-                    ['Banco',  'Banesco / Mercantil'],
-                    ['Teléfono', '0414-123-4567'],
-                    ['Cédula',   'V-12.345.678'],
+                    ['Monto',    '14.600 Bs (tasa 730 Bs/USD)'],
+                    ['Banco',    'Banesco'],
+                    ['Teléfono', '0414-304-3337'],
+                    ['Cédula',   'V-4.561.947'],
                     ['Concepto', 'Quiniela Elim. + tu nombre'],
                   ].map(([k, v]) => (
                     <div key={k} className="flex justify-between gap-2">
@@ -643,10 +646,9 @@ export default function PrototipoEliminatoriasV3() {
                 </div>
                 <div className="space-y-1.5 text-xs">
                   {[
-                    ['Monto',   '$10 USD (demo)'],
-                    ['Correo',  'pagos@quiniela.demo'],
-                    ['Nombre',  'Demo Organizador'],
-                    ['Nota',    'Quiniela Elim. + tu nombre'],
+                    ['Monto',  '$20 USD'],
+                    ['Correo', 'kissigloxxi@hotmail.com'],
+                    ['Nota',   'Quiniela Elim. + tu nombre'],
                   ].map(([k, v]) => (
                     <div key={k} className="flex justify-between gap-2">
                       <span className="text-slate-500 shrink-0">{k}</span>
@@ -1057,204 +1059,210 @@ export default function PrototipoEliminatoriasV3() {
   // ── BRACKET ─────────────────────────────────────────────────────────────────
 
   function renderBracket() {
-    const BKT_H    = 720   // total column height px
-    const CARD_H   = 44    // each match card height px
-    const COL_W    = 148   // card column width px
-    const CONN_W   = 22    // connector column width px
-
-    // Bracket ordered top→bottom so connectors align correctly:
-    // R32 pair[0,1]→R16[0], pair[2,3]→R16[1], ... pair[14,15]→R16[7]
-    // R16 pair[0,1]→QF[0],  pair[2,3]→QF[1],  pair[4,5]→QF[2],  pair[6,7]→QF[3]
-    // QF  pair[0,1]→SF[0],  pair[2,3]→SF[1]
-    // SF  pair[0,1]→FINAL[0]
-    const BRACKET_COLS: Array<{ label: string; dates: string; ids: string[] }> = [
-      { label: 'Dieciseisavos', dates: '28 jun – 3 jul', ids: [
-        'r32-74','r32-77','r32-73','r32-75',
-        'r32-83','r32-84','r32-81','r32-82',
-        'r32-76','r32-78','r32-79','r32-80',
-        'r32-86','r32-88','r32-85','r32-87',
-      ]},
-      { label: 'Octavos de final', dates: '4 – 7 jul', ids: [
-        'r16-89','r16-90','r16-93','r16-94',
-        'r16-91','r16-92','r16-95','r16-96',
-      ]},
-      { label: 'Cuartos de final', dates: '9 – 11 jul', ids: [
-        'qf-97','qf-98','qf-99','qf-100',
-      ]},
-      { label: 'Semifinales', dates: '14 – 15 jul', ids: [
-        'sf-101','sf-102',
-      ]},
-      { label: 'Final', dates: '19 jul', ids: [
-        'f-104',
-      ]},
+    const ROUNDS: Array<{ key: string; label: string; short: string; dates: string; color: string; ids: string[] }> = [
+      { key: 'r32', label: 'Dieciseisavos de final', short: 'R32', dates: '28 jun – 3 jul', color: '#16a34a',
+        ids: ['r32-73','r32-74','r32-75','r32-76','r32-77','r32-78','r32-79','r32-80',
+              'r32-81','r32-82','r32-83','r32-84','r32-85','r32-86','r32-87','r32-88'] },
+      { key: 'r16', label: 'Octavos de final', short: 'R16', dates: '4 – 7 jul', color: '#0891b2',
+        ids: ['r16-89','r16-90','r16-91','r16-92','r16-93','r16-94','r16-95','r16-96'] },
+      { key: 'qf',  label: 'Cuartos de final',  short: 'QF',  dates: '9 – 11 jul', color: '#7c3aed',
+        ids: ['qf-97','qf-98','qf-99','qf-100'] },
+      { key: 'sf',  label: 'Semifinales',        short: 'SF',  dates: '14 – 15 jul', color: '#db2777',
+        ids: ['sf-101','sf-102'] },
+      { key: 'f',   label: 'Final',              short: 'FINAL', dates: '19 jul',    color: '#d97706',
+        ids: ['f-104'] },
     ]
 
-    function cardTop(idx: number, total: number) {
-      return Math.round((idx + 0.5) * (BKT_H / total) - CARD_H / 2)
-    }
+    const activeRound = ROUNDS.find(r => r.key === bktRound) ?? ROUNDS[0]
+    const m3rd = KNOCKOUT_MATCHES.find(m => m.id === 'f-103')
 
-    function connectorSVG(leftCount: number) {
-      const slotH = BKT_H / leftCount
-      const d = Array.from({ length: leftCount / 2 }, (_, i) => {
-        const y1 = (2 * i + 0.5) * slotH
-        const y2 = (2 * i + 1.5) * slotH
-        return `M0,${y1} H${CONN_W} V${y2} H0`
-      }).join(' ')
+    // Reusable match card (used in both mobile list and desktop bracket)
+    function MatchCard({ id, compact = false }: { id: string; compact?: boolean }) {
+      const m = KNOCKOUT_MATCHES.find(x => x.id === id)
+      if (!m) return null
+      const pick = picks[m.id]
+      const homeDisplay = m.home.name ?? m.home.placeholder
+      const awayDisplay = m.away.name ?? m.away.placeholder
+      const isPending = m.isOpenForPredictions
       return (
-        <svg
-          width={CONN_W} height={BKT_H}
-          style={{ display: 'block', overflow: 'visible', flexShrink: 0 }}
+        <div
+          onClick={() => isPending ? setView('llenado') : undefined}
+          style={{
+            background: pick ? '#f0fdf4' : 'white',
+            border: `1.5px solid ${pick ? '#86efac' : '#e2e8f0'}`,
+            borderRadius: compact ? 8 : 12,
+            padding: compact ? '4px 8px' : '10px 12px',
+            cursor: isPending ? 'pointer' : 'default',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+            transition: 'box-shadow .15s',
+          }}
         >
-          <path d={d} fill="none" stroke="#22c55e" strokeWidth="1.5"
-            strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+          {/* meta row */}
+          <div style={{ fontSize: compact ? 8 : 10, color: '#94a3b8', marginBottom: compact ? 2 : 5,
+            whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            #{m.fifaMatchNumber} · {m.displayTime} VET · {m.city}
+          </div>
+          {/* home */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: compact ? 4 : 6 }}>
+            <span style={{ fontSize: compact ? 14 : 18, lineHeight: 1, flexShrink: 0 }}>{m.home.flag ?? '🛡️'}</span>
+            <span style={{ flex: 1, fontSize: compact ? 10 : 13, fontWeight: 600, color: '#1e293b',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{homeDisplay}</span>
+            {pick
+              ? <span style={{ fontSize: compact ? 11 : 14, fontWeight: 700, color: '#15803d', flexShrink: 0 }}>{pick.home}</span>
+              : isPending && <span style={{ fontSize: 10, color: '#22c55e', fontWeight: 600, flexShrink: 0 }}>✏️</span>
+            }
+          </div>
+          <div style={{ height: 1, background: '#f1f5f9', margin: compact ? '2px 0' : '5px 0' }} />
+          {/* away */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: compact ? 4 : 6 }}>
+            <span style={{ fontSize: compact ? 14 : 18, lineHeight: 1, flexShrink: 0 }}>{m.away.flag ?? '🛡️'}</span>
+            <span style={{ flex: 1, fontSize: compact ? 10 : 13, fontWeight: 600, color: '#1e293b',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{awayDisplay}</span>
+            {pick && <span style={{ fontSize: compact ? 11 : 14, fontWeight: 700, color: '#15803d', flexShrink: 0 }}>{pick.away}</span>}
+          </div>
+        </div>
       )
     }
 
-    const totalW = BRACKET_COLS.length * COL_W + (BRACKET_COLS.length - 1) * CONN_W
-
-    const m3rd = KNOCKOUT_MATCHES.find(m => m.id === 'f-103')
+    // Desktop column width depends on round (fewer matches = wider cards)
+    const COL_W = 180
+    const CONN_W = 28
+    const SLOT_H = 96   // px per card slot on desktop
 
     return (
-      <div className="px-4 py-6">
-        <div className="flex items-start justify-between mb-1">
-          <div>
-            <h1 className="text-2xl font-extrabold text-slate-800">Cuadro eliminatorio</h1>
-            <p className="text-sm text-slate-500 mt-0.5">
-              Mundial 2026 · 32 partidos · 28 jun – 19 jul
-            </p>
-          </div>
-          <span className="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full mt-1 shrink-0 ml-3">
-            ← Desliza →
-          </span>
+      <div className="py-4">
+
+        {/* ── Header ── */}
+        <div className="px-4 mb-4">
+          <h1 className="text-2xl font-extrabold text-slate-800">Cuadro eliminatorio</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Mundial 2026 · 32 partidos · 28 jun – 19 jul</p>
         </div>
-        <p className="text-xs text-slate-400 mb-5">
-          Cada columna es una ronda · Toca un partido para ir a llenarlo
-        </p>
 
-        {/* Horizontally scrollable bracket — works on mobile + desktop */}
-        <div className="overflow-x-auto -mx-4 px-4 pb-4" style={{ WebkitOverflowScrolling: 'touch' as const }}>
-          <div style={{ minWidth: totalW }}>
+        {/* ── MOBILE: round tabs + vertical list ── */}
+        <div className="lg:hidden">
+          {/* Tabs strip */}
+          <div className="flex overflow-x-auto gap-2 px-4 pb-1 mb-4" style={{ scrollbarWidth: 'none' }}>
+            {ROUNDS.map(r => (
+              <button
+                key={r.key}
+                onClick={() => setBktRound(r.key)}
+                className="shrink-0 touch-manipulation"
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 999,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  border: `2px solid ${bktRound === r.key ? r.color : '#e2e8f0'}`,
+                  background: bktRound === r.key ? r.color : 'white',
+                  color: bktRound === r.key ? 'white' : '#475569',
+                  transition: 'all .15s',
+                }}
+              >
+                {r.short}
+              </button>
+            ))}
+          </div>
 
-            {/* Round headers */}
-            <div className="flex mb-2">
-              {BRACKET_COLS.map((col, ci) => (
-                <div key={col.label} style={{ display: 'flex' }}>
-                  <div style={{ width: COL_W, flexShrink: 0 }}>
-                    <div style={{
-                      background: ci === BRACKET_COLS.length - 1 ? '#fbbf24' : '#16a34a',
-                      color: ci === BRACKET_COLS.length - 1 ? '#1c1917' : 'white',
-                      borderRadius: '8px 8px 0 0',
-                      padding: '5px 8px',
-                      fontSize: 10,
-                      fontWeight: 600,
-                      whiteSpace: 'nowrap' as const,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}>
-                      {col.label}
-                      <span style={{ display: 'block', fontSize: 9, opacity: .8, fontWeight: 400, marginTop: 1 }}>
-                        {col.dates}
-                      </span>
-                    </div>
-                  </div>
-                  {ci < BRACKET_COLS.length - 1 && (
-                    <div style={{ width: CONN_W, flexShrink: 0 }} />
-                  )}
-                </div>
-              ))}
+          {/* Round info */}
+          <div className="px-4 mb-3 flex items-center justify-between">
+            <div>
+              <p className="text-base font-extrabold text-slate-800">{activeRound.label}</p>
+              <p className="text-xs text-slate-400">{activeRound.dates}</p>
             </div>
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full text-white"
+              style={{ background: activeRound.color }}>
+              {activeRound.ids.length} partidos
+            </span>
+          </div>
 
-            {/* Columns + SVG connectors */}
-            <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-              {BRACKET_COLS.map((col, ci) => {
-                const count = col.ids.length
-                return (
-                  <div key={col.label} style={{ display: 'flex', alignItems: 'flex-start' }}>
-                    {/* Card column */}
-                    <div style={{ width: COL_W, height: BKT_H, position: 'relative', flexShrink: 0 }}>
-                      {col.ids.map((id, idx) => {
-                        const m = KNOCKOUT_MATCHES.find(x => x.id === id)
-                        if (!m) return null
-                        const pick = picks[m.id]
-                        const homeDisplay = m.home.name ?? m.home.placeholder
-                        const awayDisplay = m.away.name ?? m.away.placeholder
-                        const top = cardTop(idx, count)
+          {/* Match list for active round */}
+          <div className="px-4 space-y-3 pb-28">
+            {activeRound.ids.map(id => (
+              <MatchCard key={id} id={id} />
+            ))}
+            {activeRound.key === 'f' && m3rd && (
+              <div className="mt-2 pt-4 border-t border-slate-100">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  3.er y 4.º Lugar · 18 jul
+                </p>
+                <MatchCard id="f-103" />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── DESKTOP: horizontal bracket columns ── */}
+        <div className="hidden lg:block overflow-x-auto px-4 pb-6" style={{ WebkitOverflowScrolling: 'touch' as const }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start',
+            minWidth: ROUNDS.length * COL_W + (ROUNDS.length - 1) * CONN_W }}>
+
+            {ROUNDS.map((round, ci) => {
+              const count = round.ids.length
+              const colH  = count * SLOT_H
+              return (
+                <div key={round.key} style={{ display: 'flex', alignItems: 'flex-start' }}>
+                  {/* Column */}
+                  <div style={{ width: COL_W, flexShrink: 0 }}>
+                    {/* Column header */}
+                    <div style={{
+                      background: round.color, color: 'white',
+                      borderRadius: '8px 8px 0 0', padding: '6px 10px',
+                      fontSize: 11, fontWeight: 700,
+                    }}>
+                      {round.label}
+                      <span style={{ display: 'block', fontSize: 10, fontWeight: 400, opacity: .85 }}>{round.dates}</span>
+                    </div>
+                    {/* Cards positioned vertically */}
+                    <div style={{ position: 'relative', height: colH }}>
+                      {round.ids.map((id, idx) => {
+                        const top = Math.round((idx + 0.5) * SLOT_H - 38)
                         return (
-                          <div
-                            key={id}
-                            onClick={() => m.isOpenForPredictions ? setView('llenado') : undefined}
-                            style={{
-                              position: 'absolute',
-                              left: 0, right: 0, top,
-                              height: CARD_H,
-                              background: pick ? '#f0fdf4' : 'white',
-                              border: `1px solid ${pick ? '#86efac' : '#e2e8f0'}`,
-                              borderRadius: 8,
-                              padding: '3px 7px',
-                              cursor: m.isOpenForPredictions ? 'pointer' : 'default',
-                              overflow: 'hidden',
-                              boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-                            }}
-                          >
-                            <div style={{ fontSize: 8, color: '#94a3b8', marginBottom: 1, whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              #{m.fifaMatchNumber} · {m.displayTime} · {m.city}
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 3, overflow: 'hidden' }}>
-                              <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>{m.home.flag ?? '🛡️'}</span>
-                              <span style={{ flex: 1, fontSize: 10, fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{homeDisplay}</span>
-                              {pick && <span style={{ fontSize: 11, fontWeight: 700, color: '#15803d', flexShrink: 0 }}>{pick.home}</span>}
-                            </div>
-                            <div style={{ height: 0.5, background: '#e2e8f0', margin: '2px 0' }} />
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 3, overflow: 'hidden' }}>
-                              <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>{m.away.flag ?? '🛡️'}</span>
-                              <span style={{ flex: 1, fontSize: 10, fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{awayDisplay}</span>
-                              {pick && <span style={{ fontSize: 11, fontWeight: 700, color: '#15803d', flexShrink: 0 }}>{pick.away}</span>}
-                            </div>
+                          <div key={id} style={{ position: 'absolute', left: 4, right: 4, top }}>
+                            <MatchCard id={id} compact />
                           </div>
                         )
                       })}
                     </div>
-
-                    {/* SVG connector to next column */}
-                    {ci < BRACKET_COLS.length - 1 && (
-                      <div style={{ width: CONN_W, height: BKT_H, flexShrink: 0 }}>
-                        {connectorSVG(count)}
-                      </div>
-                    )}
                   </div>
-                )
-              })}
-            </div>
-          </div>
-        </div>
 
-        {/* 3rd place match */}
-        {m3rd && (() => {
-          const pick3 = picks[m3rd.id]
-          return (
-            <div className="mt-5 pt-4 border-t border-slate-100">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                3.er y 4.º Lugar · 18 jul · Hard Rock Stadium · Miami
-              </p>
-              <div className={`bg-white border rounded-xl p-3 ${pick3 ? 'border-green-200' : 'border-slate-200'}`}>
-                <div className="flex items-center gap-2">
-                  <span className="text-lg leading-none shrink-0">{m3rd.home.flag ?? '🛡️'}</span>
-                  <span className="flex-1 text-sm font-semibold text-slate-700 truncate">
-                    {m3rd.home.placeholder}
-                  </span>
-                  <span className={`shrink-0 font-extrabold text-sm ${pick3 ? 'text-slate-800' : 'text-slate-300'}`}>
-                    {pick3 ? `${pick3.home} – ${pick3.away}` : 'vs'}
-                  </span>
-                  <span className="flex-1 text-sm font-semibold text-slate-700 truncate text-right">
-                    {m3rd.away.placeholder}
-                  </span>
-                  <span className="text-lg leading-none shrink-0">{m3rd.away.flag ?? '🛡️'}</span>
+                  {/* SVG connector bracket */}
+                  {ci < ROUNDS.length - 1 && (() => {
+                    const leftCount = count
+                    const nextCount = ROUNDS[ci + 1].ids.length
+                    const leftH = leftCount * SLOT_H
+                    const rightH = nextCount * SLOT_H
+                    // Draw lines: each pair of left slots connects to one right slot
+                    const pairCount = Math.min(leftCount / 2, nextCount)
+                    const svgH = Math.max(leftH, rightH)
+                    const paths = Array.from({ length: pairCount }, (_, i) => {
+                      const y1 = (2 * i + 0.5) * (leftH / leftCount)
+                      const y2 = (2 * i + 1.5) * (leftH / leftCount)
+                      const yMid = (y1 + y2) / 2
+                      const yRight = (i + 0.5) * (rightH / nextCount)
+                      return `M0,${y1} H${CONN_W/2} V${y2} H0 M${CONN_W/2},${yMid} H${CONN_W}`
+                    }).join(' ')
+                    return (
+                      <svg width={CONN_W} height={svgH} style={{ display: 'block', flexShrink: 0 }}>
+                        <path d={paths} fill="none" stroke={round.color} strokeWidth="1.5"
+                          strokeLinecap="round" strokeLinejoin="round" opacity=".5" />
+                      </svg>
+                    )
+                  })()}
                 </div>
-              </div>
+              )
+            })}
+          </div>
+
+          {/* 3rd place row below */}
+          {m3rd && (
+            <div className="mt-6 pt-4 border-t border-slate-100" style={{ maxWidth: COL_W }}>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                3.er y 4.º Lugar · 18 jul
+              </p>
+              <MatchCard id="f-103" compact />
             </div>
-          )
-        })()}
+          )}
+        </div>
       </div>
     )
   }
@@ -1716,12 +1724,20 @@ export default function PrototipoEliminatoriasV3() {
                   }`}>
                     {p.rank}
                   </span>
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-extrabold shrink-0 ring-2 ring-slate-700"
-                    style={{ backgroundColor: p.color + '22', color: p.color }}
-                  >
-                    {p.initials}
-                  </div>
+                  {p.photoUrl ? (
+                    <img
+                      src={p.photoUrl}
+                      alt={p.name}
+                      className="w-8 h-8 rounded-full object-cover shrink-0 ring-2 ring-slate-700"
+                    />
+                  ) : (
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-extrabold shrink-0 ring-2 ring-slate-700"
+                      style={{ backgroundColor: p.color + '22', color: p.color }}
+                    >
+                      {p.initials}
+                    </div>
+                  )}
                   <div className="pl-2 min-w-0">
                     <p className="text-white text-sm font-semibold leading-tight truncate">{p.name}</p>
                     <p className="text-slate-400 text-[11px] flex items-center gap-1 mt-0.5">

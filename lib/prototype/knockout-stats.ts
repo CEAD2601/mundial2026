@@ -47,6 +47,7 @@ export type StatPlayer = {
   flag: string
   initials: string
   color: string   // accent color for the avatar bubble
+  photoUrl?: string
   value: number
 }
 
