@@ -16,10 +16,14 @@ import {
   KNOCKOUT_MATCHES, STAGE_META, DEMO_RANKING,
   type KOMatch, type Stage,
 } from '@/lib/prototype/knockout-data'
+import {
+  STAT_CATEGORIES, DEMO_STATS, DEMO_TEAM_STATS, DEMO_PENDING_EVENTS, SIMULATED_MATCH,
+  type StatCategory, type StatCategoryId, type PendingMatchEvent,
+} from '@/lib/prototype/knockout-stats'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type View = 'home' | 'llenado' | 'bracket' | 'mi-quiniela' | 'ranking' | 'admin' | 'registro'
+type View = 'home' | 'llenado' | 'bracket' | 'mi-quiniela' | 'ranking' | 'estadisticas' | 'admin' | 'registro'
 type Pick = { home: number; away: number }
 type Picks = Record<string, Pick>
 
@@ -262,6 +266,13 @@ export default function PrototipoEliminatoriasV3() {
   // Admin — búsqueda participantes
   const [adminSearch, setAdminSearch] = useState('')
 
+  // Estadísticas — tab activo y estado de simulación
+  const [statTab, setStatTab]           = useState<StatCategoryId>('goals')
+  const [statLastUpdate, setStatLastUpdate] = useState<string | null>(null)
+  const [statSimLogs, setStatSimLogs]   = useState<string[]>([])
+  const [statSimRunning, setStatSimRunning] = useState(false)
+  const [pendingEvents, setPendingEvents] = useState<PendingMatchEvent[]>(DEMO_PENDING_EVENTS)
+
   useEffect(() => { setPicks(loadPicks()) }, [])
 
   useEffect(() => {
@@ -321,11 +332,12 @@ export default function PrototipoEliminatoriasV3() {
   // ── Navigation ──────────────────────────────────────────────────────────────
 
   const navItems: { id: View; label: string; emoji: string }[] = [
-    { id: 'home',        label: 'Inicio',      emoji: '🏠' },
-    { id: 'llenado',     label: 'Llenar',      emoji: '⚽' },
-    { id: 'mi-quiniela', label: 'Mi quiniela', emoji: '📋' },
-    { id: 'ranking',     label: 'Ranking',     emoji: '🏆' },
-    { id: 'bracket',     label: 'Cuadro',      emoji: '📊' },
+    { id: 'home',          label: 'Inicio',      emoji: '🏠' },
+    { id: 'llenado',       label: 'Llenar',      emoji: '⚽' },
+    { id: 'mi-quiniela',   label: 'Mi quiniela', emoji: '📋' },
+    { id: 'ranking',       label: 'Ranking',     emoji: '🏆' },
+    { id: 'bracket',       label: 'Cuadro',      emoji: '📊' },
+    { id: 'estadisticas',  label: 'Stats',       emoji: '📈' },
   ]
 
   // ── HOME ────────────────────────────────────────────────────────────────────
@@ -550,6 +562,29 @@ export default function PrototipoEliminatoriasV3() {
                   </div>
                 </div>
               ))}
+            </div>
+          </section>
+
+          {/* Stats teaser card */}
+          <section>
+            <div className="bg-slate-900 rounded-2xl p-5 flex items-center justify-between gap-4 shadow-lg">
+              <div>
+                <p className="text-white font-extrabold text-base leading-tight">📈 Estadísticas del torneo</p>
+                <p className="text-slate-400 text-xs mt-1">Goleadores · Asistencias · Tarjetas</p>
+                <div className="flex gap-2 mt-2.5">
+                  {STAT_CATEGORIES.map(c => (
+                    <span key={c.id} className="text-[10px] font-bold bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">
+                      {c.emoji} {c.label.split(' ')[0]}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <button
+                onClick={() => setView('estadisticas')}
+                className="shrink-0 bg-white text-slate-900 font-extrabold text-xs px-4 py-2.5 rounded-xl hover:bg-slate-100 active:scale-95 transition-all touch-manipulation"
+              >
+                Ver stats
+              </button>
             </div>
           </section>
 
@@ -1405,6 +1440,176 @@ export default function PrototipoEliminatoriasV3() {
     )
   }
 
+  // ── ESTADÍSTICAS ─────────────────────────────────────────────────────────────
+
+  function renderEstadisticas() {
+    const activeCat = STAT_CATEGORIES.find(c => c.id === statTab)!
+    const isTeams   = statTab === 'teams'
+    const players   = isTeams ? [] : DEMO_STATS[statTab as Exclude<StatCategoryId, 'teams'>]
+    const pendingCount = pendingEvents.filter(e => e.status === 'pending').length
+
+    return (
+      <div className="max-w-2xl mx-auto px-3 py-5 pb-28">
+
+        {/* Pending badge */}
+        {pendingCount > 0 && (
+          <button
+            onClick={() => setView('admin')}
+            className="w-full flex items-center justify-between bg-amber-400 text-slate-900 rounded-xl px-4 py-2.5 mb-3 text-xs font-bold touch-manipulation hover:bg-amber-300 transition-colors"
+          >
+            <span>⚠️ {pendingCount} evento{pendingCount > 1 ? 's' : ''} pendiente{pendingCount > 1 ? 's' : ''} de revisión</span>
+            <span className="underline">Revisar →</span>
+          </button>
+        )}
+
+        {/* Header card — dark Google-style */}
+        <div className="bg-slate-900 rounded-2xl overflow-hidden shadow-xl mb-4">
+          <div className="px-5 pt-5 pb-0">
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-white text-xl font-extrabold tracking-tight">Estadísticas</h1>
+                <p className="text-slate-400 text-xs mt-0.5">Quiniela Eliminatorias 2026</p>
+              </div>
+              {/* Last update */}
+              <div className="text-right shrink-0 ml-3">
+                {statLastUpdate ? (
+                  <p className="text-green-400 text-[10px] font-semibold leading-tight">
+                    ✓ Actualizado<br />
+                    <span className="text-slate-400">{statLastUpdate}</span>
+                  </p>
+                ) : (
+                  <p className="text-slate-500 text-[10px]">datos demo</p>
+                )}
+              </div>
+            </div>
+
+            {/* Tabs — scrollable on mobile */}
+            <div className="flex gap-0 overflow-x-auto -mx-1 px-1 mt-4" style={{ scrollbarWidth: 'none' }}>
+              {STAT_CATEGORIES.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => setStatTab(cat.id)}
+                  className={`shrink-0 flex items-center gap-1.5 px-3 py-3 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap touch-manipulation ${
+                    statTab === cat.id
+                      ? 'text-white border-blue-400'
+                      : 'text-slate-400 border-transparent hover:text-slate-200'
+                  }`}
+                >
+                  <span className="text-base leading-none">{cat.emoji}</span>
+                  <span>{cat.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Jugadores ── */}
+          {!isTeams && (
+            <div className="divide-y divide-slate-800">
+              <div className="grid px-4 py-2 bg-slate-800/60"
+                style={{ gridTemplateColumns: '28px 40px 1fr 48px' }}>
+                <span className="text-[10px] text-slate-500 font-bold">#</span>
+                <span />
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">Jugador</span>
+                <span className="text-[10px] text-slate-500 font-bold text-right uppercase tracking-wide">
+                  {activeCat.unitShort}
+                </span>
+              </div>
+
+              {players.map((p, i) => (
+                <div
+                  key={`${p.name}-${i}`}
+                  className="grid items-center px-4 py-3 hover:bg-slate-800/50 transition-colors"
+                  style={{ gridTemplateColumns: '28px 40px 1fr 48px' }}
+                >
+                  <span className={`text-sm font-extrabold tabular-nums ${
+                    p.rank === 1 ? 'text-yellow-400' : 'text-slate-500'
+                  }`}>
+                    {p.rank}
+                  </span>
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-extrabold shrink-0 ring-2 ring-slate-700"
+                    style={{ backgroundColor: p.color + '22', color: p.color }}
+                  >
+                    {p.initials}
+                  </div>
+                  <div className="pl-2 min-w-0">
+                    <p className="text-white text-sm font-semibold leading-tight truncate">{p.name}</p>
+                    <p className="text-slate-400 text-[11px] flex items-center gap-1 mt-0.5">
+                      <span>{p.flag}</span>
+                      <span className="truncate">{p.country}</span>
+                    </p>
+                  </div>
+                  <span className="text-white text-lg font-extrabold text-right tabular-nums">
+                    {p.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ── Equipos ── */}
+          {isTeams && (
+            <div className="overflow-x-auto">
+              <div className="min-w-[420px]">
+                {/* Header */}
+                <div className="grid px-4 py-2 bg-slate-800/60 text-[10px] font-bold text-slate-500 uppercase tracking-wide"
+                  style={{ gridTemplateColumns: '28px 1fr 32px 32px 32px 32px 48px 48px 40px' }}>
+                  <span>#</span><span>Equipo</span>
+                  <span className="text-center">PJ</span><span className="text-center">G</span>
+                  <span className="text-center">E</span><span className="text-center">P</span>
+                  <span className="text-center">GF</span><span className="text-center">GC</span>
+                  <span className="text-center">DG</span>
+                </div>
+                {DEMO_TEAM_STATS.map(t => (
+                  <div
+                    key={t.code}
+                    className="grid items-center px-4 py-2.5 border-t border-slate-800 hover:bg-slate-800/40 transition-colors"
+                    style={{ gridTemplateColumns: '28px 1fr 32px 32px 32px 32px 48px 48px 40px' }}
+                  >
+                    <span className={`text-sm font-extrabold tabular-nums ${t.rank === 1 ? 'text-yellow-400' : 'text-slate-500'}`}>{t.rank}</span>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="text-base leading-none shrink-0">{t.flag}</span>
+                      <span className="text-white text-xs font-semibold truncate">{t.name}</span>
+                    </div>
+                    <span className="text-slate-400 text-xs text-center">{t.played}</span>
+                    <span className="text-green-400 text-xs text-center font-bold">{t.wins}</span>
+                    <span className="text-slate-400 text-xs text-center">{t.draws}</span>
+                    <span className="text-red-400 text-xs text-center">{t.losses}</span>
+                    <span className="text-white text-xs text-center font-semibold">{t.goalsFor}</span>
+                    <span className="text-slate-400 text-xs text-center">{t.goalsAgainst}</span>
+                    <span className={`text-xs text-center font-extrabold tabular-nums ${
+                      t.goalDiff > 0 ? 'text-green-400' : t.goalDiff < 0 ? 'text-red-400' : 'text-slate-400'
+                    }`}>
+                      {t.goalDiff > 0 ? '+' : ''}{t.goalDiff}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Footer */}
+          <div className="px-5 py-3 bg-slate-800/40 border-t border-slate-800 flex items-center justify-between">
+            <p className="text-[10px] text-slate-500">⚠️ Datos demo · no son estadísticas oficiales</p>
+            <button
+              onClick={() => setView('admin')}
+              className="text-[10px] text-slate-400 hover:text-white underline transition-colors"
+            >
+              Admin →
+            </button>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setView('home')}
+          className="w-full text-slate-400 text-xs py-2 hover:text-slate-600 transition-colors"
+        >
+          ← Volver al inicio
+        </button>
+      </div>
+    )
+  }
+
   // ── ADMIN DEMO ───────────────────────────────────────────────────────────────
 
   // Demo participants with full cedula (visible only in admin)
@@ -1497,8 +1702,136 @@ export default function PrototipoEliminatoriasV3() {
           )}
         </div>
 
+        {/* Simulate match finished */}
+        <div className="bg-slate-900 rounded-2xl p-5 mb-5 shadow-lg">
+          <h2 className="text-white font-extrabold text-sm mb-1">🔁 Simular partido finalizado</h2>
+          <p className="text-slate-400 text-xs mb-4">
+            Simula el ciclo completo: resultado → ranking → estadísticas → logs.<br />
+            Basado en: <span className="text-green-400 font-bold">{SIMULATED_MATCH.matchLabel}</span> (#{SIMULATED_MATCH.fifaMatchNumber})
+          </p>
+          <button
+            disabled={statSimRunning}
+            onClick={() => {
+              setStatSimRunning(true)
+              setStatSimLogs([])
+              let i = 0
+              const interval = setInterval(() => {
+                if (i < SIMULATED_MATCH.logs.length) {
+                  setStatSimLogs(prev => [...prev, SIMULATED_MATCH.logs[i]])
+                  i++
+                } else {
+                  clearInterval(interval)
+                  setStatSimRunning(false)
+                  setStatLastUpdate(`Partido #${SIMULATED_MATCH.fifaMatchNumber} · ${SIMULATED_MATCH.matchLabel}`)
+                  setToast('✅ Estadísticas actualizadas (simulación)')
+                }
+              }, 500)
+            }}
+            className="w-full bg-green-600 hover:bg-green-700 disabled:bg-slate-600 text-white font-extrabold py-3 rounded-xl text-sm transition-all touch-manipulation"
+          >
+            {statSimRunning ? '⏳ Ejecutando…' : '▶ Simular partido finalizado'}
+          </button>
+
+          {statSimLogs.length > 0 && (
+            <div className="mt-3 bg-slate-800 rounded-xl p-3 font-mono text-[10px] space-y-1">
+              {statSimLogs.map((log, i) => (
+                <p key={i} className={`${log.startsWith('STATS_APPLIED') ? 'text-green-400' : log.startsWith('STATS_SKIP') ? 'text-yellow-400' : 'text-slate-300'}`}>
+                  {log}
+                </p>
+              ))}
+              {!statSimRunning && <p className="text-blue-400 mt-1">✓ Proceso completado</p>}
+            </div>
+          )}
+        </div>
+
+        {/* Pending events review */}
+        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden mb-5 shadow-sm">
+          <div className="px-4 py-3 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+            <h2 className="font-extrabold text-slate-700 text-sm">📋 Estadísticas pendientes</h2>
+            {pendingEvents.filter(e => e.status === 'pending').length > 0 && (
+              <span className="bg-amber-400 text-slate-900 text-[10px] font-extrabold px-2 py-0.5 rounded-full">
+                {pendingEvents.filter(e => e.status === 'pending').length} pendientes
+              </span>
+            )}
+          </div>
+          <p className="text-[10px] text-slate-400 px-4 py-2 border-b border-slate-100 bg-slate-50/50">
+            Eventos detectados con confianza media/baja · Requieren revisión antes de aplicarse
+          </p>
+          {pendingEvents.length === 0 ? (
+            <div className="px-4 py-6 text-xs text-slate-400 text-center italic">Sin eventos pendientes</div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {pendingEvents.map(ev => (
+                <div key={ev.id} className={`px-4 py-3 ${ev.status !== 'pending' ? 'opacity-40' : ''}`}>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-semibold">{ev.matchLabel}</p>
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        <span className="text-base">{ev.flag}</span>
+                        <span className="text-sm font-bold text-slate-800">{ev.playerName}</span>
+                        <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+                          ev.eventType === 'GOAL'        ? 'bg-green-100 text-green-700' :
+                          ev.eventType === 'ASSIST'      ? 'bg-blue-100 text-blue-700'  :
+                          ev.eventType === 'YELLOW_CARD' ? 'bg-amber-100 text-amber-700':
+                                                           'bg-red-100 text-red-700'
+                        }`}>
+                          {ev.eventType === 'GOAL' ? '⚽ Gol' : ev.eventType === 'ASSIST' ? '🅰️ Asistencia' : ev.eventType === 'YELLOW_CARD' ? '🟨 Amarilla' : '🟥 Roja'}
+                        </span>
+                        <span className="text-[10px] text-slate-400">min. {ev.minute}</span>
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-1">
+                        Fuente: <span className="font-semibold">{ev.source}</span> ·{' '}
+                        Confianza:{' '}
+                        <span className={`font-extrabold ${
+                          ev.confidence === 'high' ? 'text-green-600' :
+                          ev.confidence === 'medium' ? 'text-amber-600' : 'text-red-600'
+                        }`}>{ev.confidence}</span>
+                      </p>
+                    </div>
+                    {ev.status !== 'pending' && (
+                      <span className={`text-[10px] font-extrabold px-2 py-1 rounded-lg shrink-0 ${
+                        ev.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
+                      }`}>
+                        {ev.status === 'approved' ? '✓ Aprobado' : '✗ Rechazado'}
+                      </span>
+                    )}
+                  </div>
+                  {ev.status === 'pending' && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setPendingEvents(prev => prev.map(e => e.id === ev.id ? { ...e, status: 'approved' } : e))
+                          setToast(`✅ Aprobado: ${ev.playerName} — ${ev.eventType}`)
+                        }}
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 rounded-lg transition-all touch-manipulation"
+                      >
+                        ✓ Aprobar
+                      </button>
+                      <button
+                        onClick={() => {
+                          setPendingEvents(prev => prev.map(e => e.id === ev.id ? { ...e, status: 'rejected' } : e))
+                          setToast(`🗑 Rechazado: ${ev.playerName}`)
+                        }}
+                        className="flex-1 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 text-xs font-bold py-2 rounded-lg transition-all touch-manipulation"
+                      >
+                        ✗ Rechazar
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Actions */}
         <div className="space-y-3 mb-6">
+          <button
+            onClick={() => setView('estadisticas')}
+            className="w-full bg-slate-900 text-white font-bold py-3.5 rounded-xl hover:bg-slate-800 transition-all touch-manipulation"
+          >
+            📈 Ver panel de estadísticas
+          </button>
           <button
             onClick={() => { setPicks({}); storePicks({}); setToast('🗑 Picks borrados') }}
             className="w-full bg-red-50 border border-red-200 text-red-600 font-bold py-3.5 rounded-xl hover:bg-red-100 transition-all touch-manipulation"
@@ -1683,13 +2016,14 @@ export default function PrototipoEliminatoriasV3() {
 
       {/* Main content */}
       <main>
-        {view === 'home'        && renderHome()}
-        {view === 'registro'    && renderRegistro()}
-        {view === 'llenado'     && renderLlenado()}
-        {view === 'bracket'     && renderBracket()}
-        {view === 'mi-quiniela' && renderMiQuiniela()}
-        {view === 'ranking'     && renderRanking()}
-        {view === 'admin'       && renderAdmin()}
+        {view === 'home'          && renderHome()}
+        {view === 'registro'      && renderRegistro()}
+        {view === 'llenado'       && renderLlenado()}
+        {view === 'bracket'       && renderBracket()}
+        {view === 'mi-quiniela'   && renderMiQuiniela()}
+        {view === 'ranking'       && renderRanking()}
+        {view === 'estadisticas'  && renderEstadisticas()}
+        {view === 'admin'         && renderAdmin()}
       </main>
 
       {/* Global toast (outside llenado which has its own) */}
