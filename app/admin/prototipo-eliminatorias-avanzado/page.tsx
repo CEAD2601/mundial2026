@@ -1316,7 +1316,7 @@ export default function PrototipoEliminatoriasV3() {
     }
 
     // Shorten very long placeholder strings for tight cards
-    function shortLabel(name: string | undefined, placeholder: string | undefined): string {
+    function shortLabel(name: string | null | undefined, placeholder: string | null | undefined): string {
       const raw = name ?? placeholder ?? 'A definir'
       // "Mejor 3.º A/B/C/D/F" → "Mejor 3.º"
       if (raw.startsWith('Mejor 3.º')) return 'Mejor 3.º'
