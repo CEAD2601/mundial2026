@@ -266,6 +266,9 @@ export default function PrototipoEliminatoriasV3() {
   // Admin — búsqueda participantes
   const [adminSearch, setAdminSearch] = useState('')
 
+  // FAQ accordion
+  const [faqOpen, setFaqOpen] = useState<number | null>(null)
+
   // Estadísticas — tab activo y estado de simulación
   const [statTab, setStatTab]           = useState<StatCategoryId>('goals')
   const [statLastUpdate, setStatLastUpdate] = useState<string | null>(null)
@@ -542,39 +545,173 @@ export default function PrototipoEliminatoriasV3() {
             </div>
           </section>
 
-          {/* How it works */}
+          {/* How it works — 5 steps */}
           <section>
-            <h2 className="text-lg font-extrabold text-slate-800 mb-4">¿Cómo funciona?</h2>
-            <div className="grid grid-cols-2 gap-3">
+            <h2 className="text-lg font-extrabold text-slate-800 mb-4">¿Cómo participar?</h2>
+            <div className="space-y-3">
               {[
-                { n: '1', emoji: '📝', title: 'Inscríbete', desc: 'Regístrate con tu nombre y paga' },
-                { n: '2', emoji: '⚽', title: 'Llena tu quiniela', desc: 'Predice los 32 partidos' },
-                { n: '3', emoji: '✅', title: 'Confirma', desc: 'Revisa y bloquea tu quiniela' },
-                { n: '4', emoji: '🏆', title: '¡Gana!', desc: 'El mejor quinielero gana el 65%' },
+                { n:'1', emoji:'📝', title:'Regístrate',            desc:'Nombre completo, cédula y WhatsApp. Sin complicaciones.' },
+                { n:'2', emoji:'⚽', title:'Llena tu quiniela',     desc:'Predice el marcador exacto de los 32 partidos eliminatorios.' },
+                { n:'3', emoji:'💳', title:'Paga y reporta',        desc:'Pago Móvil o Zelle. Reporta tu comprobante por WhatsApp.' },
+                { n:'4', emoji:'📊', title:'Sigue el ranking',      desc:'Ve tu posición en tiempo real después de cada partido.' },
+                { n:'5', emoji:'🏆', title:'¡Gana el premio!',      desc:'El mejor puntaje acumulado se lleva el 65% del pozo.' },
               ].map(s => (
-                <div key={s.n} className="bg-white border border-slate-200 rounded-2xl p-4 flex items-start gap-3">
-                  <span className="w-7 h-7 rounded-full bg-green-600 text-white text-xs font-extrabold flex items-center justify-center shrink-0">
+                <div key={s.n} className="bg-white border border-slate-200 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
+                  <span className="w-8 h-8 rounded-full bg-green-600 text-white text-sm font-extrabold flex items-center justify-center shrink-0 mt-0.5">
                     {s.n}
                   </span>
                   <div>
                     <p className="font-bold text-slate-800 text-sm">{s.emoji} {s.title}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{s.desc}</p>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{s.desc}</p>
                   </div>
                 </div>
               ))}
             </div>
           </section>
 
-          {/* Stats teaser card */}
+          {/* Prize pool / Pozo */}
+          <section>
+            <h2 className="text-lg font-extrabold text-slate-800 mb-4">💰 Pozo acumulado</h2>
+            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-5 text-white shadow-xl">
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-white/10 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-extrabold text-yellow-400">$120</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Pozo en USD</p>
+                </div>
+                <div className="bg-white/10 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-extrabold text-green-400">12</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Participantes</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                {[
+                  { place:'🥇 1.er lugar', pct:'65%', usd:'$78', color:'text-yellow-400' },
+                  { place:'🥈 2.do lugar', pct:'20%', usd:'$24', color:'text-slate-300' },
+                  { place:'⚙️ Organización', pct:'15%', usd:'$18', color:'text-slate-400' },
+                ].map(p => (
+                  <div key={p.place} className="flex items-center justify-between">
+                    <span className={`text-sm font-semibold ${p.color}`}>{p.place}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-slate-400">{p.pct}</span>
+                      <span className={`text-sm font-extrabold ${p.color}`}>{p.usd}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-slate-500 mt-3 text-center">
+                * Datos demo · monto varía según participantes confirmados
+              </p>
+            </div>
+          </section>
+
+          {/* Payment methods */}
+          <section>
+            <h2 className="text-lg font-extrabold text-slate-800 mb-4">💳 Métodos de pago</h2>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {/* Pago Móvil */}
+              <div className="bg-white border-2 border-blue-100 rounded-2xl p-5 shadow-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-2xl">📱</span>
+                  <div>
+                    <p className="font-extrabold text-slate-800">Pago Móvil</p>
+                    <p className="text-xs text-slate-400">Venezuela</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 text-xs">
+                  {[
+                    ['Monto', 'Bs 1.500.000 (demo)'],
+                    ['Banco',  'Banesco / Mercantil'],
+                    ['Teléfono', '0414-123-4567'],
+                    ['Cédula',   'V-12.345.678'],
+                    ['Concepto', 'Quiniela Elim. + tu nombre'],
+                  ].map(([k, v]) => (
+                    <div key={k} className="flex justify-between gap-2">
+                      <span className="text-slate-500 shrink-0">{k}</span>
+                      <span className="font-semibold text-slate-800 text-right">{v}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Zelle */}
+              <div className="bg-white border-2 border-purple-100 rounded-2xl p-5 shadow-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-2xl">🏦</span>
+                  <div>
+                    <p className="font-extrabold text-slate-800">Zelle</p>
+                    <p className="text-xs text-slate-400">Desde USA</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 text-xs">
+                  {[
+                    ['Monto',   '$10 USD (demo)'],
+                    ['Correo',  'pagos@quiniela.demo'],
+                    ['Nombre',  'Demo Organizador'],
+                    ['Nota',    'Quiniela Elim. + tu nombre'],
+                  ].map(([k, v]) => (
+                    <div key={k} className="flex justify-between gap-2">
+                      <span className="text-slate-500 shrink-0">{k}</span>
+                      <span className="font-semibold text-slate-800 text-right">{v}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-slate-400 mt-3">Después de pagar, envía el comprobante por WhatsApp.</p>
+              </div>
+            </div>
+          </section>
+
+          {/* Benefits grid */}
+          <section>
+            <h2 className="text-lg font-extrabold text-slate-800 mb-4">✅ Todo lo que necesitas</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {[
+                { emoji:'📊', title:'Ranking en vivo',      desc:'Actualizado tras cada partido' },
+                { emoji:'⏰', title:'Hora Venezuela',        desc:'Todos los horarios en VET' },
+                { emoji:'📋', title:'Quinielas comparables', desc:'Ve los pronósticos de todos' },
+                { emoji:'📈', title:'Estadísticas',          desc:'Goleadores, asistencias y más' },
+                { emoji:'🔒', title:'Transparencia total',   desc:'Resultados verificables' },
+                { emoji:'💬', title:'Soporte WhatsApp',      desc:'Respuesta en menos de 1 hora' },
+              ].map(b => (
+                <div key={b.title} className="bg-white border border-slate-200 rounded-2xl p-4 text-center shadow-sm">
+                  <div className="text-2xl mb-2">{b.emoji}</div>
+                  <p className="font-bold text-slate-800 text-xs">{b.title}</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5 leading-snug">{b.desc}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Group stage historical access */}
+          <section>
+            <h2 className="text-lg font-extrabold text-slate-800 mb-1">📁 Fase anterior</h2>
+            <p className="text-xs text-slate-500 mb-4">Consulta los resultados y quinielas de la Fase de Grupos ya disputada.</p>
+            <div className="grid sm:grid-cols-3 gap-3">
+              {[
+                { emoji:'⚽', label:'Resultados',   desc:'Fase de Grupos',   href:'/' },
+                { emoji:'🏆', label:'Ranking',       desc:'Fase de Grupos',   href:'/ranking' },
+                { emoji:'📋', label:'Mi quiniela',  desc:'Fase de Grupos',   href:'/mi-quiniela' },
+              ].map(l => (
+                <a key={l.label} href={l.href} target="_blank" rel="noreferrer"
+                  className="flex items-center gap-3 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-2xl px-4 py-3 transition-colors">
+                  <span className="text-xl">{l.emoji}</span>
+                  <div>
+                    <p className="font-bold text-slate-700 text-sm">{l.label}</p>
+                    <p className="text-[10px] text-slate-400">{l.desc}</p>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </section>
+
+          {/* Stats teaser */}
           <section>
             <div className="bg-slate-900 rounded-2xl p-5 flex items-center justify-between gap-4 shadow-lg">
               <div>
                 <p className="text-white font-extrabold text-base leading-tight">📈 Estadísticas del torneo</p>
-                <p className="text-slate-400 text-xs mt-1">Goleadores · Asistencias · Tarjetas</p>
-                <div className="flex gap-2 mt-2.5">
+                <p className="text-slate-400 text-xs mt-1">Goleadores · Asistencias · Tarjetas · Equipos</p>
+                <div className="flex flex-wrap gap-2 mt-2.5">
                   {STAT_CATEGORIES.map(c => (
                     <span key={c.id} className="text-[10px] font-bold bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">
-                      {c.emoji} {c.label.split(' ')[0]}
+                      {c.emoji} {c.label}
                     </span>
                   ))}
                 </div>
@@ -585,6 +722,50 @@ export default function PrototipoEliminatoriasV3() {
               >
                 Ver stats
               </button>
+            </div>
+          </section>
+
+          {/* FAQ */}
+          <section>
+            <h2 className="text-lg font-extrabold text-slate-800 mb-4">❓ Preguntas frecuentes</h2>
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm divide-y divide-slate-100">
+              {[
+                { q:'¿Cómo funciona la quiniela?',
+                  a:'Predices el marcador exacto de cada partido de la fase eliminatoria. Por cada marcador exacto ganas 3 pts, por acertar el ganador (sin el marcador exacto) ganas 1 pt, y si fallas ganas 0 pts. Al final gana quien tenga más puntos.' },
+                { q:'¿Cuánto cuesta participar?',
+                  a:'El costo es de $10 USD o su equivalente en Bolívares según la tasa del día. El monto exacto se confirma por WhatsApp antes de inscribirte.' },
+                { q:'¿Cómo puedo pagar?',
+                  a:'Aceptamos Pago Móvil (Venezuela) y Zelle (desde USA). Después de pagar, envía el comprobante por WhatsApp al organizador con tu nombre y número de quiniela.' },
+                { q:'¿Hasta cuándo puedo inscribirme?',
+                  a:'Puedes inscribirte y llenar tu quiniela hasta antes del primer partido de cada ronda. Una vez empieza la ronda, tu quiniela queda bloqueada.' },
+                { q:'¿Cómo se distribuyen los premios?',
+                  a:'El pozo se distribuye así: 65% para el 1.er lugar, 20% para el 2.do lugar, y 15% para costos de organización. Los montos exactos dependen del total de participantes confirmados.' },
+                { q:'¿Qué pasa si hay empate en puntos?',
+                  a:'En caso de empate en puntos, el desempate se hace por: 1) mayor cantidad de marcadores exactos, 2) menor diferencia de goles acumulada, 3) orden cronológico de inscripción.' },
+                { q:'¿Los horarios están en hora Venezuela?',
+                  a:'Sí. Todos los horarios mostrados en la quiniela están en hora Venezuela (VET, UTC-4). No necesitas hacer conversiones.' },
+                { q:'¿Puedo modificar mi quiniela después de enviarla?',
+                  a:'Sí, puedes modificar tus pronósticos hasta que comience el primer partido de la ronda correspondiente. Una vez inicia el partido, ese pronóstico queda bloqueado.' },
+                { q:'¿Cómo funcionan prórroga y penales?',
+                  a:'El marcador que cuenta es el del final del tiempo regular (90 minutos). Si el partido va a prórroga o penales, ese resultado no afecta tu pronóstico. Solo cuenta el marcador al 90\'.' },
+                { q:'¿Puedo ver la quiniela de otros participantes?',
+                  a:'Sí, una vez que el partido haya comenzado o finalizado, podrás ver los pronósticos de todos los participantes. Antes del partido, los pronósticos están ocultos para todos.' },
+              ].map((item, i) => (
+                <div key={i}>
+                  <button
+                    onClick={() => setFaqOpen(faqOpen === i ? null : i)}
+                    className="w-full flex items-center justify-between px-4 py-4 text-left hover:bg-slate-50 transition-colors touch-manipulation"
+                  >
+                    <span className="font-semibold text-slate-800 text-sm pr-4 leading-snug">{item.q}</span>
+                    <span className={`shrink-0 text-slate-400 text-lg font-light transition-transform duration-200 ${faqOpen === i ? 'rotate-45' : ''}`}>+</span>
+                  </button>
+                  {faqOpen === i && (
+                    <div className="px-4 pb-4">
+                      <p className="text-sm text-slate-600 leading-relaxed">{item.a}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </section>
 
@@ -1373,13 +1554,13 @@ export default function PrototipoEliminatoriasV3() {
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
           {/* Table header */}
           <div className="grid gap-0 text-xs font-bold text-slate-500 bg-slate-50 border-b border-slate-200 px-3 py-2.5"
-            style={{ gridTemplateColumns: '36px 1fr 44px 36px 36px 28px' }}>
-            <span className="text-center">#</span>
+            style={{ gridTemplateColumns: '52px 1fr 44px 30px 30px 36px' }}>
+            <span>#</span>
             <span>Participante</span>
             <span className="text-center">Pts</span>
             <span className="text-center">🎯</span>
             <span className="text-center">✅</span>
-            <span />
+            <span className="text-center text-[9px]">DG</span>
           </div>
 
           {/* Top 3 */}
@@ -1391,19 +1572,25 @@ export default function PrototipoEliminatoriasV3() {
                 className={`grid gap-0 px-3 py-3 items-center border-b border-slate-100 ${
                   isMe ? 'bg-yellow-50 border-l-4 border-l-yellow-400' : r.pos === 1 ? 'bg-yellow-50/50' : ''
                 }`}
-                style={{ gridTemplateColumns: '36px 1fr 44px 36px 36px 28px' }}
+                style={{ gridTemplateColumns: '52px 1fr 44px 30px 30px 36px' }}
               >
-                <span className="text-center font-extrabold text-base">
-                  {r.pos === 1 ? '🥇' : r.pos === 2 ? '🥈' : '🥉'}
-                </span>
+                {/* Pos + move arrow together */}
+                <div className="flex items-center gap-1">
+                  <span className="font-extrabold text-base">
+                    {r.pos === 1 ? '🥇' : r.pos === 2 ? '🥈' : '🥉'}
+                  </span>
+                  {r.move > 0 ? <TrendingUp size={11} className="text-green-500" /> :
+                   r.move < 0 ? <TrendingDown size={11} className="text-red-400" /> :
+                   <span className="text-slate-300 text-[9px]">—</span>}
+                </div>
                 <span className="font-semibold text-slate-800 text-xs truncate">{r.name}</span>
                 <span className="text-center font-extrabold text-slate-900 text-sm">{r.pts}</span>
                 <span className="text-center text-slate-600 text-xs">{r.exact}</span>
                 <span className="text-center text-slate-600 text-xs">{r.correct}</span>
-                <span className="flex items-center justify-center">
-                  {r.move > 0 ? <TrendingUp size={13} className="text-green-500" /> :
-                   r.move < 0 ? <TrendingDown size={13} className="text-red-400" /> :
-                   <span className="text-slate-300 text-[10px]">—</span>}
+                <span className={`text-center text-xs font-extrabold tabular-nums ${
+                  (r.goalDiff ?? 0) > 0 ? 'text-green-600' : (r.goalDiff ?? 0) < 0 ? 'text-red-400' : 'text-slate-400'
+                }`}>
+                  {(r.goalDiff ?? 0) > 0 ? `+${r.goalDiff}` : r.goalDiff ?? '—'}
                 </span>
               </div>
             )
@@ -1416,17 +1603,23 @@ export default function PrototipoEliminatoriasV3() {
               <div
                 key={`${r.pos}-${r.name}`}
                 className={`grid gap-0 px-3 py-3 items-center border-b border-slate-100 last:border-b-0 ${isMe ? 'bg-yellow-50 border-l-4 border-l-yellow-400' : ''}`}
-                style={{ gridTemplateColumns: '36px 1fr 44px 36px 36px 28px' }}
+                style={{ gridTemplateColumns: '52px 1fr 44px 30px 30px 36px' }}
               >
-                <span className="text-center font-bold text-slate-400 text-xs">{r.pos}</span>
+                {/* Pos + move arrow together */}
+                <div className="flex items-center gap-1">
+                  <span className="font-bold text-slate-500 text-xs w-4 shrink-0">{r.pos}</span>
+                  {r.move > 0 ? <TrendingUp size={11} className="text-green-500" /> :
+                   r.move < 0 ? <TrendingDown size={11} className="text-red-400" /> :
+                   <span className="text-slate-300 text-[9px]">—</span>}
+                </div>
                 <span className="font-medium text-slate-700 text-xs truncate">{r.name}</span>
                 <span className="text-center font-extrabold text-slate-900 text-sm">{r.pts}</span>
                 <span className="text-center text-slate-500 text-xs">{r.exact}</span>
                 <span className="text-center text-slate-500 text-xs">{r.correct}</span>
-                <span className="flex items-center justify-center">
-                  {r.move > 0 ? <TrendingUp size={13} className="text-green-500" /> :
-                   r.move < 0 ? <TrendingDown size={13} className="text-red-400" /> :
-                   <span className="text-slate-300 text-[10px]">—</span>}
+                <span className={`text-center text-xs font-extrabold tabular-nums ${
+                  (r.goalDiff ?? 0) > 0 ? 'text-green-600' : (r.goalDiff ?? 0) < 0 ? 'text-red-400' : 'text-slate-400'
+                }`}>
+                  {(r.goalDiff ?? 0) > 0 ? `+${r.goalDiff}` : r.goalDiff ?? '—'}
                 </span>
               </div>
             )
@@ -1451,15 +1644,12 @@ export default function PrototipoEliminatoriasV3() {
     return (
       <div className="max-w-2xl mx-auto px-3 py-5 pb-28">
 
-        {/* Pending badge */}
-        {pendingCount > 0 && (
-          <button
-            onClick={() => setView('admin')}
-            className="w-full flex items-center justify-between bg-amber-400 text-slate-900 rounded-xl px-4 py-2.5 mb-3 text-xs font-bold touch-manipulation hover:bg-amber-300 transition-colors"
-          >
-            <span>⚠️ {pendingCount} evento{pendingCount > 1 ? 's' : ''} pendiente{pendingCount > 1 ? 's' : ''} de revisión</span>
-            <span className="underline">Revisar →</span>
-          </button>
+        {/* Last update or auto badge */}
+        {statLastUpdate && (
+          <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-2 mb-3 text-xs text-green-700 font-semibold">
+            <span>✓</span>
+            <span>Estadísticas actualizadas · {statLastUpdate}</span>
+          </div>
         )}
 
         {/* Header card — dark Google-style */}
@@ -1744,85 +1934,66 @@ export default function PrototipoEliminatoriasV3() {
           )}
         </div>
 
-        {/* Pending events review */}
-        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden mb-5 shadow-sm">
-          <div className="px-4 py-3 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
-            <h2 className="font-extrabold text-slate-700 text-sm">📋 Estadísticas pendientes</h2>
-            {pendingEvents.filter(e => e.status === 'pending').length > 0 && (
-              <span className="bg-amber-400 text-slate-900 text-[10px] font-extrabold px-2 py-0.5 rounded-full">
-                {pendingEvents.filter(e => e.status === 'pending').length} pendientes
-              </span>
-            )}
-          </div>
-          <p className="text-[10px] text-slate-400 px-4 py-2 border-b border-slate-100 bg-slate-50/50">
-            Eventos detectados con confianza media/baja · Requieren revisión antes de aplicarse
-          </p>
-          {pendingEvents.length === 0 ? (
-            <div className="px-4 py-6 text-xs text-slate-400 text-center italic">Sin eventos pendientes</div>
-          ) : (
-            <div className="divide-y divide-slate-100">
-              {pendingEvents.map(ev => (
-                <div key={ev.id} className={`px-4 py-3 ${ev.status !== 'pending' ? 'opacity-40' : ''}`}>
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div>
-                      <p className="text-[10px] text-slate-400 font-semibold">{ev.matchLabel}</p>
-                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                        <span className="text-base">{ev.flag}</span>
-                        <span className="text-sm font-bold text-slate-800">{ev.playerName}</span>
-                        <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
-                          ev.eventType === 'GOAL'        ? 'bg-green-100 text-green-700' :
-                          ev.eventType === 'ASSIST'      ? 'bg-blue-100 text-blue-700'  :
-                          ev.eventType === 'YELLOW_CARD' ? 'bg-amber-100 text-amber-700':
-                                                           'bg-red-100 text-red-700'
-                        }`}>
-                          {ev.eventType === 'GOAL' ? '⚽ Gol' : ev.eventType === 'ASSIST' ? '🅰️ Asistencia' : ev.eventType === 'YELLOW_CARD' ? '🟨 Amarilla' : '🟥 Roja'}
-                        </span>
-                        <span className="text-[10px] text-slate-400">min. {ev.minute}</span>
+        {/* Pending events — collapsed technical section */}
+        <details className="bg-white border border-slate-200 rounded-2xl overflow-hidden mb-5 shadow-sm group">
+          <summary className="px-4 py-3 flex items-center justify-between cursor-pointer list-none hover:bg-slate-50 transition-colors">
+            <div className="flex items-center gap-2">
+              <h2 className="font-extrabold text-slate-700 text-sm">🔧 Revisión técnica de eventos</h2>
+              {pendingEvents.filter(e => e.status === 'pending').length > 0 && (
+                <span className="bg-amber-100 text-amber-700 text-[10px] font-extrabold px-2 py-0.5 rounded-full">
+                  {pendingEvents.filter(e => e.status === 'pending').length}
+                </span>
+              )}
+            </div>
+            <span className="text-slate-400 text-xs">Ver ▾</span>
+          </summary>
+          <div className="border-t border-slate-100">
+            <p className="text-[10px] text-slate-400 px-4 py-2 bg-slate-50/50">
+              Eventos con confianza media/baja detectados automáticamente. En producción estos se procesan sin revisión manual salvo que la confianza sea muy baja.
+            </p>
+            {pendingEvents.length === 0 ? (
+              <div className="px-4 py-6 text-xs text-slate-400 text-center italic">Sin eventos pendientes</div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {pendingEvents.map(ev => (
+                  <div key={ev.id} className={`px-4 py-3 ${ev.status !== 'pending' ? 'opacity-40' : ''}`}>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div>
+                        <p className="text-[10px] text-slate-400 font-semibold">{ev.matchLabel}</p>
+                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                          <span className="text-base">{ev.flag}</span>
+                          <span className="text-sm font-bold text-slate-800">{ev.playerName}</span>
+                          <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+                            ev.eventType === 'GOAL'        ? 'bg-green-100 text-green-700' :
+                            ev.eventType === 'ASSIST'      ? 'bg-blue-100 text-blue-700'  :
+                            ev.eventType === 'YELLOW_CARD' ? 'bg-amber-100 text-amber-700':
+                                                              'bg-red-100 text-red-700'
+                          }`}>
+                            {ev.eventType === 'GOAL' ? '⚽ Gol' : ev.eventType === 'ASSIST' ? '🅰️ Asistencia' : ev.eventType === 'YELLOW_CARD' ? '🟨 Amarilla' : '🟥 Roja'}
+                          </span>
+                          <span className="text-[10px] text-slate-400">min. {ev.minute} · {ev.source} · <span className={ev.confidence === 'high' ? 'text-green-600' : ev.confidence === 'medium' ? 'text-amber-600' : 'text-red-600'}>{ev.confidence}</span></span>
+                        </div>
                       </div>
-                      <p className="text-[10px] text-slate-400 mt-1">
-                        Fuente: <span className="font-semibold">{ev.source}</span> ·{' '}
-                        Confianza:{' '}
-                        <span className={`font-extrabold ${
-                          ev.confidence === 'high' ? 'text-green-600' :
-                          ev.confidence === 'medium' ? 'text-amber-600' : 'text-red-600'
-                        }`}>{ev.confidence}</span>
-                      </p>
+                      {ev.status !== 'pending' && (
+                        <span className={`text-[10px] font-extrabold px-2 py-1 rounded-lg shrink-0 ${ev.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                          {ev.status === 'approved' ? '✓ OK' : '✗ Rechaz.'}
+                        </span>
+                      )}
                     </div>
-                    {ev.status !== 'pending' && (
-                      <span className={`text-[10px] font-extrabold px-2 py-1 rounded-lg shrink-0 ${
-                        ev.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
-                      }`}>
-                        {ev.status === 'approved' ? '✓ Aprobado' : '✗ Rechazado'}
-                      </span>
+                    {ev.status === 'pending' && (
+                      <div className="flex gap-2">
+                        <button onClick={() => { setPendingEvents(prev => prev.map(e => e.id === ev.id ? { ...e, status: 'approved' } : e)); setToast(`✅ ${ev.playerName}`) }}
+                          className="flex-1 bg-green-600 text-white text-xs font-bold py-1.5 rounded-lg touch-manipulation">✓ Aprobar</button>
+                        <button onClick={() => { setPendingEvents(prev => prev.map(e => e.id === ev.id ? { ...e, status: 'rejected' } : e)); setToast(`🗑 ${ev.playerName}`) }}
+                          className="flex-1 bg-red-50 border border-red-200 text-red-600 text-xs font-bold py-1.5 rounded-lg touch-manipulation">✗ Rechazar</button>
+                      </div>
                     )}
                   </div>
-                  {ev.status === 'pending' && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          setPendingEvents(prev => prev.map(e => e.id === ev.id ? { ...e, status: 'approved' } : e))
-                          setToast(`✅ Aprobado: ${ev.playerName} — ${ev.eventType}`)
-                        }}
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 rounded-lg transition-all touch-manipulation"
-                      >
-                        ✓ Aprobar
-                      </button>
-                      <button
-                        onClick={() => {
-                          setPendingEvents(prev => prev.map(e => e.id === ev.id ? { ...e, status: 'rejected' } : e))
-                          setToast(`🗑 Rechazado: ${ev.playerName}`)
-                        }}
-                        className="flex-1 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 text-xs font-bold py-2 rounded-lg transition-all touch-manipulation"
-                      >
-                        ✗ Rechazar
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </details>
 
         {/* Actions */}
         <div className="space-y-3 mb-6">

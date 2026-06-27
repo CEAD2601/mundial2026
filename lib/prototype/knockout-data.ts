@@ -404,16 +404,16 @@ export const STAGE_META: Record<Stage, { label: string; short: string; matches: 
 }
 
 export const DEMO_RANKING = [
-  { pos:1,  name:'Carlos Acosta',    pts:28, exact:6, correct:10, move:+2, code:'KO-0001' },
-  { pos:2,  name:'María Delgado',    pts:25, exact:5, correct:10, move:-1, code:'KO-0002' },
-  { pos:3,  name:'Laura Bracho',     pts:22, exact:4, correct:10, move:+1, code:'KO-0003' },
-  { pos:4,  name:'José Martínez',    pts:20, exact:5, correct: 5, move:-2, code:'KO-0004' },
-  { pos:5,  name:'Ana Rodríguez',    pts:18, exact:4, correct: 6, move: 0, code:'KO-0005' },
-  { pos:6,  name:'Pedro Gómez',      pts:16, exact:2, correct:10, move:+3, code:'KO-0006' },
-  { pos:7,  name:'Diana Torres',     pts:14, exact:4, correct: 2, move:-1, code:'KO-0007' },
-  { pos:8,  name:'Rafael López',     pts:12, exact:2, correct: 6, move:+2, code:'KO-0008' },
-  { pos:9,  name:'Carmen Suárez',    pts:10, exact:0, correct:10, move: 0, code:'KO-0009' },
-  { pos:10, name:'Andrés Morales',   pts: 8, exact:2, correct: 2, move:-2, code:'KO-0010' },
-  { pos:11, name:'Sofía Castillo',   pts: 6, exact:0, correct: 6, move:+1, code:'KO-0011' },
-  { pos:12, name:'Miguel Herrera',   pts: 4, exact:1, correct: 1, move:-1, code:'KO-0012' },
+  { pos:1,  name:'Carlos Acosta',    pts:28, exact:6, correct:10, move:+2, goalDiff:+8  },
+  { pos:2,  name:'María Delgado',    pts:25, exact:5, correct:10, move:-1, goalDiff:+5  },
+  { pos:3,  name:'Laura Bracho',     pts:22, exact:4, correct:10, move:+1, goalDiff:+4  },
+  { pos:4,  name:'José Martínez',    pts:20, exact:5, correct: 5, move:-2, goalDiff:+7  },
+  { pos:5,  name:'Ana Rodríguez',    pts:18, exact:4, correct: 6, move: 0, goalDiff:+2  },
+  { pos:6,  name:'Pedro Gómez',      pts:16, exact:2, correct:10, move:+3, goalDiff:-1  },
+  { pos:7,  name:'Diana Torres',     pts:14, exact:4, correct: 2, move:-1, goalDiff:+3  },
+  { pos:8,  name:'Rafael López',     pts:12, exact:2, correct: 6, move:+2, goalDiff:-2  },
+  { pos:9,  name:'Carmen Suárez',    pts:10, exact:0, correct:10, move: 0, goalDiff:-3  },
+  { pos:10, name:'Andrés Morales',   pts: 8, exact:2, correct: 2, move:-2, goalDiff:-5  },
+  { pos:11, name:'Sofía Castillo',   pts: 6, exact:0, correct: 6, move:+1, goalDiff:-6  },
+  { pos:12, name:'Miguel Herrera',   pts: 4, exact:1, correct: 1, move:-1, goalDiff:-9  },
 ]
