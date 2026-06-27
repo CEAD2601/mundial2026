@@ -36,7 +36,11 @@ export interface KORankingEntry {
 // ── Participantes previos de la Fase de Grupos ───────────────────────────────
 // Estos se pueden "encontrar" cuando alguien busca por cédula o WhatsApp
 
+// En producción esta lista se reemplaza por una consulta a la tabla Participant de Prisma
+// (solo lectura, sin modificar datos reales).
 export const PREV_PARTICIPANTS: KOParticipant[] = [
+  // Participante confirmado de Fase de Grupos — cédula y WA usados como prueba de búsqueda
+  { cedula: '24974565', nombre: 'Participante Fase de Grupos',    displayName: 'Participante FG',  whatsapp: '04265205461', ciudad: null,         email: null,               previousRound: 'grupos', registeredAt: '2026-05-01T09:00:00-04:00', paymentStatus: 'verified', enrolledInKO: false },
   { cedula: '12345678', nombre: 'Carlos Eduardo Acosta Delgado', displayName: 'Carlos Acosta',    whatsapp: '04141234567', ciudad: 'Caracas',    email: 'carlos@demo.com',  previousRound: 'grupos', registeredAt: '2026-05-01T10:00:00-04:00', paymentStatus: 'verified', enrolledInKO: false },
   { cedula: '8765432',  nombre: 'María Fernanda López Ríos',     displayName: 'María López',      whatsapp: '04241112233', ciudad: 'Valencia',   email: null,               previousRound: 'grupos', registeredAt: '2026-05-02T11:30:00-04:00', paymentStatus: 'verified', enrolledInKO: false },
   { cedula: '15234567', nombre: 'José Antonio Ramírez Blanco',   displayName: 'José Ramírez',     whatsapp: '04121234567', ciudad: 'Maracaibo',  email: null,               previousRound: 'grupos', registeredAt: '2026-05-03T09:00:00-04:00', paymentStatus: 'verified', enrolledInKO: false },

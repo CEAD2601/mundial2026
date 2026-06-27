@@ -340,6 +340,19 @@ export default function PrototipoEliminatoriasV3() {
   useEffect(() => { setPicks(loadPicks()) }, [])
   useEffect(() => { setKoEnrolled(loadKOEnrolled()) }, [])
 
+  // Scroll-reveal — activa .ko-reveal cuando entra al viewport (solo en home)
+  useEffect(() => {
+    if (view !== 'home') return
+    const els = document.querySelectorAll('.ko-reveal')
+    if (!els.length) return
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('ko-visible'); io.unobserve(e.target) } }),
+      { threshold: 0.08 }
+    )
+    els.forEach(el => io.observe(el))
+    return () => io.disconnect()
+  }, [view])
+
   useEffect(() => {
     if (!toast) return
     const t = setTimeout(() => setToast(null), 2800)
@@ -440,16 +453,43 @@ export default function PrototipoEliminatoriasV3() {
     return (
       <div className="min-h-screen flex flex-col bg-slate-50">
 
-        {/* ── Animaciones suaves (respeta prefers-reduced-motion) ── */}
+        {/* ── Animaciones y transiciones (respeta prefers-reduced-motion) ── */}
         <style>{`
-          @keyframes ko-rise { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:translateY(0) } }
-          .ko-rise    { animation: ko-rise 0.55s ease both; }
-          .ko-rise-d1 { animation: ko-rise 0.55s 0.08s ease both; }
-          .ko-rise-d2 { animation: ko-rise 0.55s 0.18s ease both; }
-          .ko-rise-d3 { animation: ko-rise 0.55s 0.30s ease both; }
-          .ko-rise-d4 { animation: ko-rise 0.55s 0.42s ease both; }
+          @keyframes ko-rise { from { opacity:0; transform:translateY(22px) } to { opacity:1; transform:translateY(0) } }
+          .ko-rise    { animation: ko-rise 0.6s cubic-bezier(.22,1,.36,1) both; }
+          .ko-rise-d1 { animation: ko-rise 0.6s 0.08s cubic-bezier(.22,1,.36,1) both; }
+          .ko-rise-d2 { animation: ko-rise 0.6s 0.18s cubic-bezier(.22,1,.36,1) both; }
+          .ko-rise-d3 { animation: ko-rise 0.6s 0.30s cubic-bezier(.22,1,.36,1) both; }
+          .ko-rise-d4 { animation: ko-rise 0.6s 0.44s cubic-bezier(.22,1,.36,1) both; }
+
+          /* Scroll reveal — empieza invisible, se activa al entrar en viewport */
+          .ko-reveal {
+            opacity: 0;
+            transform: translateY(28px);
+            transition: opacity 0.6s cubic-bezier(.22,1,.36,1), transform 0.6s cubic-bezier(.22,1,.36,1);
+          }
+          .ko-reveal.ko-visible { opacity: 1; transform: translateY(0); }
+          .ko-reveal.ko-d1 { transition-delay: 0.08s; }
+          .ko-reveal.ko-d2 { transition-delay: 0.18s; }
+          .ko-reveal.ko-d3 { transition-delay: 0.28s; }
+
+          /* Botón CTA */
+          .ko-btn-cta {
+            transition: transform 0.15s cubic-bezier(.22,1,.36,1), box-shadow 0.15s ease, filter 0.15s ease;
+          }
+          .ko-btn-cta:hover  { transform: translateY(-2px) scale(1.015); box-shadow: 0 8px 28px rgba(34,197,94,0.35); filter: brightness(1.06); }
+          .ko-btn-cta:active { transform: scale(0.97); }
+
+          /* Card hover suave */
+          .ko-card-hover {
+            transition: transform 0.2s cubic-bezier(.22,1,.36,1), box-shadow 0.2s ease;
+          }
+          .ko-card-hover:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.10); }
+
           @media (prefers-reduced-motion: reduce) {
             .ko-rise, .ko-rise-d1, .ko-rise-d2, .ko-rise-d3, .ko-rise-d4 { animation: none !important; }
+            .ko-reveal { opacity:1; transform:none; transition:none; }
+            .ko-btn-cta, .ko-card-hover { transition: none !important; transform: none !important; }
           }
         `}</style>
 
@@ -634,7 +674,7 @@ export default function PrototipoEliminatoriasV3() {
           </section>
 
           {/* ── ¿CÓMO PARTICIPAR? ── */}
-          <section>
+          <section className="ko-reveal">
             <div className="text-center mb-10">
               <span className="inline-block bg-green-100 text-green-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Proceso</span>
               <h2 className="text-3xl font-extrabold text-slate-900">
@@ -700,7 +740,7 @@ export default function PrototipoEliminatoriasV3() {
           </section>
 
           {/* ── TABLA DE PREMIOS ── */}
-          <section>
+          <section className="ko-reveal">
             <div className="text-center mb-10">
               <span className="inline-block bg-yellow-100 text-yellow-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Premios</span>
               <h2 className="text-3xl font-extrabold text-slate-900">
@@ -746,7 +786,7 @@ export default function PrototipoEliminatoriasV3() {
           </section>
 
           {/* ── MÉTODOS DE PAGO ── */}
-          <section>
+          <section className="ko-reveal">
             <div className="text-center mb-8">
               <span className="inline-block bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Pago</span>
               <h2 className="text-3xl font-extrabold text-slate-900">
@@ -756,7 +796,7 @@ export default function PrototipoEliminatoriasV3() {
             </div>
             <div className="grid sm:grid-cols-2 gap-5">
               {/* Pago Móvil */}
-              <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-3xl p-6 text-white shadow-xl">
+              <div className="ko-card-hover bg-gradient-to-br from-green-600 to-green-700 rounded-3xl p-6 text-white shadow-xl">
                 <div className="text-center mb-5">
                   <div className="text-3xl mb-1">📱</div>
                   <h3 className="font-extrabold text-xl">Pago Móvil</h3>
@@ -784,7 +824,7 @@ export default function PrototipoEliminatoriasV3() {
                 </div>
               </div>
               {/* Zelle */}
-              <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-6 text-white shadow-xl">
+              <div className="ko-card-hover bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-6 text-white shadow-xl">
                 <div className="text-center mb-5">
                   <div className="text-3xl mb-1">💵</div>
                   <h3 className="font-extrabold text-xl">Zelle</h3>
@@ -818,7 +858,7 @@ export default function PrototipoEliminatoriasV3() {
           </section>
 
           {/* ── SISTEMA DE PUNTUACIÓN ── */}
-          <section>
+          <section className="ko-reveal">
             <div className="text-center mb-8">
               <span className="inline-block bg-green-100 text-green-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Puntuación</span>
               <h2 className="text-3xl font-extrabold text-slate-900">
@@ -874,7 +914,7 @@ export default function PrototipoEliminatoriasV3() {
           </section>
 
           {/* ── TODO LO QUE NECESITAS ── */}
-          <section>
+          <section className="ko-reveal">
             <div className="text-center mb-10">
               <span className="inline-block bg-purple-100 text-purple-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Plataforma</span>
               <h2 className="text-3xl font-extrabold text-slate-900">
@@ -902,7 +942,7 @@ export default function PrototipoEliminatoriasV3() {
           </section>
 
           {/* ── FASE ANTERIOR ── */}
-          <section>
+          <section className="ko-reveal">
             <div className="text-center mb-8">
               <span className="inline-block bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Historial</span>
               <h2 className="text-3xl font-extrabold text-slate-900">
@@ -929,7 +969,7 @@ export default function PrototipoEliminatoriasV3() {
           </section>
 
           {/* ── FAQ ── */}
-          <section>
+          <section className="ko-reveal">
             <div className="text-center mb-10">
               <span className="inline-block bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Dudas</span>
               <h2 className="text-3xl font-extrabold text-slate-900">
@@ -978,7 +1018,7 @@ export default function PrototipoEliminatoriasV3() {
           </section>
 
           {/* ── BOTTOM CTA ── */}
-          <section className="relative bg-gradient-to-br from-green-700 via-green-600 to-blue-700 rounded-3xl p-10 text-white text-center overflow-hidden shadow-2xl">
+          <section className="ko-reveal relative bg-gradient-to-br from-green-700 via-green-600 to-blue-700 rounded-3xl p-10 text-white text-center overflow-hidden shadow-2xl">
             <div className="absolute inset-0 opacity-[0.05]"
               style={{ backgroundImage: 'url(/assets/hero/football-pattern.svg)', backgroundSize: '120px' }} />
             <div className="relative">
@@ -989,7 +1029,7 @@ export default function PrototipoEliminatoriasV3() {
               </p>
               <button
                 onClick={() => setView(registered || filledCount > 0 ? 'llenado' : 'registro')}
-                className="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-slate-900 font-extrabold px-10 py-4 rounded-2xl text-lg transition-all shadow-xl hover:shadow-yellow-400/40 hover:-translate-y-1 touch-manipulation"
+                className="ko-btn-cta inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-slate-900 font-extrabold px-10 py-4 rounded-2xl text-lg shadow-xl touch-manipulation"
               >
                 ⚽ {registered || filledCount > 0 ? 'Llenar mi quiniela' : 'Inscribirme ahora'} · 20 USD
               </button>
