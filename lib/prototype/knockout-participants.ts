@@ -39,9 +39,9 @@ export interface KORankingEntry {
 // En producción esta lista se reemplaza por una consulta a la tabla Participant de Prisma
 // (solo lectura, sin modificar datos reales).
 export const PREV_PARTICIPANTS: KOParticipant[] = [
-  // Participante confirmado de Fase de Grupos — cédula y WA usados como prueba de búsqueda
-  { cedula: '24974565', nombre: 'Participante Fase de Grupos',    displayName: 'Participante FG',  whatsapp: '04265205461', ciudad: null,         email: null,               previousRound: 'grupos', registeredAt: '2026-05-01T09:00:00-04:00', paymentStatus: 'verified', enrolledInKO: false },
-  { cedula: '12345678', nombre: 'Carlos Eduardo Acosta Delgado', displayName: 'Carlos Acosta',    whatsapp: '04141234567', ciudad: 'Caracas',    email: 'carlos@demo.com',  previousRound: 'grupos', registeredAt: '2026-05-01T10:00:00-04:00', paymentStatus: 'verified', enrolledInKO: false },
+  // Participantes reales de la Fase de Grupos (lectura; en producción viene de Prisma)
+  { cedula: '24974565', nombre: 'Carlos Eduardo Acosta Delgado', displayName: 'Carlos Acosta',   whatsapp: '04265205461', ciudad: 'El Hatillo', email: 'acostac2601@gmail.com', previousRound: 'grupos', registeredAt: '2026-05-01T09:00:00-04:00', paymentStatus: 'verified', enrolledInKO: false },
+  { cedula: '12345678', nombre: 'Demo Participante García',      displayName: 'Demo García',      whatsapp: '04141234567', ciudad: 'Caracas',   email: null,                   previousRound: 'grupos', registeredAt: '2026-05-01T10:00:00-04:00', paymentStatus: 'verified', enrolledInKO: false },
   { cedula: '8765432',  nombre: 'María Fernanda López Ríos',     displayName: 'María López',      whatsapp: '04241112233', ciudad: 'Valencia',   email: null,               previousRound: 'grupos', registeredAt: '2026-05-02T11:30:00-04:00', paymentStatus: 'verified', enrolledInKO: false },
   { cedula: '15234567', nombre: 'José Antonio Ramírez Blanco',   displayName: 'José Ramírez',     whatsapp: '04121234567', ciudad: 'Maracaibo',  email: null,               previousRound: 'grupos', registeredAt: '2026-05-03T09:00:00-04:00', paymentStatus: 'verified', enrolledInKO: false },
   { cedula: '11987654', nombre: 'Luisa Margarita Torres Cruz',   displayName: 'Luisa Torres',     whatsapp: '04161234567', ciudad: 'Barquisimeto',email: null,              previousRound: 'grupos', registeredAt: '2026-05-04T14:00:00-04:00', paymentStatus: 'verified', enrolledInKO: false },

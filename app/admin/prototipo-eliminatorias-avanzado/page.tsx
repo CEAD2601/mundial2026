@@ -340,17 +340,27 @@ export default function PrototipoEliminatoriasV3() {
   useEffect(() => { setPicks(loadPicks()) }, [])
   useEffect(() => { setKoEnrolled(loadKOEnrolled()) }, [])
 
-  // Scroll-reveal — activa .ko-reveal cuando entra al viewport (solo en home)
+  // Scroll-reveal — activa .ko-visible cuando la sección entra al viewport.
+  // setTimeout(80) es crítico: sin él el observer fires antes de que el browser
+  // pinte opacity:0, y la transición no es perceptible.
   useEffect(() => {
     if (view !== 'home') return
-    const els = document.querySelectorAll('.ko-reveal')
-    if (!els.length) return
-    const io = new IntersectionObserver(
-      (entries) => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('ko-visible'); io.unobserve(e.target) } }),
-      { threshold: 0.08 }
-    )
-    els.forEach(el => io.observe(el))
-    return () => io.disconnect()
+    let io: IntersectionObserver | null = null
+    const timer = setTimeout(() => {
+      const els = Array.from(document.querySelectorAll<HTMLElement>('.ko-reveal'))
+      if (!els.length) return
+      io = new IntersectionObserver(
+        (entries) => entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.classList.add('ko-visible')
+            io?.unobserve(e.target)
+          }
+        }),
+        { threshold: 0.06, rootMargin: '0px 0px -40px 0px' }
+      )
+      els.forEach(el => io!.observe(el))
+    }, 80)
+    return () => { clearTimeout(timer); io?.disconnect() }
   }, [view])
 
   useEffect(() => {
@@ -453,43 +463,88 @@ export default function PrototipoEliminatoriasV3() {
     return (
       <div className="min-h-screen flex flex-col bg-slate-50">
 
-        {/* ── Animaciones y transiciones (respeta prefers-reduced-motion) ── */}
+        {/* ── Animaciones y transiciones ── */}
         <style>{`
-          @keyframes ko-rise { from { opacity:0; transform:translateY(22px) } to { opacity:1; transform:translateY(0) } }
-          .ko-rise    { animation: ko-rise 0.6s cubic-bezier(.22,1,.36,1) both; }
-          .ko-rise-d1 { animation: ko-rise 0.6s 0.08s cubic-bezier(.22,1,.36,1) both; }
-          .ko-rise-d2 { animation: ko-rise 0.6s 0.18s cubic-bezier(.22,1,.36,1) both; }
-          .ko-rise-d3 { animation: ko-rise 0.6s 0.30s cubic-bezier(.22,1,.36,1) both; }
-          .ko-rise-d4 { animation: ko-rise 0.6s 0.44s cubic-bezier(.22,1,.36,1) both; }
+          /* Hero enter (above the fold, plays on mount) */
+          @keyframes ko-rise {
+            from { opacity: 0; transform: translateY(28px); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
+          .ko-rise    { animation: ko-rise 0.65s cubic-bezier(.22,1,.36,1) both; }
+          .ko-rise-d1 { animation: ko-rise 0.65s 0.10s cubic-bezier(.22,1,.36,1) both; }
+          .ko-rise-d2 { animation: ko-rise 0.65s 0.20s cubic-bezier(.22,1,.36,1) both; }
+          .ko-rise-d3 { animation: ko-rise 0.65s 0.32s cubic-bezier(.22,1,.36,1) both; }
+          .ko-rise-d4 { animation: ko-rise 0.65s 0.46s cubic-bezier(.22,1,.36,1) both; }
 
-          /* Scroll reveal — empieza invisible, se activa al entrar en viewport */
+          /* Scroll reveal — IntersectionObserver agrega .ko-visible */
           .ko-reveal {
             opacity: 0;
-            transform: translateY(28px);
-            transition: opacity 0.6s cubic-bezier(.22,1,.36,1), transform 0.6s cubic-bezier(.22,1,.36,1);
+            transform: translateY(40px);
+            transition: opacity 0.65s cubic-bezier(.22,1,.36,1),
+                        transform 0.65s cubic-bezier(.22,1,.36,1);
+            will-change: transform, opacity;
           }
-          .ko-reveal.ko-visible { opacity: 1; transform: translateY(0); }
-          .ko-reveal.ko-d1 { transition-delay: 0.08s; }
-          .ko-reveal.ko-d2 { transition-delay: 0.18s; }
-          .ko-reveal.ko-d3 { transition-delay: 0.28s; }
+          .ko-reveal.ko-visible {
+            opacity: 1;
+            transform: translateY(0);
+          }
 
-          /* Botón CTA */
+          /* FAQ accordion transition con max-height */
+          .ko-faq-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.32s cubic-bezier(.22,1,.36,1),
+                        opacity 0.28s ease;
+            opacity: 0;
+          }
+          .ko-faq-body.ko-faq-open {
+            max-height: 360px;
+            opacity: 1;
+          }
+
+          /* Botón CTA principal */
           .ko-btn-cta {
-            transition: transform 0.15s cubic-bezier(.22,1,.36,1), box-shadow 0.15s ease, filter 0.15s ease;
+            transition: transform 0.18s cubic-bezier(.22,1,.36,1),
+                        box-shadow 0.18s ease,
+                        filter 0.15s ease;
           }
-          .ko-btn-cta:hover  { transform: translateY(-2px) scale(1.015); box-shadow: 0 8px 28px rgba(34,197,94,0.35); filter: brightness(1.06); }
-          .ko-btn-cta:active { transform: scale(0.97); }
+          .ko-btn-cta:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 32px rgba(34,197,94,0.4);
+            filter: brightness(1.08);
+          }
+          .ko-btn-cta:active { transform: scale(0.96); }
 
-          /* Card hover suave */
+          /* Cards con elevación suave */
           .ko-card-hover {
-            transition: transform 0.2s cubic-bezier(.22,1,.36,1), box-shadow 0.2s ease;
+            transition: transform 0.22s cubic-bezier(.22,1,.36,1),
+                        box-shadow 0.22s ease;
           }
-          .ko-card-hover:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.10); }
+          .ko-card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.14);
+          }
+          .ko-card-hover:active { transform: scale(0.98); }
 
+          /* Prefers reduced motion — disable everything */
           @media (prefers-reduced-motion: reduce) {
-            .ko-rise, .ko-rise-d1, .ko-rise-d2, .ko-rise-d3, .ko-rise-d4 { animation: none !important; }
-            .ko-reveal { opacity:1; transform:none; transition:none; }
-            .ko-btn-cta, .ko-card-hover { transition: none !important; transform: none !important; }
+            .ko-rise, .ko-rise-d1, .ko-rise-d2, .ko-rise-d3, .ko-rise-d4 {
+              animation: none !important;
+            }
+            .ko-reveal {
+              opacity: 1 !important;
+              transform: none !important;
+              transition: none !important;
+            }
+            .ko-faq-body {
+              transition: none !important;
+              max-height: 360px !important;
+              opacity: 1 !important;
+            }
+            .ko-btn-cta, .ko-card-hover {
+              transition: none !important;
+              transform: none !important;
+            }
           }
         `}</style>
 
@@ -563,7 +618,7 @@ export default function PrototipoEliminatoriasV3() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center w-full max-w-sm sm:max-w-none">
               <button
                 onClick={() => setView(registered || filledCount > 0 ? 'llenado' : 'registro')}
-                className="group relative bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-slate-900 font-extrabold px-8 py-4 rounded-2xl text-base sm:text-lg transition-all shadow-2xl hover:-translate-y-1 active:scale-95 inline-flex items-center gap-2 w-full sm:w-auto justify-center touch-manipulation"
+                className="ko-btn-cta group relative bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-slate-900 font-extrabold px-8 py-4 rounded-2xl text-base sm:text-lg shadow-2xl inline-flex items-center gap-2 w-full sm:w-auto justify-center touch-manipulation"
                 style={{ boxShadow: '0 8px 32px rgba(251,191,36,0.4), 0 2px 8px rgba(0,0,0,0.3)' }}
               >
                 <span className="text-xl group-hover:scale-110 transition-transform">⚽</span>
@@ -717,7 +772,7 @@ export default function PrototipoEliminatoriasV3() {
                 },
               ].map((step) => (
                 <div key={step.num} className="flex lg:flex-col items-start lg:items-center gap-4 lg:gap-0 lg:text-center">
-                  <div className={`relative flex-1 lg:w-full bg-white rounded-2xl p-5 lg:p-6 shadow-sm border ${step.border} hover:shadow-md transition-all`}>
+                  <div className={`ko-card-hover relative flex-1 lg:w-full bg-white rounded-2xl p-5 lg:p-6 shadow-sm border ${step.border}`}>
                     <div className={`absolute -top-3 -left-3 lg:left-1/2 lg:-translate-x-1/2 w-7 h-7 ${step.bg} border-2 ${step.border} ${step.color} text-sm font-extrabold rounded-full flex items-center justify-center shadow-sm`}>
                       {step.num}
                     </div>
@@ -998,22 +1053,26 @@ export default function PrototipoEliminatoriasV3() {
                   a: 'Puedes modificar tus pronósticos hasta que comience el primer partido de la ronda correspondiente. Una vez inicia el partido, ese pronóstico queda bloqueado.' },
                 { q: '¿Cómo funcionan prórroga y penales?',
                   a: "El marcador que cuenta es el del final del tiempo regular (90 minutos). Si el partido va a prórroga o penales, ese resultado no afecta tu pronóstico. Solo cuenta el marcador al 90'." },
-              ].map((faq, i) => (
-                <div key={i} className="border border-slate-200 rounded-xl overflow-hidden hover:border-green-300 transition-colors">
-                  <button
-                    onClick={() => setFaqOpen(faqOpen === i ? null : i)}
-                    className="w-full flex items-center justify-between p-4 text-left font-medium hover:bg-slate-50 transition-colors touch-manipulation"
-                  >
-                    <span className="text-slate-800">{faq.q}</span>
-                    {faqOpen === i
-                      ? <ChevronUp size={18} className="text-green-600 shrink-0 ml-3" />
-                      : <ChevronDown size={18} className="text-slate-400 shrink-0 ml-3" />}
-                  </button>
-                  {faqOpen === i && (
-                    <div className="px-4 pb-4 text-slate-600 text-sm leading-relaxed border-t border-slate-100 pt-3">{faq.a}</div>
-                  )}
-                </div>
-              ))}
+              ].map((faq, i) => {
+                const isOpen = faqOpen === i
+                return (
+                  <div key={i} className={`border rounded-xl overflow-hidden transition-colors duration-200 ${isOpen ? 'border-green-300 bg-green-50/30' : 'border-slate-200 hover:border-green-200'}`}>
+                    <button
+                      onClick={() => setFaqOpen(isOpen ? null : i)}
+                      className="w-full flex items-center justify-between p-4 text-left font-medium hover:bg-slate-50/60 transition-colors touch-manipulation"
+                      aria-expanded={isOpen}
+                    >
+                      <span className={`text-sm leading-snug ${isOpen ? 'text-green-800 font-semibold' : 'text-slate-800'}`}>{faq.q}</span>
+                      <span className={`shrink-0 ml-3 transition-transform duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'}`}>
+                        <ChevronDown size={18} className={isOpen ? 'text-green-600' : 'text-slate-400'} />
+                      </span>
+                    </button>
+                    <div className={`ko-faq-body ${isOpen ? 'ko-faq-open' : ''}`}>
+                      <div className="px-4 pb-4 text-slate-600 text-sm leading-relaxed border-t border-slate-100 pt-3">{faq.a}</div>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </section>
 
