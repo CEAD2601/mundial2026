@@ -275,6 +275,40 @@ export default function PrototipoEliminatoriasV3() {
 
   // Estadísticas — tab activo y estado de simulación
   const [statTab, setStatTab] = useState<StatCategoryId>('goals')
+
+  // Fotos de goleadores — cargadas desde Wikipedia REST API (thumbnails verificados)
+  const [playerPhotos, setPlayerPhotos] = useState<Record<string, string>>({})
+  useEffect(() => {
+    const articles: Record<string, string> = {
+      'Lionel Messi':    'Lionel_Messi',
+      'Erling Haaland':  'Erling_Haaland',
+      'Kylian Mbappé':   'Kylian_Mbapp%C3%A9',
+      'Ousmane Dembélé': 'Ousmane_Demb%C3%A9l%C3%A9',
+      'Vinícius Júnior': 'Vin%C3%ADcius_J%C3%BAnior',
+      'Bukayo Saka':     'Bukayo_Saka',
+      'Lamine Yamal':    'Lamine_Yamal',
+      'Harry Kane':      'Harry_Kane',
+      'Rodrygo':         'Rodrygo',
+      'Romelu Lukaku':   'Romelu_Lukaku',
+    }
+    Promise.all(
+      Object.entries(articles).map(async ([player, article]) => {
+        try {
+          const res = await fetch(
+            `https://en.wikipedia.org/api/rest_v1/page/summary/${article}`,
+            { headers: { 'Accept': 'application/json' } }
+          )
+          const data = await res.json()
+          if (data.thumbnail?.source) return [player, data.thumbnail.source] as [string, string]
+        } catch { /* silently fall through */ }
+        return null
+      })
+    ).then(results => {
+      const photos: Record<string, string> = {}
+      results.forEach(r => { if (r) photos[r[0]] = r[1] })
+      setPlayerPhotos(photos)
+    })
+  }, [])
   const [statLastUpdate, setStatLastUpdate] = useState<string | null>(null)
   const [statSimLogs, setStatSimLogs]   = useState<string[]>([])
   const [statSimRunning, setStatSimRunning] = useState(false)
@@ -1085,7 +1119,7 @@ export default function PrototipoEliminatoriasV3() {
       { key:'sf',  short:'SF',    label:'Semifinales',   dates:'14 – 15 jul',
         ids:['sf-101','sf-102'] },
       { key:'f',   short:'FINAL', label:'Final',         dates:'19 jul',
-        ids:['f-104'] },
+        ids:['final-104'] },
     ]
 
     // ── Card vertical center for a given round + card index ─────────────────────
@@ -1126,7 +1160,7 @@ export default function PrototipoEliminatoriasV3() {
 
     const TOTAL_W = ROUNDS.length * CARD_W + (ROUNDS.length - 1) * CONN_W  // 1012
 
-    const m3rd = KNOCKOUT_MATCHES.find(m => m.id === 'f-103')
+    const m3rd = KNOCKOUT_MATCHES.find(m => m.id === 'final-103')
 
     return (
       <div style={{ background: '#0f172a', minHeight: 'calc(100vh - 120px)' }}>
@@ -1790,27 +1824,40 @@ export default function PrototipoEliminatoriasV3() {
                     {p.rank}
                   </span>
 
-                  {/* Photo — triple fallback: randomuser CDN → ui-avatars → initials div */}
-                  <img
-                    src={p.photoUrl ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=${p.color.slice(1)}&color=fff&size=100&bold=true`}
-                    alt={p.name}
-                    className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-600"
-                    style={{ objectPosition: 'center top' }}
-                    onError={e => {
-                      const img = e.target as HTMLImageElement
-                      if (!img.dataset.fb) {
-                        // first failure → try ui-avatars
-                        img.dataset.fb = '1'
-                        img.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=${p.color.slice(1)}&color=fff&size=100&bold=true&font-size=0.38`
-                      } else {
-                        // second failure → replace with styled div, never empty
-                        const div = document.createElement('div')
-                        div.style.cssText = `width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;background:${p.color}28;color:${p.color};outline:2px solid #475569`
-                        div.textContent = p.initials
-                        img.replaceWith(div)
-                      }
-                    }}
-                  />
+                  {/* Photo — Wikipedia REST API thumbnail (real verified headshot).
+                      onError falls to dark silhouette placeholder — never shows random people. */}
+                  {playerPhotos[p.name] ? (
+                    <img
+                      src={playerPhotos[p.name]}
+                      alt={p.name}
+                      className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-600"
+                      style={{ objectPosition: 'center top' }}
+                      onError={e => {
+                        const img = e.target as HTMLImageElement
+                        const wrap = img.parentElement
+                        if (wrap) {
+                          const div = document.createElement('div')
+                          div.style.cssText = `width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;background:${p.color}22;color:${p.color};border:2px solid #334155`
+                          div.textContent = p.initials
+                          img.replaceWith(div)
+                        }
+                      }}
+                    />
+                  ) : (
+                    // Placeholder elegante mientras carga o si no hay foto verificada
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center ring-2 ring-slate-700 flex-shrink-0"
+                      style={{ background: p.color + '18', color: p.color }}
+                    >
+                      <svg viewBox="0 0 40 40" width="40" height="40" style={{ position: 'absolute' }} aria-hidden>
+                        <circle cx="20" cy="15" r="7" fill={p.color} opacity="0.35" />
+                        <ellipse cx="20" cy="34" rx="11" ry="7" fill={p.color} opacity="0.25" />
+                      </svg>
+                      <span style={{ fontSize: 10, fontWeight: 800, position: 'relative', zIndex: 1 }}>
+                        {p.initials}
+                      </span>
+                    </div>
+                  )}
 
                   {/* Name + country */}
                   <div className="pl-2 min-w-0">
