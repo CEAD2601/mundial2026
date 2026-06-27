@@ -11,7 +11,11 @@ function isAdminRoute(pathname: string) {
 }
 
 function isAdminAuthRoute(pathname: string) {
-  return pathname === '/api/admin/auth' || pathname === '/api/admin/auth/check'
+  return (
+    pathname === '/api/admin/auth' ||
+    pathname === '/api/admin/auth/check' ||
+    pathname === '/admin/login'
+  )
 }
 
 export function proxy(req: NextRequest) {
