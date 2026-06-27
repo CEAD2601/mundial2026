@@ -1366,12 +1366,12 @@ export default function PrototipoEliminatoriasV3() {
 
   function renderBracket() {
     // ── Layout constants ────────────────────────────────────────────────────────
-    const SLOT_H   = 80   // height per 1 R32 slot (= spacing unit)
-    const CARD_H   = 76   // card height  (must be < SLOT_H)
-    const CARD_W   = 204  // card width
-    const CONN_W   = 32   // connector column width
-    const HDR_H    = 48   // column header height
-    const COL_H    = 16 * SLOT_H   // 1280 — same for every column
+    const SLOT_H = 64    // height per 1 R32 slot — reduced from 80
+    const CARD_H = 56    // card height — reduced from 76
+    const CARD_W = 172   // card width — reduced from 204
+    const CONN_W = 26    // connector column width
+    const HDR_H  = 52    // column header height
+    const COL_H  = 16 * SLOT_H   // 1024
 
     const ROUNDS = [
       { key:'r32', short:'R32',   label:'Dieciseisavos', dates:'28 jun – 3 jul',
@@ -1415,33 +1415,152 @@ export default function PrototipoEliminatoriasV3() {
       bracketScrollRef.current?.scrollTo({ left: idx * (CARD_W + CONN_W), behavior: 'smooth' })
     }
 
-    // Shorten very long placeholder strings for tight cards
+    // Compact placeholder labels for tight cards
     function shortLabel(name: string | null | undefined, placeholder: string | null | undefined): string {
       const raw = name ?? placeholder ?? 'A definir'
-      // "Mejor 3.º A/B/C/D/F" → "Mejor 3.º"
-      if (raw.startsWith('Mejor 3.º')) return 'Mejor 3.º'
+      if (raw.startsWith('Mejor 3.º')) return 'Mejor 3.°'
+      if (/^1\.º Grupo (.+)/.test(raw)) return '1° Gr. ' + raw.replace(/^1\.º Grupo /, '')
+      if (/^2\.º Grupo (.+)/.test(raw)) return '2° Gr. ' + raw.replace(/^2\.º Grupo /, '')
+      if (raw.startsWith('Gan. #'))  return 'Gan. '  + raw.slice(6)
+      if (raw.startsWith('Perd. #')) return 'Perd. ' + raw.slice(7)
       return raw
     }
 
     const TOTAL_W = ROUNDS.length * CARD_W + (ROUNDS.length - 1) * CONN_W
+    const m3rd    = KNOCKOUT_MATCHES.find(m => m.id === 'final-103')
 
-    const m3rd = KNOCKOUT_MATCHES.find(m => m.id === 'final-103')
+    // Card renderer — extracted to avoid duplication in 3rd-place card
+    function MatchCard({
+      m, ri, hasPick, pick, isOpen, isFinal,
+    }: {
+      m: KOMatch; ri: number; hasPick: boolean
+      pick: { home: number; away: number } | undefined
+      isOpen: boolean; isFinal: boolean
+    }) {
+      const homePh   = m.home.name === null
+      const awayPh   = m.away.name === null
+      const homeLabel = shortLabel(m.home.name, m.home.placeholder)
+      const awayLabel = shortLabel(m.away.name, m.away.placeholder)
+
+      // Colors
+      const bgCard    = isFinal
+        ? (hasPick ? '#3b1d03' : '#1a1205')
+        : (hasPick ? '#14532d' : '#1e293b')
+      const borderCard = isFinal
+        ? (hasPick ? '#d97706' : '#78350f')
+        : (hasPick ? '#16a34a' : '#2d3f55')
+      const bgMeta    = isFinal
+        ? (hasPick ? '#78350f' : '#261a07')
+        : (hasPick ? '#166534' : '#131c2b')
+      const clrNum    = isFinal ? '#fbbf24' : (hasPick ? '#4ade80' : '#475569')
+      const clrTime   = hasPick ? (isFinal ? '#fcd34d' : '#86efac') : '#374151'
+      const clrTeam   = (ph: boolean) =>
+        ph ? '#3d4f63' : (hasPick ? (isFinal ? '#fef3c7' : '#bbf7d0') : '#d1d5db')
+      const shadow    = isFinal
+        ? '0 0 0 1px rgba(251,191,36,0.12), 0 4px 16px rgba(0,0,0,0.6)'
+        : (hasPick ? '0 0 0 1px rgba(34,197,94,0.08), 0 2px 8px rgba(0,0,0,0.35)' : '0 2px 6px rgba(0,0,0,0.3)')
+
+      const height = ri === -1 ? 56 : CARD_H  // ri=-1 for standalone 3rd place
+
+      return (
+        <div
+          onClick={() => isOpen ? setView('llenado') : undefined}
+          style={{
+            height,
+            background: bgCard,
+            border: `1.5px solid ${borderCard}`,
+            borderRadius: 8,
+            overflow: 'hidden',
+            cursor: isOpen ? 'pointer' : 'default',
+            boxShadow: shadow,
+          }}
+        >
+          {/* Meta bar */}
+          <div style={{
+            padding: '2px 7px',
+            background: bgMeta,
+            fontSize: 9, lineHeight: '14px',
+            display: 'flex', alignItems: 'center', gap: 4,
+            borderBottom: `1px solid ${isFinal ? 'rgba(120,53,15,0.6)' : 'rgba(0,0,0,0.4)'}`,
+          }}>
+            <span style={{ fontWeight: 700, color: clrNum, flexShrink: 0 }}>
+              {isFinal ? '🏆' : `#${m.fifaMatchNumber}`}
+            </span>
+            <span style={{ color: clrTime, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
+              {isFinal ? 'Gran Final · ' : ''}{m.displayTime}
+            </span>
+            {isOpen && !hasPick && (
+              <span style={{ marginLeft: 'auto', color: '#22c55e', flexShrink: 0, fontSize: 8 }}>✏️</span>
+            )}
+          </div>
+
+          {/* Home */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 5,
+            padding: '5px 7px 2px',
+            opacity: homePh ? 0.55 : 1,
+          }}>
+            <span style={{ fontSize: 13, lineHeight: 1, width: 16, textAlign: 'center' as const, flexShrink: 0 }}>
+              {m.home.flag ?? (homePh ? '—' : '🛡️')}
+            </span>
+            <span style={{
+              flex: 1, fontSize: 11.5, fontWeight: homePh ? 400 : 600,
+              fontStyle: homePh ? 'italic' : 'normal',
+              color: clrTeam(homePh),
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const,
+            }}>
+              {homeLabel}
+            </span>
+            {hasPick && pick && (
+              <span style={{ fontSize: 13, fontWeight: 800, color: isFinal ? '#fbbf24' : '#4ade80', flexShrink: 0, minWidth: 14, textAlign: 'center' as const }}>
+                {pick.home}
+              </span>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div style={{ height: 1, margin: '0 7px', background: isFinal ? 'rgba(120,53,15,0.5)' : 'rgba(0,0,0,0.35)' }} />
+
+          {/* Away */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 5,
+            padding: '2px 7px 5px',
+            opacity: awayPh ? 0.55 : 1,
+          }}>
+            <span style={{ fontSize: 13, lineHeight: 1, width: 16, textAlign: 'center' as const, flexShrink: 0 }}>
+              {m.away.flag ?? (awayPh ? '—' : '🛡️')}
+            </span>
+            <span style={{
+              flex: 1, fontSize: 11.5, fontWeight: awayPh ? 400 : 600,
+              fontStyle: awayPh ? 'italic' : 'normal',
+              color: clrTeam(awayPh),
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const,
+            }}>
+              {awayLabel}
+            </span>
+            {hasPick && pick && (
+              <span style={{ fontSize: 13, fontWeight: 800, color: isFinal ? '#fbbf24' : '#4ade80', flexShrink: 0, minWidth: 14, textAlign: 'center' as const }}>
+                {pick.away}
+              </span>
+            )}
+          </div>
+        </div>
+      )
+    }
 
     return (
       <div style={{ background: '#0f172a', minHeight: 'calc(100vh - 120px)' }}>
 
         {/* ── Header ── */}
-        <div style={{ padding: '20px 16px 8px' }}>
-          <h1 style={{ color: '#f1f5f9', fontSize: 22, fontWeight: 800, lineHeight: 1.2 }}>
+        <div style={{ padding: '18px 16px 6px', display: 'flex', alignItems: 'baseline', gap: 10 }}>
+          <h1 style={{ color: '#f1f5f9', fontSize: 19, fontWeight: 800, lineHeight: 1.2, margin: 0 }}>
             Cuadro eliminatorio
           </h1>
-          <p style={{ color: '#475569', fontSize: 11, marginTop: 3 }}>
-            Mundial 2026 · 32 partidos · 28 jun – 19 jul
-          </p>
+          <span style={{ color: '#334155', fontSize: 10 }}>Mundial 2026 · desliza →</span>
         </div>
 
         {/* ── Round tabs ── */}
-        <div style={{ display: 'flex', gap: 6, padding: '8px 16px 12px', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
+        <div style={{ display: 'flex', gap: 5, padding: '8px 16px 14px', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
           {ROUNDS.map(r => {
             const active = bktRound === r.key
             return (
@@ -1449,28 +1568,27 @@ export default function PrototipoEliminatoriasV3() {
                 key={r.key}
                 onClick={() => scrollToRound(r.key)}
                 style={{
-                  padding: '5px 14px', borderRadius: 999, fontSize: 11, fontWeight: 700,
+                  padding: '5px 13px', borderRadius: 999, fontSize: 10.5, fontWeight: 700,
                   border: `1.5px solid ${active ? '#22c55e' : '#1e293b'}`,
                   background: active ? '#22c55e' : '#1e293b',
-                  color: active ? '#0f172a' : '#64748b',
-                  flexShrink: 0, cursor: 'pointer', transition: 'all .15s',
+                  color: active ? '#0f172a' : '#475569',
+                  flexShrink: 0, cursor: 'pointer', transition: 'all .12s',
+                  lineHeight: 1,
                 }}
               >
                 {r.short}
+                {active && <span style={{ marginLeft: 5, fontSize: 8, opacity: 0.8 }}>{r.dates}</span>}
               </button>
             )
           })}
-          <span style={{ color: '#4b5563', fontSize: 12, alignSelf: 'center', paddingLeft: 10, flexShrink: 0, letterSpacing: '0.04em' }}>
-            ← desliza →
-          </span>
         </div>
 
         {/* ── Horizontal bracket ── */}
         <div
           ref={bracketScrollRef}
-          style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const, paddingBottom: 120 }}
+          style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const, paddingBottom: 16 }}
         >
-          <div style={{ display: 'flex', paddingLeft: 16, paddingRight: 24, width: TOTAL_W + 40 }}>
+          <div style={{ display: 'flex', paddingLeft: 16, paddingRight: 24, width: TOTAL_W + 40, alignItems: 'flex-start' }}>
 
             {ROUNDS.map((round, ri) => {
               const elements: React.ReactNode[] = []
@@ -1480,8 +1598,14 @@ export default function PrototipoEliminatoriasV3() {
 
                   {/* Column header */}
                   <div style={{ height: HDR_H, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: 10 }}>
-                    <p style={{ color: '#e2e8f0', fontSize: 12, fontWeight: 700, lineHeight: 1 }}>{round.label}</p>
-                    <p style={{ color: '#475569', fontSize: 10, marginTop: 3 }}>{round.dates}</p>
+                    <p style={{
+                      color: bktRound === round.key ? '#22c55e' : '#94a3b8',
+                      fontSize: 11, fontWeight: 800, lineHeight: 1, margin: 0,
+                      letterSpacing: '0.03em',
+                    }}>
+                      {round.label.toUpperCase()}
+                    </p>
+                    <p style={{ color: '#334155', fontSize: 9.5, marginTop: 2 }}>{round.dates}</p>
                   </div>
 
                   {/* Cards */}
@@ -1493,82 +1617,14 @@ export default function PrototipoEliminatoriasV3() {
                       const hasPick = !!pick
                       const isOpen  = m.isOpenForPredictions
                       const top     = cardTop(ri, ci)
-                      const homeName = shortLabel(m.home.name, m.home.placeholder)
-                      const awayName = shortLabel(m.away.name, m.away.placeholder)
 
                       return (
-                        <div
-                          key={id}
-                          onClick={() => isOpen ? setView('llenado') : undefined}
-                          style={{
-                            position: 'absolute', left: 2, right: 2, top,
-                            height: CARD_H,
-                            background: hasPick ? '#14532d' : '#1e293b',
-                            border: `1.5px solid ${hasPick ? '#16a34a' : '#334155'}`,
-                            borderRadius: 10,
-                            overflow: 'hidden',
-                            cursor: isOpen ? 'pointer' : 'default',
-                            boxShadow: hasPick
-                              ? '0 0 0 1px rgba(34,197,94,0.15), 0 4px 10px rgba(0,0,0,0.4)'
-                              : '0 2px 8px rgba(0,0,0,0.4)',
-                          }}
-                        >
-                          {/* Match meta */}
-                          <div style={{
-                            padding: '3px 8px 3px',
-                            borderBottom: `1px solid ${hasPick ? '#166534' : '#0f172a'}`,
-                            background: hasPick ? '#166534' : '#141f30',
-                            fontSize: 9.5, color: hasPick ? '#86efac' : '#475569',
-                            whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis',
-                            lineHeight: '14px',
-                          }}>
-                            <span style={{ fontWeight: 700, color: hasPick ? '#4ade80' : '#64748b' }}>#{m.fifaMatchNumber}</span>
-                            {' · '}{m.displayTime} VET · {m.city}
-                          </div>
-
-                          {/* Home */}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px 3px' }}>
-                            <span style={{ fontSize: 15, lineHeight: 1, flexShrink: 0 }}>
-                              {m.home.flag ?? '🛡️'}
-                            </span>
-                            <span style={{
-                              flex: 1, fontSize: 12, fontWeight: 600,
-                              color: hasPick ? '#bbf7d0' : '#e2e8f0',
-                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const,
-                            }}>
-                              {homeName}
-                            </span>
-                            {hasPick && (
-                              <span style={{ fontSize: 14, fontWeight: 800, color: '#4ade80', flexShrink: 0, minWidth: 16, textAlign: 'center' as const }}>
-                                {pick.home}
-                              </span>
-                            )}
-                            {!hasPick && isOpen && (
-                              <span style={{ fontSize: 9, color: '#22c55e', flexShrink: 0 }}>✏️</span>
-                            )}
-                          </div>
-
-                          {/* Divider */}
-                          <div style={{ height: 1, background: hasPick ? '#166534' : '#0f172a', margin: '0 8px' }} />
-
-                          {/* Away */}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 8px 6px' }}>
-                            <span style={{ fontSize: 15, lineHeight: 1, flexShrink: 0 }}>
-                              {m.away.flag ?? '🛡️'}
-                            </span>
-                            <span style={{
-                              flex: 1, fontSize: 12, fontWeight: 600,
-                              color: hasPick ? '#bbf7d0' : '#e2e8f0',
-                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const,
-                            }}>
-                              {awayName}
-                            </span>
-                            {hasPick && (
-                              <span style={{ fontSize: 14, fontWeight: 800, color: '#4ade80', flexShrink: 0, minWidth: 16, textAlign: 'center' as const }}>
-                                {pick.away}
-                              </span>
-                            )}
-                          </div>
+                        <div key={id} style={{ position: 'absolute', left: 2, right: 2, top }}>
+                          <MatchCard
+                            m={m} ri={ri}
+                            hasPick={hasPick} pick={pick}
+                            isOpen={isOpen} isFinal={id === 'final-104'}
+                          />
                         </div>
                       )
                     })}
@@ -1576,7 +1632,7 @@ export default function PrototipoEliminatoriasV3() {
                 </div>
               )
 
-              // Connector SVG
+              // Connector SVG between columns
               if (ri < ROUNDS.length - 1) {
                 elements.push(
                   <div key={`conn-${ri}`} style={{ flexShrink: 0, paddingTop: HDR_H }}>
@@ -1589,10 +1645,10 @@ export default function PrototipoEliminatoriasV3() {
                         d={connPaths(ri)}
                         fill="none"
                         stroke="#22c55e"
-                        strokeWidth="2"
+                        strokeWidth="1.5"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        opacity="0.55"
+                        opacity="0.4"
                       />
                     </svg>
                   </div>
@@ -1605,47 +1661,31 @@ export default function PrototipoEliminatoriasV3() {
           </div>
         </div>
 
-        {/* ── 3rd place match ── */}
+        {/* ── 3rd place ── */}
         {m3rd && (() => {
           const pick3   = picks[m3rd.id]
           const hasPick = !!pick3
           return (
-            <div style={{ padding: '0 16px 40px', marginTop: -96 }}>
-              <p style={{ color: '#64748b', fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.07em', marginBottom: 8 }}>
-                🥉 Tercer puesto · 18 jul
-              </p>
-              <div style={{
-                background: hasPick ? '#14532d' : '#1e293b',
-                border: `1.5px solid ${hasPick ? '#16a34a' : '#334155'}`,
-                borderRadius: 10, overflow: 'hidden',
-                maxWidth: CARD_W,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-              }}>
-                <div style={{
-                  padding: '3px 8px 3px',
-                  borderBottom: `1px solid ${hasPick ? '#166534' : '#0f172a'}`,
-                  background: hasPick ? '#166534' : '#141f30',
-                  fontSize: 9.5, color: hasPick ? '#86efac' : '#475569',
-                  lineHeight: '14px',
+            <div style={{ padding: '8px 16px 48px' }}>
+              {/* Divider */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                <div style={{ flex: 1, height: 1, background: '#1e293b' }} />
+                <span style={{
+                  color: '#64748b', fontSize: 9.5, fontWeight: 700,
+                  letterSpacing: '0.08em', textTransform: 'uppercase' as const,
+                  whiteSpace: 'nowrap' as const,
                 }}>
-                  <span style={{ fontWeight: 700, color: hasPick ? '#4ade80' : '#64748b' }}>#{m3rd.fifaMatchNumber}</span>
-                  {' · '}{m3rd.displayTime} VET · {m3rd.city}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px 3px' }}>
-                  <span style={{ fontSize: 15 }}>{m3rd.home.flag ?? '🛡️'}</span>
-                  <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: hasPick ? '#bbf7d0' : '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
-                    {shortLabel(m3rd.home.name, m3rd.home.placeholder)}
-                  </span>
-                  {hasPick && <span style={{ fontSize: 14, fontWeight: 800, color: '#4ade80' }}>{pick3.home}</span>}
-                </div>
-                <div style={{ height: 1, background: hasPick ? '#166534' : '#0f172a', margin: '0 8px' }} />
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 8px 6px' }}>
-                  <span style={{ fontSize: 15 }}>{m3rd.away.flag ?? '🛡️'}</span>
-                  <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: hasPick ? '#bbf7d0' : '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
-                    {shortLabel(m3rd.away.name, m3rd.away.placeholder)}
-                  </span>
-                  {hasPick && <span style={{ fontSize: 14, fontWeight: 800, color: '#4ade80' }}>{pick3.away}</span>}
-                </div>
+                  🥉 Tercer puesto · 18 jul · Miami
+                </span>
+                <div style={{ flex: 1, height: 1, background: '#1e293b' }} />
+              </div>
+
+              <div style={{ maxWidth: CARD_W }}>
+                <MatchCard
+                  m={m3rd} ri={-1}
+                  hasPick={hasPick} pick={pick3}
+                  isOpen={m3rd.isOpenForPredictions} isFinal={false}
+                />
               </div>
             </div>
           )
