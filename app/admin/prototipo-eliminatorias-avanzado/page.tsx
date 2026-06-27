@@ -88,11 +88,13 @@ function totalFilled(picks: Picks) {
 }
 
 // ── Prize pool ─────────────────────────────────────────────────────────────────
-const ENTRY_USD  = 20
-const RATE_BS    = 730
-const PCT_1ST    = 0.65
-const PCT_2ND    = 0.20
-const PCT_ORG    = 0.15
+const ENTRY_USD      = 20
+const RATE_BS        = 730
+const PCT_1ST        = 0.65
+const PCT_2ND        = 0.20
+const PCT_ORG        = 0.15
+const ESTIMATED_PARTICIPANTS = 24   // meta inicial para pozo estimado
+const REAL_POOL_THRESHOLD    = 10   // a partir de este nro de verificados se usa pozo real
 
 function getKnockoutPrizePool(enrolled: { paymentStatus: string }[]) {
   const verified = enrolled.filter(p => p.paymentStatus === 'verified').length
@@ -461,6 +463,7 @@ export default function PrototipoEliminatoriasV3() {
   const [adminInputCode, setAdminInputCode] = useState('')
   const [adminCodeError, setAdminCodeError] = useState(false)
   const [adminModule, setAdminModule] = useState<AdminModule>('dashboard')
+  const [adminReview, setAdminReview] = useState(false)  // modo revisión: navegación libre sin completar picks
 
   // Admin — búsqueda participantes
   const [adminSearch, setAdminSearch] = useState('')
@@ -1083,74 +1086,84 @@ export default function PrototipoEliminatoriasV3() {
                 Tabla de <span className="text-yellow-600">Premios</span>
               </h2>
             </div>
-            <div className="bg-white rounded-3xl shadow-md border border-slate-100 overflow-hidden">
-              {/* Pozo header */}
-              <div className="relative bg-gradient-to-br from-green-600 via-green-700 to-blue-800 text-white p-8 text-center overflow-hidden">
-                <div className="relative">
-                  <p className="text-green-200 text-sm mb-2">
-                    Pozo acumulado · <AnimatedCounter value={pool.verified} suffix=" pagos verificados" duration={700} delay={300} />
-                  </p>
-                  <p className="text-5xl font-extrabold text-white drop-shadow">
-                    $<AnimatedCounter value={pool.pozoUSD} duration={900} delay={200} /> <span className="text-2xl font-bold text-green-200">USD</span>
-                  </p>
-                  <p className="text-green-300 text-sm mt-1">
-                    <AnimatedCounter value={pool.pozoBs} duration={900} delay={250} /> Bs
-                    <span className="text-xs ml-1">(tasa fija {RATE_BS} Bs/USD)</span>
-                  </p>
-                  <p className="text-green-400 text-xs mt-1">
-                    {pool.verified} pagos verificados × ${ENTRY_USD} USD = ${pool.pozoUSD} USD
-                  </p>
-                </div>
-              </div>
-
-              {/* Prize rows */}
-              <div className="divide-y divide-slate-100">
-                {[
-                  {
-                    medal: '🥇', pos: '1.er Lugar', pct: '65%',
-                    usd: pool.prize1USD, bs: pool.prize1Bs,
-                    color: 'from-yellow-50 to-amber-50', badge: 'bg-yellow-100 text-yellow-800',
-                    delay: 400,
-                  },
-                  {
-                    medal: '🥈', pos: '2.do Lugar', pct: '20%',
-                    usd: pool.prize2USD, bs: pool.prize2Bs,
-                    color: 'from-slate-50 to-slate-50', badge: 'bg-slate-100 text-slate-600',
-                    delay: 500,
-                  },
-                  {
-                    medal: '🏛️', pos: 'Organización', pct: '15%',
-                    usd: pool.prizeOrgUSD, bs: pool.prizeOrgBs,
-                    color: '', badge: 'bg-blue-50 text-blue-600',
-                    delay: 600,
-                  },
-                ].map((row) => (
-                  <div key={row.pos} className={`flex items-center justify-between px-6 py-5 bg-gradient-to-r ${row.color} hover:bg-opacity-80 transition-colors`}>
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{row.medal}</span>
-                      <span className="font-bold text-slate-700">{row.pos}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`text-sm font-bold px-3 py-1 rounded-full ${row.badge}`}>{row.pct}</span>
-                      <div className="text-right">
-                        <div className="font-extrabold text-lg text-slate-800">
-                          $<AnimatedCounter value={row.usd} duration={800} delay={row.delay} /> USD
-                        </div>
-                        <div className="text-xs text-slate-500">
-                          <AnimatedCounter value={row.bs} duration={800} delay={row.delay + 50} /> Bs
-                        </div>
-                      </div>
+            {(() => {
+              const isEstimated = pool.verified < REAL_POOL_THRESHOLD
+              const estPozoUSD  = ESTIMATED_PARTICIPANTS * ENTRY_USD
+              const estPozoBs   = estPozoUSD * RATE_BS
+              const displayUSD  = isEstimated ? estPozoUSD  : pool.pozoUSD
+              const displayBs   = isEstimated ? estPozoBs   : pool.pozoBs
+              const rows = [
+                { medal: '🥇', pos: '1er Lugar',   pct: '65%', usd: isEstimated ? Math.round(estPozoUSD * PCT_1ST) : pool.prize1USD,   bs: isEstimated ? Math.round(estPozoBs * PCT_1ST) : pool.prize1Bs,   color: 'from-yellow-50 to-amber-50', badge: 'bg-yellow-100 text-yellow-800', delay: 400 },
+                { medal: '🥈', pos: '2do Lugar',   pct: '20%', usd: isEstimated ? Math.round(estPozoUSD * PCT_2ND) : pool.prize2USD,   bs: isEstimated ? Math.round(estPozoBs * PCT_2ND) : pool.prize2Bs,   color: 'from-slate-50 to-slate-50',  badge: 'bg-slate-100 text-slate-600', delay: 500 },
+                { medal: '🏛️', pos: 'Organización', pct: '15%', usd: isEstimated ? Math.round(estPozoUSD * PCT_ORG) : pool.prizeOrgUSD, bs: isEstimated ? Math.round(estPozoBs * PCT_ORG) : pool.prizeOrgBs, color: '',                           badge: 'bg-blue-50 text-blue-600',   delay: 600 },
+              ]
+              return (
+                <div className="bg-white rounded-3xl shadow-md border border-slate-100 overflow-hidden">
+                  {/* Pozo header */}
+                  <div className="relative bg-gradient-to-br from-green-600 via-green-700 to-blue-800 text-white p-8 text-center overflow-hidden">
+                    <div className="relative">
+                      {isEstimated ? (
+                        <>
+                          <p className="text-green-200 text-sm mb-2">Pozo estimado · Meta inicial {ESTIMATED_PARTICIPANTS} participantes</p>
+                          <p className="text-5xl font-extrabold text-white drop-shadow">
+                            $<AnimatedCounter value={displayUSD} duration={900} delay={200} /> <span className="text-2xl font-bold text-green-200">USD</span>
+                          </p>
+                          <p className="text-green-300 text-sm mt-1">
+                            <AnimatedCounter value={displayBs} duration={900} delay={250} /> Bs
+                            <span className="text-xs ml-1">(tasa fija {RATE_BS} Bs/USD)</span>
+                          </p>
+                          {pool.verified > 0 && (
+                            <p className="text-green-400 text-xs mt-1">Pagos verificados actuales: {pool.verified}</p>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-green-200 text-sm mb-2">
+                            Pozo acumulado · <AnimatedCounter value={pool.verified} suffix=" pagos verificados" duration={700} delay={300} />
+                          </p>
+                          <p className="text-5xl font-extrabold text-white drop-shadow">
+                            $<AnimatedCounter value={displayUSD} duration={900} delay={200} /> <span className="text-2xl font-bold text-green-200">USD</span>
+                          </p>
+                          <p className="text-green-300 text-sm mt-1">
+                            <AnimatedCounter value={displayBs} duration={900} delay={250} /> Bs
+                            <span className="text-xs ml-1">(tasa fija {RATE_BS} Bs/USD)</span>
+                          </p>
+                        </>
+                      )}
                     </div>
                   </div>
-                ))}
-              </div>
 
-              <p className="text-center text-xs text-slate-400 p-4">
-                {pool.verified === 0
-                  ? 'El pozo se actualizará cuando se verifiquen los primeros pagos.'
-                  : `${pool.verified} pago${pool.verified !== 1 ? 's' : ''} verificado${pool.verified !== 1 ? 's' : ''} · Tasa fija: ${RATE_BS} Bs/USD`}
-              </p>
-            </div>
+                  {/* Prize rows */}
+                  <div className="divide-y divide-slate-100">
+                    {rows.map((row) => (
+                      <div key={row.pos} className={`flex items-center justify-between px-6 py-5 bg-gradient-to-r ${row.color} hover:bg-opacity-80 transition-colors`}>
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">{row.medal}</span>
+                          <span className="font-bold text-slate-700">{row.pos}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className={`text-sm font-bold px-3 py-1 rounded-full ${row.badge}`}>{row.pct}</span>
+                          <div className="text-right">
+                            <div className="font-extrabold text-lg text-slate-800">
+                              $<AnimatedCounter value={row.usd} duration={800} delay={row.delay} /> USD
+                            </div>
+                            <div className="text-xs text-slate-500">
+                              <AnimatedCounter value={row.bs} duration={800} delay={row.delay + 50} /> Bs
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="text-center text-xs text-slate-400 p-4">
+                    {isEstimated
+                      ? 'El pozo real se actualizará automáticamente según los pagos verificados.'
+                      : `${pool.verified} pago${pool.verified !== 1 ? 's' : ''} verificado${pool.verified !== 1 ? 's' : ''} · Tasa fija: ${RATE_BS} Bs/USD`}
+                  </p>
+                </div>
+              )
+            })()}
           </section>
 
           {/* ── MÉTODOS DE PAGO ── */}
@@ -1482,8 +1495,26 @@ export default function PrototipoEliminatoriasV3() {
   // ── LLENADO ─────────────────────────────────────────────────────────────────
 
   function renderLlenado() {
+    const isReviewMode = adminUnlocked && adminReview
+
     return (
       <div className="pb-28">
+
+        {/* ── Modo revisión admin — banner y toggle ── */}
+        {adminUnlocked && (
+          <div className={`sticky top-0 z-30 px-4 py-2 flex items-center justify-between gap-3 text-xs font-bold transition-colors ${isReviewMode ? 'bg-violet-700 text-white' : 'bg-slate-100 text-slate-600 border-b border-slate-200'}`}>
+            <span className="flex items-center gap-2">
+              {isReviewMode ? '🔎 Modo revisión admin activo — navegación libre sin restricciones' : '🔒 Admin · Flujo de participante (restricciones normales)'}
+            </span>
+            <button
+              onClick={() => setAdminReview(v => !v)}
+              className={`shrink-0 px-3 py-1 rounded-full font-extrabold transition-all ${isReviewMode ? 'bg-white text-violet-700 hover:bg-violet-100' : 'bg-violet-600 text-white hover:bg-violet-700'}`}
+            >
+              {isReviewMode ? 'Desactivar' : 'Activar revisión'}
+            </button>
+          </div>
+        )}
+
         {/* Sticky progress header */}
         <header className="bg-gradient-to-r from-green-700 to-blue-700 text-white sticky top-0 z-20 shadow-lg">
           <div className="max-w-2xl mx-auto px-4 py-3">
@@ -1516,16 +1547,28 @@ export default function PrototipoEliminatoriasV3() {
           <div className="max-w-2xl mx-auto px-4 py-2.5">
             <div className="flex items-center gap-1.5 text-xs overflow-x-auto scrollbar-hide">
               <span className="w-5 h-5 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-xs font-bold shrink-0">✓</span>
-              <span className="text-slate-400 shrink-0">Registro</span>
+              <button onClick={() => setView('registro')} className="text-slate-400 shrink-0 hover:text-green-600 transition-colors">Registro</button>
               <div className="flex-1 h-px bg-slate-200 min-w-3" />
               <span className="w-5 h-5 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold shrink-0">2</span>
               <span className="font-semibold text-green-700 shrink-0">Pronósticos</span>
               <div className="flex-1 h-px bg-slate-200 min-w-3" />
-              <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-xs font-bold shrink-0">3</span>
-              <span className="text-slate-400 shrink-0">Revisar</span>
+              <button
+                onClick={() => isReviewMode ? setView('mi-quiniela') : undefined}
+                className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${isReviewMode ? 'bg-violet-500 text-white cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-default'}`}
+              >3</button>
+              <button
+                onClick={() => isReviewMode ? setView('mi-quiniela') : undefined}
+                className={`shrink-0 transition-colors ${isReviewMode ? 'text-violet-600 font-semibold hover:text-violet-800' : 'text-slate-400 cursor-default'}`}
+              >Revisar</button>
               <div className="flex-1 h-px bg-slate-200 min-w-3" />
-              <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-xs font-bold shrink-0">4</span>
-              <span className="text-slate-400 shrink-0">Confirmar</span>
+              <button
+                onClick={() => isReviewMode ? setView('mi-quiniela') : undefined}
+                className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${isReviewMode ? 'bg-violet-500 text-white cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-default'}`}
+              >4</button>
+              <button
+                onClick={() => isReviewMode ? setView('mi-quiniela') : undefined}
+                className={`shrink-0 transition-colors ${isReviewMode ? 'text-violet-600 font-semibold hover:text-violet-800' : 'text-slate-400 cursor-default'}`}
+              >Confirmar</button>
             </div>
           </div>
         </div>
@@ -1723,15 +1766,24 @@ export default function PrototipoEliminatoriasV3() {
                 >
                   <Save size={14} /> Guardar
                 </button>
-                <button
-                  onClick={goToFirstPending}
-                  className="flex-1 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 text-sm transition-all touch-manipulation"
-                >
-                  🔍 Ir al primer pendiente
-                  <span className="bg-amber-700/70 text-xs px-2 py-0.5 rounded-full font-extrabold">
-                    {pendingInStage}
-                  </span>
-                </button>
+                {isReviewMode ? (
+                  <button
+                    onClick={() => setView('mi-quiniela')}
+                    className="flex-1 bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 text-sm transition-all touch-manipulation"
+                  >
+                    🔎 Revisar (admin) <ArrowRight size={16} />
+                  </button>
+                ) : (
+                  <button
+                    onClick={goToFirstPending}
+                    className="flex-1 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 text-sm transition-all touch-manipulation"
+                  >
+                    🔍 Ir al primer pendiente
+                    <span className="bg-amber-700/70 text-xs px-2 py-0.5 rounded-full font-extrabold">
+                      {pendingInStage}
+                    </span>
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -2177,8 +2229,27 @@ export default function PrototipoEliminatoriasV3() {
       )
     }
 
+    const isReviewMode = adminUnlocked && adminReview
+    const missingCount = allOpen.length - filled
+
     return (
       <div className="max-w-2xl mx-auto px-4 py-6 pb-10">
+
+        {/* Banner revisión admin */}
+        {isReviewMode && (
+          <div className="bg-violet-50 border border-violet-200 rounded-2xl p-3 mb-4 flex items-start gap-2">
+            <span className="text-violet-500 shrink-0 text-base">🔎</span>
+            <div>
+              <p className="text-xs font-extrabold text-violet-700">Modo revisión admin activo</p>
+              <p className="text-[10px] text-violet-600 mt-0.5">
+                {missingCount > 0
+                  ? `Estás viendo una revisión parcial. Faltan ${missingCount} partido${missingCount !== 1 ? 's' : ''} por completar.`
+                  : 'Todos los pronósticos están completos.'}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Header card */}
         <div className="bg-gradient-to-r from-green-700 to-blue-700 rounded-2xl p-5 text-white mb-5 shadow-lg">
           <div className="flex items-start justify-between mb-3">
@@ -2292,14 +2363,30 @@ export default function PrototipoEliminatoriasV3() {
           >
             ✏️ Editar pronósticos
           </button>
-          {filled === totalOpenCount && !confirmed && (
+
+          {/* Confirmar — solo si completo; en modo revisión admin mostrar aviso */}
+          {isReviewMode && missingCount > 0 ? (
+            <div className="bg-violet-50 border border-violet-200 rounded-2xl p-4">
+              <p className="text-violet-700 font-extrabold text-sm mb-1">🔎 Vista previa admin</p>
+              <p className="text-violet-600 text-xs mb-3">
+                No se puede confirmar oficialmente hasta completar los {missingCount} pronóstico{missingCount !== 1 ? 's' : ''} faltante{missingCount !== 1 ? 's' : ''}.
+              </p>
+              <button
+                disabled
+                className="w-full bg-slate-200 text-slate-400 font-extrabold py-3 rounded-xl text-sm cursor-not-allowed"
+              >
+                ✅ Confirmar quiniela (bloqueado — incompleta)
+              </button>
+            </div>
+          ) : filled === totalOpenCount && !confirmed ? (
             <button
               onClick={() => { storePicks(picks); setConfirmed(true); setToast('🎉 ¡Quiniela confirmada!') }}
               className="w-full bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-extrabold py-4 rounded-2xl flex items-center justify-center gap-2 text-base shadow-lg transition-all active:scale-95 touch-manipulation"
             >
               ✅ Confirmar quiniela
             </button>
-          )}
+          ) : null}
+
           {confirmed && (
             <div className="bg-green-50 border-2 border-green-300 rounded-2xl p-5 text-center">
               <div className="text-3xl mb-2">🎉</div>
