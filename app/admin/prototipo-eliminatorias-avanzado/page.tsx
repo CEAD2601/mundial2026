@@ -17,7 +17,7 @@ import {
   type KOMatch, type Stage,
 } from '@/lib/prototype/knockout-data'
 import {
-  STAT_CATEGORIES, DEMO_STATS, DEMO_TEAM_STATS, DEMO_PENDING_EVENTS, SIMULATED_MATCH,
+  STAT_CATEGORIES, DEMO_GOALS, DEMO_STATS, DEMO_TEAM_STATS, DEMO_PENDING_EVENTS, SIMULATED_MATCH,
   type StatCategory, type StatCategoryId, type PendingMatchEvent,
 } from '@/lib/prototype/knockout-stats'
 
@@ -273,7 +273,7 @@ export default function PrototipoEliminatoriasV3() {
   const [bktRound, setBktRound] = useState('r32')
 
   // Estadísticas — tab activo y estado de simulación
-  const [statTab, setStatTab]           = useState<StatCategoryId>('goals')
+  const [statTab, setStatTab] = useState<StatCategoryId>('goals')
   const [statLastUpdate, setStatLastUpdate] = useState<string | null>(null)
   const [statSimLogs, setStatSimLogs]   = useState<string[]>([])
   const [statSimRunning, setStatSimRunning] = useState(false)
@@ -576,33 +576,37 @@ export default function PrototipoEliminatoriasV3() {
           <section>
             <h2 className="text-lg font-extrabold text-slate-800 mb-4">💰 Pozo acumulado</h2>
             <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-5 text-white shadow-xl">
-              <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="grid grid-cols-3 gap-3 mb-5">
                 <div className="bg-white/10 rounded-xl p-3 text-center">
-                  <p className="text-2xl font-extrabold text-yellow-400">$120</p>
+                  <p className="text-2xl font-extrabold text-yellow-400">$480</p>
                   <p className="text-xs text-slate-400 mt-0.5">Pozo en USD</p>
                 </div>
                 <div className="bg-white/10 rounded-xl p-3 text-center">
-                  <p className="text-2xl font-extrabold text-green-400">12</p>
-                  <p className="text-xs text-slate-400 mt-0.5">Participantes</p>
+                  <p className="text-xl font-extrabold text-green-300">350.400</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Pozo en Bs</p>
+                </div>
+                <div className="bg-white/10 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-extrabold text-blue-300">24</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Pagos verif.</p>
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {[
-                  { place:'🥇 1.er lugar', pct:'65%', usd:'$78', color:'text-yellow-400' },
-                  { place:'🥈 2.do lugar', pct:'20%', usd:'$24', color:'text-slate-300' },
-                  { place:'⚙️ Organización', pct:'15%', usd:'$18', color:'text-slate-400' },
+                  { place:'🥇 1.er lugar', pct:'65%', usd:'$312 USD', color:'text-yellow-400' },
+                  { place:'🥈 2.do lugar', pct:'20%', usd:'$96 USD',  color:'text-slate-300' },
+                  { place:'⚙️ Organización', pct:'15%', usd:'$72 USD', color:'text-slate-500' },
                 ].map(p => (
-                  <div key={p.place} className="flex items-center justify-between">
+                  <div key={p.place} className="flex items-center justify-between border-b border-white/10 pb-2.5 last:border-0 last:pb-0">
                     <span className={`text-sm font-semibold ${p.color}`}>{p.place}</span>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-slate-400">{p.pct}</span>
+                      <span className="text-xs text-slate-500">{p.pct}</span>
                       <span className={`text-sm font-extrabold ${p.color}`}>{p.usd}</span>
                     </div>
                   </div>
                 ))}
               </div>
-              <p className="text-[10px] text-slate-500 mt-3 text-center">
-                * Datos demo · monto varía según participantes confirmados
+              <p className="text-[10px] text-slate-500 mt-4 text-center">
+                Datos demo · El pozo se actualizará según pagos verificados
               </p>
             </div>
           </section>
@@ -669,7 +673,7 @@ export default function PrototipoEliminatoriasV3() {
                 { emoji:'📊', title:'Ranking en vivo',      desc:'Actualizado tras cada partido' },
                 { emoji:'⏰', title:'Hora Venezuela',        desc:'Todos los horarios en VET' },
                 { emoji:'📋', title:'Quinielas comparables', desc:'Ve los pronósticos de todos' },
-                { emoji:'📈', title:'Estadísticas',          desc:'Goleadores, asistencias y más' },
+                { emoji:'📈', title:'Estadísticas',          desc:'Goleadores y tabla de equipos' },
                 { emoji:'🔒', title:'Transparencia total',   desc:'Resultados verificables' },
                 { emoji:'💬', title:'Soporte WhatsApp',      desc:'Respuesta en menos de 1 hora' },
               ].map(b => (
@@ -709,13 +713,10 @@ export default function PrototipoEliminatoriasV3() {
             <div className="bg-slate-900 rounded-2xl p-5 flex items-center justify-between gap-4 shadow-lg">
               <div>
                 <p className="text-white font-extrabold text-base leading-tight">📈 Estadísticas del torneo</p>
-                <p className="text-slate-400 text-xs mt-1">Goleadores · Asistencias · Tarjetas · Equipos</p>
+                <p className="text-slate-400 text-xs mt-1">Goleadores y tabla de equipos</p>
                 <div className="flex flex-wrap gap-2 mt-2.5">
-                  {STAT_CATEGORIES.map(c => (
-                    <span key={c.id} className="text-[10px] font-bold bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">
-                      {c.emoji} {c.label}
-                    </span>
-                  ))}
+                  <span className="text-[10px] font-bold bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">⚽ Goles</span>
+                  <span className="text-[10px] font-bold bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">🏆 Equipos</span>
                 </div>
               </div>
               <button
@@ -735,9 +736,9 @@ export default function PrototipoEliminatoriasV3() {
                 { q:'¿Cómo funciona la quiniela?',
                   a:'Predices el marcador exacto de cada partido de la fase eliminatoria. Por cada marcador exacto ganas 3 pts, por acertar el ganador (sin el marcador exacto) ganas 1 pt, y si fallas ganas 0 pts. Al final gana quien tenga más puntos.' },
                 { q:'¿Cuánto cuesta participar?',
-                  a:'El costo es de $10 USD o su equivalente en Bolívares según la tasa del día. El monto exacto se confirma por WhatsApp antes de inscribirte.' },
+                  a:'La inscripción es de $20 USD. Puedes pagar por Pago Móvil Banesco (14.600 Bs a tasa fija 730 Bs/USD) o por Zelle ($20 USD directamente).' },
                 { q:'¿Cómo puedo pagar?',
-                  a:'Aceptamos Pago Móvil (Venezuela) y Zelle (desde USA). Después de pagar, envía el comprobante por WhatsApp al organizador con tu nombre y número de quiniela.' },
+                  a:'Pago Móvil Banesco: teléfono 04143043337, CI V-4.561.947, monto 14.600 Bs. Zelle: kissigloxxi@hotmail.com, monto $20 USD. Después de pagar, envía el comprobante por WhatsApp con tu nombre.' },
                 { q:'¿Hasta cuándo puedo inscribirme?',
                   a:'Puedes inscribirte y llenar tu quiniela hasta antes del primer partido de cada ronda. Una vez empieza la ronda, tu quiniela queda bloqueada.' },
                 { q:'¿Cómo se distribuyen los premios?',
@@ -1644,15 +1645,11 @@ export default function PrototipoEliminatoriasV3() {
   // ── ESTADÍSTICAS ─────────────────────────────────────────────────────────────
 
   function renderEstadisticas() {
-    const activeCat = STAT_CATEGORIES.find(c => c.id === statTab)!
-    const isTeams   = statTab === 'teams'
-    const players   = isTeams ? [] : DEMO_STATS[statTab as Exclude<StatCategoryId, 'teams'>]
-    const pendingCount = pendingEvents.filter(e => e.status === 'pending').length
+    const isTeams = statTab === 'teams'
 
     return (
       <div className="max-w-2xl mx-auto px-3 py-5 pb-28">
 
-        {/* Last update or auto badge */}
         {statLastUpdate && (
           <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-2 mb-3 text-xs text-green-700 font-semibold">
             <span>✓</span>
@@ -1660,84 +1657,85 @@ export default function PrototipoEliminatoriasV3() {
           </div>
         )}
 
-        {/* Header card — dark Google-style */}
+        {/* Card oscura */}
         <div className="bg-slate-900 rounded-2xl overflow-hidden shadow-xl mb-4">
-          <div className="px-5 pt-5 pb-0">
-            <div className="flex items-start justify-between">
+
+          {/* Header */}
+          <div className="px-5 pt-5 pb-4">
+            <div className="flex items-start justify-between mb-4">
               <div>
                 <h1 className="text-white text-xl font-extrabold tracking-tight">Estadísticas</h1>
                 <p className="text-slate-400 text-xs mt-0.5">Quiniela Eliminatorias 2026</p>
               </div>
-              {/* Last update */}
-              <div className="text-right shrink-0 ml-3">
-                {statLastUpdate ? (
-                  <p className="text-green-400 text-[10px] font-semibold leading-tight">
-                    ✓ Actualizado<br />
-                    <span className="text-slate-400">{statLastUpdate}</span>
-                  </p>
-                ) : (
-                  <p className="text-slate-500 text-[10px]">datos demo</p>
-                )}
-              </div>
+              <p className="text-slate-500 text-[10px] text-right shrink-0 ml-3 mt-1">
+                {statLastUpdate
+                  ? <span className="text-green-400 font-semibold">✓ {statLastUpdate}</span>
+                  : 'datos demo'}
+              </p>
             </div>
 
-            {/* Tabs — scrollable on mobile */}
-            <div className="flex gap-0 overflow-x-auto -mx-1 px-1 mt-4" style={{ scrollbarWidth: 'none' }}>
+            {/* 2 tabs — Goles y Equipos */}
+            <div className="flex gap-1 bg-slate-800 rounded-xl p-1">
               {STAT_CATEGORIES.map(cat => (
                 <button
                   key={cat.id}
                   onClick={() => setStatTab(cat.id)}
-                  className={`shrink-0 flex items-center gap-1.5 px-3 py-3 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap touch-manipulation ${
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-bold transition-all touch-manipulation ${
                     statTab === cat.id
-                      ? 'text-white border-blue-400'
-                      : 'text-slate-400 border-transparent hover:text-slate-200'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  <span className="text-base leading-none">{cat.emoji}</span>
+                  <span>{cat.emoji}</span>
                   <span>{cat.label}</span>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* ── Jugadores ── */}
+          {/* ── GOLES — foto + nombre + bandera + valor ── */}
           {!isTeams && (
             <div className="divide-y divide-slate-800">
-              <div className="grid px-4 py-2 bg-slate-800/60"
-                style={{ gridTemplateColumns: '28px 40px 1fr 48px' }}>
-                <span className="text-[10px] text-slate-500 font-bold">#</span>
+              {/* Col header */}
+              <div className="grid px-5 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wide"
+                style={{ gridTemplateColumns: '28px 44px 1fr 36px' }}>
+                <span>#</span>
                 <span />
-                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">Jugador</span>
-                <span className="text-[10px] text-slate-500 font-bold text-right uppercase tracking-wide">
-                  {activeCat.unitShort}
-                </span>
+                <span>Jugador</span>
+                <span className="text-right">G</span>
               </div>
 
-              {players.map((p, i) => (
+              {DEMO_GOALS.map((p, i) => (
                 <div
                   key={`${p.name}-${i}`}
-                  className="grid items-center px-4 py-3 hover:bg-slate-800/50 transition-colors"
-                  style={{ gridTemplateColumns: '28px 40px 1fr 48px' }}
+                  className="grid items-center px-5 py-3 hover:bg-slate-800/60 transition-colors"
+                  style={{ gridTemplateColumns: '28px 44px 1fr 36px' }}
                 >
-                  <span className={`text-sm font-extrabold tabular-nums ${
-                    p.rank === 1 ? 'text-yellow-400' : 'text-slate-500'
+                  {/* Rank */}
+                  <span className={`text-sm font-extrabold tabular-nums leading-none ${
+                    p.rank === 1 ? 'text-yellow-400' : p.rank <= 3 ? 'text-slate-300' : 'text-slate-500'
                   }`}>
                     {p.rank}
                   </span>
+
+                  {/* Photo */}
                   {p.photoUrl ? (
                     <img
                       src={p.photoUrl}
                       alt={p.name}
-                      className="w-8 h-8 rounded-full object-cover shrink-0 ring-2 ring-slate-700"
+                      className="w-9 h-9 rounded-full object-cover ring-2 ring-slate-700"
+                      onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                     />
                   ) : (
                     <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-extrabold shrink-0 ring-2 ring-slate-700"
-                      style={{ backgroundColor: p.color + '22', color: p.color }}
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-[10px] font-extrabold ring-2 ring-slate-700"
+                      style={{ background: p.color + '30', color: p.color }}
                     >
                       {p.initials}
                     </div>
                   )}
+
+                  {/* Name + country */}
                   <div className="pl-2 min-w-0">
                     <p className="text-white text-sm font-semibold leading-tight truncate">{p.name}</p>
                     <p className="text-slate-400 text-[11px] flex items-center gap-1 mt-0.5">
@@ -1745,7 +1743,11 @@ export default function PrototipoEliminatoriasV3() {
                       <span className="truncate">{p.country}</span>
                     </p>
                   </div>
-                  <span className="text-white text-lg font-extrabold text-right tabular-nums">
+
+                  {/* Goals */}
+                  <span className={`text-right text-lg font-extrabold tabular-nums ${
+                    p.rank === 1 ? 'text-yellow-400' : 'text-white'
+                  }`}>
                     {p.value}
                   </span>
                 </div>
@@ -1753,41 +1755,52 @@ export default function PrototipoEliminatoriasV3() {
             </div>
           )}
 
-          {/* ── Equipos ── */}
+          {/* ── EQUIPOS — tabla con scroll horizontal en móvil ── */}
           {isTeams && (
-            <div className="overflow-x-auto">
-              <div className="min-w-[420px]">
-                {/* Header */}
-                <div className="grid px-4 py-2 bg-slate-800/60 text-[10px] font-bold text-slate-500 uppercase tracking-wide"
-                  style={{ gridTemplateColumns: '28px 1fr 32px 32px 32px 32px 48px 48px 40px' }}>
-                  <span>#</span><span>Equipo</span>
-                  <span className="text-center">PJ</span><span className="text-center">G</span>
-                  <span className="text-center">E</span><span className="text-center">P</span>
-                  <span className="text-center">GF</span><span className="text-center">GC</span>
+            <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' as const }}>
+              <div style={{ minWidth: 520 }}>
+                {/* Table header */}
+                <div className="grid px-4 py-2 bg-slate-800/70 text-[10px] font-bold text-slate-400 uppercase tracking-wide"
+                  style={{ gridTemplateColumns: '28px 1fr 30px 30px 30px 30px 36px 36px 40px 40px' }}>
+                  <span>#</span>
+                  <span>Equipo</span>
+                  <span className="text-center">PJ</span>
+                  <span className="text-center">G</span>
+                  <span className="text-center">E</span>
+                  <span className="text-center">P</span>
+                  <span className="text-center">GF</span>
+                  <span className="text-center">GC</span>
                   <span className="text-center">DG</span>
+                  <span className="text-center text-yellow-400">PTS</span>
                 </div>
+
                 {DEMO_TEAM_STATS.map(t => (
                   <div
                     key={t.code}
-                    className="grid items-center px-4 py-2.5 border-t border-slate-800 hover:bg-slate-800/40 transition-colors"
-                    style={{ gridTemplateColumns: '28px 1fr 32px 32px 32px 32px 48px 48px 40px' }}
+                    className="grid items-center px-4 py-2 border-t border-slate-800/80 hover:bg-slate-800/40 transition-colors"
+                    style={{ gridTemplateColumns: '28px 1fr 30px 30px 30px 30px 36px 36px 40px 40px' }}
                   >
-                    <span className={`text-sm font-extrabold tabular-nums ${t.rank === 1 ? 'text-yellow-400' : 'text-slate-500'}`}>{t.rank}</span>
+                    <span className={`text-xs font-extrabold tabular-nums ${
+                      t.rank <= 3 ? 'text-yellow-400' : t.rank <= 8 ? 'text-green-400' : 'text-slate-500'
+                    }`}>{t.rank}</span>
+
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="text-base leading-none shrink-0">{t.flag}</span>
+                      <span className="text-sm leading-none shrink-0">{t.flag}</span>
                       <span className="text-white text-xs font-semibold truncate">{t.name}</span>
                     </div>
-                    <span className="text-slate-400 text-xs text-center">{t.played}</span>
-                    <span className="text-green-400 text-xs text-center font-bold">{t.wins}</span>
-                    <span className="text-slate-400 text-xs text-center">{t.draws}</span>
-                    <span className="text-red-400 text-xs text-center">{t.losses}</span>
-                    <span className="text-white text-xs text-center font-semibold">{t.goalsFor}</span>
-                    <span className="text-slate-400 text-xs text-center">{t.goalsAgainst}</span>
-                    <span className={`text-xs text-center font-extrabold tabular-nums ${
+
+                    <span className="text-slate-400 text-xs text-center tabular-nums">{t.played}</span>
+                    <span className="text-green-400 text-xs text-center font-bold tabular-nums">{t.wins}</span>
+                    <span className="text-slate-400 text-xs text-center tabular-nums">{t.draws}</span>
+                    <span className="text-red-400 text-xs text-center tabular-nums">{t.losses}</span>
+                    <span className="text-white text-xs text-center tabular-nums">{t.goalsFor}</span>
+                    <span className="text-slate-400 text-xs text-center tabular-nums">{t.goalsAgainst}</span>
+                    <span className={`text-xs text-center font-bold tabular-nums ${
                       t.goalDiff > 0 ? 'text-green-400' : t.goalDiff < 0 ? 'text-red-400' : 'text-slate-400'
                     }`}>
                       {t.goalDiff > 0 ? '+' : ''}{t.goalDiff}
                     </span>
+                    <span className="text-yellow-400 text-xs text-center font-extrabold tabular-nums">{t.pts}</span>
                   </div>
                 ))}
               </div>
@@ -1797,19 +1810,11 @@ export default function PrototipoEliminatoriasV3() {
           {/* Footer */}
           <div className="px-5 py-3 bg-slate-800/40 border-t border-slate-800 flex items-center justify-between">
             <p className="text-[10px] text-slate-500">⚠️ Datos demo · no son estadísticas oficiales</p>
-            <button
-              onClick={() => setView('admin')}
-              className="text-[10px] text-slate-400 hover:text-white underline transition-colors"
-            >
-              Admin →
-            </button>
+            <button onClick={() => setView('admin')} className="text-[10px] text-slate-400 hover:text-white underline">Admin →</button>
           </div>
         </div>
 
-        <button
-          onClick={() => setView('home')}
-          className="w-full text-slate-400 text-xs py-2 hover:text-slate-600 transition-colors"
-        >
+        <button onClick={() => setView('home')} className="w-full text-slate-400 text-xs py-2 hover:text-slate-600 transition-colors">
           ← Volver al inicio
         </button>
       </div>
