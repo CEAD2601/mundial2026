@@ -203,15 +203,9 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center w-full max-w-sm sm:max-w-none">
-            <Link href="/eliminatorias/registro"
-              className="ko-btn-cta group relative bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-slate-900 font-extrabold px-8 py-4 rounded-2xl text-base sm:text-lg shadow-2xl inline-flex items-center gap-2 w-full sm:w-auto justify-center touch-manipulation"
-              style={{ boxShadow: '0 8px 32px rgba(251,191,36,0.4), 0 2px 8px rgba(0,0,0,0.3)' }}>
-              <span className="text-xl group-hover:scale-110 transition-transform">⚽</span>
-              Participar ahora
-              <span className="absolute -top-2.5 -right-2.5 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg border border-red-400">
-                20 USD
-              </span>
-            </Link>
+            <div className="bg-white/20 backdrop-blur-md border border-white/30 text-white font-bold px-8 py-4 rounded-2xl text-base sm:text-lg inline-flex items-center gap-2 w-full sm:w-auto justify-center">
+              🔒 Inscripciones cerradas
+            </div>
             <Link href="/eliminatorias/ranking"
               className="bg-white/15 hover:bg-white/25 active:bg-white/30 backdrop-blur-md border border-white/30 text-white font-semibold px-7 py-4 rounded-2xl text-base transition-all hover:-translate-y-0.5 inline-flex items-center gap-2 w-full sm:w-auto justify-center touch-manipulation">
               🏆 Ver ranking
@@ -311,10 +305,9 @@ export default function Home() {
                       <p className="text-xs text-slate-500">16 partidos · 28 jun – 3 jul</p>
                     </div>
                   </div>
-                  <Link href="/eliminatorias/registro"
-                    className="text-sm font-bold px-4 py-2.5 rounded-xl bg-green-600 text-white hover:bg-green-700 transition-all active:scale-95 touch-manipulation">
-                    Inscribirme
-                  </Link>
+                  <span className="text-sm font-bold px-4 py-2.5 rounded-xl bg-slate-300 text-slate-600">
+                    🔒 Cerrado
+                  </span>
                 </div>
               </div>
             </div>
@@ -389,10 +382,9 @@ export default function Home() {
           </div>
 
           <div className="text-center mt-8">
-            <Link href="/eliminatorias/registro"
-              className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold px-8 py-3.5 rounded-2xl transition-all shadow-lg hover:shadow-green-500/25 hover:-translate-y-0.5 text-sm touch-manipulation">
-              ⚽ Empezar ahora · 20 USD
-            </Link>
+            <span className="inline-flex items-center gap-2 bg-slate-200 text-slate-500 font-bold px-8 py-3.5 rounded-2xl text-sm">
+              🔒 Inscripciones cerradas
+            </span>
           </div>
         </section>
 
@@ -735,15 +727,14 @@ export default function Home() {
             style={{ backgroundImage: 'url(/assets/hero/football-pattern.svg)', backgroundSize: '120px' }} />
           <div className="relative">
             <div className="text-5xl mb-4">🏆</div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold mb-3">¡Inscripciones abiertas!</h2>
+            <h2 className="text-2xl sm:text-3xl font-extrabold mb-3">🔒 Inscripciones cerradas</h2>
             <p className="text-green-100 mb-8 max-w-md mx-auto">
-              Predice los 32 partidos de la fase eliminatoria y compite por el primer lugar.
+              La fase de Dieciseisavos ya comenzó. ¡Sigue el ranking y los resultados en vivo!
             </p>
-            <Link href="/eliminatorias/registro"
-              className="ko-btn-cta inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-slate-900 font-extrabold px-10 py-4 rounded-2xl text-lg shadow-xl touch-manipulation">
-              ⚽ Inscribirme ahora · 20 USD
+            <Link href="/eliminatorias/ranking"
+              className="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-extrabold px-10 py-4 rounded-2xl text-lg shadow-xl touch-manipulation">
+              🏆 Ver ranking
             </Link>
-            <p className="text-green-200 text-xs mt-4">Pago Móvil Banesco · Zelle · 20 USD / 14.600 Bs · Tasa fija 730 Bs/USD</p>
           </div>
         </section>
 
