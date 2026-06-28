@@ -1,10 +1,11 @@
+export const dynamic = 'force-dynamic'
+
 import { prisma } from '@/lib/prisma'
 import { KNOCKOUT_MATCHES } from '@/lib/prototype/knockout-data'
 
-export const revalidate = 60
-
 export default async function KOResultadosPage() {
-  const results = await prisma.kOMatchResult.findMany()
+  const rawResults = await prisma.kOMatchResult.findMany().catch(() => [])
+  const results = rawResults
   const resultMap = Object.fromEntries(results.map(r => [r.id, r]))
 
   const finished = KNOCKOUT_MATCHES.filter(m => resultMap[m.id]?.status === 'FINISHED')

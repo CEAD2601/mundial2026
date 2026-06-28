@@ -27,7 +27,7 @@ function AnimatedCounter({
 }: {
   value: number; prefix?: string; suffix?: string; duration?: number; delay?: number
 }) {
-  const [display, setDisplay] = useState(0)
+  const [display, setDisplay] = useState(value)
   const rafRef   = useRef<number | null>(null)
   const startRef = useRef<number | null>(null)
 

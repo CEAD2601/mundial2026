@@ -1,7 +1,7 @@
+export const dynamic = 'force-dynamic'
+
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
-
-export const revalidate = 30
 
 export default async function AdminKORankingPage() {
   const snapshots = await prisma.kORankingSnapshot.findMany({
@@ -10,7 +10,7 @@ export default async function AdminKORankingPage() {
       { totalPoints: 'desc' }, { classifiedCorrect: 'desc' },
       { exactScores: 'desc' }, { penaltyBonus: 'desc' },
     ],
-  })
+  }).catch(() => [])
 
   return (
     <div className="space-y-4">

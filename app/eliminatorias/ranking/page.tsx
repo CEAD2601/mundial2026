@@ -1,14 +1,20 @@
+export const dynamic = 'force-dynamic'
+
 import { prisma } from '@/lib/prisma'
 
 async function getRanking() {
-  const snapshots = await prisma.kORankingSnapshot.findMany({
-    include: { participant: { include: { payment: true } } },
-    orderBy: [
-      { totalPoints: 'desc' }, { classifiedCorrect: 'desc' },
-      { exactScores: 'desc' }, { penaltyBonus: 'desc' },
-    ],
-  })
-  return snapshots.filter(s => s.participant.payment?.paymentStatus === 'VERIFIED')
+  try {
+    const snapshots = await prisma.kORankingSnapshot.findMany({
+      include: { participant: { include: { payment: true } } },
+      orderBy: [
+        { totalPoints: 'desc' }, { classifiedCorrect: 'desc' },
+        { exactScores: 'desc' }, { penaltyBonus: 'desc' },
+      ],
+    })
+    return snapshots.filter(s => s.participant.payment?.paymentStatus === 'VERIFIED')
+  } catch {
+    return []
+  }
 }
 
 export const revalidate = 60
