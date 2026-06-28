@@ -566,6 +566,24 @@ export default function PrototipoEliminatoriasV3() {
     return dates.includes(today) ? today : (dates[0] ?? today)
   })
 
+  // Carrusel de fechas — refs para auto-scroll al botón seleccionado
+  const rankDayScrollRef   = useRef<HTMLDivElement>(null)
+  const resultDayScrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const container = rankDayScrollRef.current
+    if (!container) return
+    const btn = container.querySelector<HTMLElement>(`[data-date="${rankDay}"]`)
+    btn?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+  }, [rankDay])
+
+  useEffect(() => {
+    const container = resultDayScrollRef.current
+    if (!container) return
+    const btn = container.querySelector<HTMLElement>(`[data-date="${resultDay}"]`)
+    btn?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+  }, [resultDay])
+
   // Mi Quiniela — búsqueda
   const [miqQuery, setMiqQuery] = useState('')
   const [miqFound, setMiqFound] = useState(false)
@@ -2842,9 +2860,9 @@ export default function PrototipoEliminatoriasV3() {
             </div>
 
             {/* Date selector */}
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+            <div ref={rankDayScrollRef} className="flex gap-2 overflow-x-auto pb-2 scrollbar-none px-[45%]">
               {allDates.map(d => (
-                <button key={d} onClick={() => setRankDay(d)}
+                <button key={d} data-date={d} onClick={() => setRankDay(d)}
                   className={`shrink-0 px-3 py-2 rounded-xl text-xs font-bold border transition-all touch-manipulation ${
                     d === activeRankDay
                       ? 'bg-green-600 text-white border-green-600 shadow-sm'
@@ -4500,9 +4518,9 @@ export default function PrototipoEliminatoriasV3() {
             <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mb-1.5 px-0.5">
               2. Elige el día · <span className="normal-case font-normal text-slate-400">Días con partidos de {activePhaseLabel}</span>
             </p>
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <div ref={resultDayScrollRef} className="flex gap-2 overflow-x-auto pb-1 scrollbar-none px-[45%]">
               {availableDates.map(d => (
-                <button key={d} onClick={() => setResultDay(d)}
+                <button key={d} data-date={d} onClick={() => setResultDay(d)}
                   className={`shrink-0 px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
                     d === activeDate
                       ? 'bg-green-600 text-white border-green-600 shadow-sm'
