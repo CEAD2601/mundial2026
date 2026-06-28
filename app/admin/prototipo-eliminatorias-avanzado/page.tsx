@@ -3556,6 +3556,17 @@ export default function PrototipoEliminatoriasV3() {
       if (adminModule === 'dashboard') {
         return (
           <div className="space-y-4">
+            {/* Banner de acceso al admin real */}
+            <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-extrabold text-green-800">Admin KO con datos reales</p>
+                <p className="text-[10px] text-green-600 mt-0.5">Este panel usa localStorage. Para ver participantes, pagos y verificar en tiempo real usa el admin real.</p>
+              </div>
+              <a href="/admin/eliminatorias" target="_blank"
+                className="shrink-0 bg-green-600 hover:bg-green-700 text-white font-extrabold text-xs px-4 py-2 rounded-xl transition-colors whitespace-nowrap">
+                Admin real →
+              </a>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
                 { label: 'Inscritos', val: koEnrolled.length, icon: '👥', color: 'text-blue-700' },
