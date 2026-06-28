@@ -1820,28 +1820,16 @@ export default function PrototipoEliminatoriasV3() {
         </div>
 
         <div className="max-w-2xl mx-auto px-4 py-4">
-          {/* Scoring hint */}
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-4">
-            <p className="text-xs font-semibold text-blue-800 mb-2">⚡ Sistema de puntos — Eliminatorias:</p>
-            <div className="space-y-1 text-xs text-blue-700">
-              <div className="flex items-center gap-2">
-                <span className="bg-green-500 text-white font-extrabold px-2 py-0.5 rounded-full text-[10px] shrink-0">🏆 +2</span>
-                <span>Aciertas el equipo que clasifica</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="bg-yellow-400 text-slate-900 font-extrabold px-2 py-0.5 rounded-full text-[10px] shrink-0">🎯 +2</span>
-                <span>Aciertas el marcador exacto <em>(solo si también acertaste el clasificado)</em></span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="bg-amber-500 text-white font-extrabold px-2 py-0.5 rounded-full text-[10px] shrink-0">⭐ +1</span>
-                <span>Bonus: pronosticas empate y aciertas quién clasifica por penales</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="bg-slate-300 text-slate-700 font-extrabold px-2 py-0.5 rounded-full text-[10px] shrink-0">❌ 0</span>
-                <span>Si fallas el clasificado, son 0 pts aunque el marcador coincida</span>
-              </div>
+          {/* Scoring hint — compact */}
+          <div className="bg-blue-50 border border-blue-100 rounded-xl px-3 py-2.5 mb-4">
+            <p className="text-[10px] font-bold text-blue-800 mb-1.5 uppercase tracking-wide">Sistema de puntos — Eliminatorias</p>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-blue-700">
+              <span><span className="font-extrabold text-green-700">🏆 +2</span> Clasificado correcto</span>
+              <span><span className="font-extrabold text-yellow-700">🎯 +2</span> Marcador exacto del partido</span>
+              <span><span className="font-extrabold text-amber-600">⭐ +1</span> Bonus penales</span>
+              <span><span className="font-extrabold text-slate-500">❌ 0</span> Fallo</span>
             </div>
-            <p className="text-[10px] text-blue-500 mt-2 font-medium">El marcador exacto no incluye penales · Máximo 5 pts por partido · 160 pts en total</p>
+            <p className="text-[10px] text-blue-400 mt-1.5">El marcador no incluye penales · Máx. 5 pts por partido</p>
           </div>
 
           {/* Stage tabs */}
@@ -3031,12 +3019,17 @@ export default function PrototipoEliminatoriasV3() {
           )}
 
           {/* Scoring legend — updated to KO scoring */}
-          <div className="bg-white rounded-xl border border-slate-100 p-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
-            <span>🏆 Clasificado correcto = <strong>2 pts</strong></span>
-            <span>🎯 Marcador exacto = <strong>+2 pts</strong> <span className="text-slate-400">(solo si acertó clasificado)</span></span>
-            <span>⭐ Bonus penales = <strong>+1 pt</strong></span>
-            <span>❌ Fallo clasificado = <strong>0 pts</strong></span>
-            <span className="text-slate-400">· Máximo <strong>5 pts</strong> por partido</span>
+          <div className="bg-white rounded-xl border border-slate-100 px-3 py-2 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-slate-600 items-center">
+            <span>🏆 Clas. <strong>2 pts</strong></span>
+            <span className="text-slate-200">·</span>
+            <span>🎯 Exacto <strong>+2</strong></span>
+            <span className="text-slate-200">·</span>
+            <span>⭐ Penales <strong>+1</strong></span>
+            <span className="text-slate-200">·</span>
+            <span>❌ Fallo <strong>0</strong></span>
+            <span className="text-slate-200">·</span>
+            <span className="text-slate-400">Máx. <strong className="text-slate-600">5 pts</strong></span>
+            <span className="w-full text-[10px] text-slate-400 mt-0.5">El marcador no incluye penales.</span>
           </div>
 
           {/* Ranking table */}
@@ -3048,7 +3041,7 @@ export default function PrototipoEliminatoriasV3() {
                 <div className="col-span-2 text-center">Pts</div>
                 <div className="col-span-2 text-center" title="Clasificados correctos (2 pts c/u)">🏆 Clas.</div>
                 <div className="col-span-1 text-center" title="Marcadores exactos (+2 pts c/u)">🎯</div>
-                <div className="col-span-2 text-center" title="Penales correctos (+1 pt c/u)">🥅 Pen.</div>
+                <div className="col-span-2 text-center" title="Bonus penales correctos (+1 pt c/u)">⭐ Pen.</div>
               </div>
 
               {ranking.map(entry => {
