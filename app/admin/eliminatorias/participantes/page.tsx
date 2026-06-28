@@ -33,6 +33,7 @@ export default function AdminKOParticipantesPage() {
     setLoading(true)
     const params = new URLSearchParams()
     if (search) params.set('search', search)
+    params.set('secret', 'CEAD2601')
     const res = await fetch(`/api/admin/ko/participants?${params}`)
     if (res.ok) setParticipants((await res.json()).participants ?? [])
     setLoading(false)

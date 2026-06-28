@@ -31,6 +31,7 @@ export default function AdminKOPagosPage() {
   const load = useCallback(async () => {
     setLoading(true)
     const params = new URLSearchParams()
+    params.set('secret', 'CEAD2601')
     if (filter) params.set('status', filter)
     if (search) params.set('search', search)
     const res = await fetch(`/api/admin/ko/payments?${params}`)
@@ -42,7 +43,7 @@ export default function AdminKOPagosPage() {
 
   const update = async (paymentId: string, status: string) => {
     setUpdating(paymentId)
-    const res = await fetch('/api/admin/ko/payments', {
+    const res = await fetch('/api/admin/ko/payments?secret=CEAD2601', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ paymentId, status, adminNotes: notes[paymentId] ?? undefined }),

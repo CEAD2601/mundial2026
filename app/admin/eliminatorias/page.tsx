@@ -152,8 +152,8 @@ export default async function AdminEliminatoriasPage() {
         ) : (
           <div className="space-y-3">
             {todayCompleted.map(p => {
-              const pay = p.payment!
-              const pStatus = pay.paymentStatus
+              const pay = p.payment
+              const pStatus = pay?.paymentStatus ?? 'PENDING'
               return (
                 <div key={p.id} className="bg-white border-2 border-green-300 rounded-2xl px-4 py-4 shadow-sm">
                   {/* Nombre + badges */}
@@ -164,7 +164,7 @@ export default async function AdminEliminatoriasPage() {
                     </div>
                     <div className="flex gap-1.5 flex-wrap">
                       <span className="text-[10px] bg-green-100 text-green-700 font-bold px-2 py-1 rounded-full">
-                        🔒 16/16 completa
+                        🔒 {p.picks.length}/16 completa
                       </span>
                       <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${STATUS_COLOR[pStatus]}`}>
                         {STATUS_LABEL[pStatus]}
@@ -174,7 +174,7 @@ export default async function AdminEliminatoriasPage() {
 
                   {/* Info pago */}
                   <div className="bg-slate-50 rounded-xl px-3 py-2 mb-3 text-xs space-y-1">
-                    {pay.paymentMethod ? (
+                    {pay?.paymentMethod ? (
                       <>
                         <div>
                           <span className="text-slate-500">Método: </span>
@@ -186,13 +186,17 @@ export default async function AdminEliminatoriasPage() {
                         <div><span className="text-slate-500">Monto: </span><strong>${pay.amountUsd} USD{pay.amountVes ? ` / ${fmtVes(pay.amountVes)} Bs` : ''}</strong></div>
                       </>
                     ) : (
-                      <p className="text-slate-400 italic">Pago no reportado aún</p>
+                      <p className="text-slate-400 italic">Pago no reportado aún por el participante</p>
                     )}
                     <div className="text-slate-400">Inscripción: {formatTime(p.createdAt)} · {timeAgo(p.createdAt)}</div>
                   </div>
 
-                  {/* Botones */}
-                  <PaymentActions paymentId={pay.id} participantName={p.fullName} />
+                  {/* Botones — solo si existe registro de pago */}
+                  {pay ? (
+                    <PaymentActions paymentId={pay.id} participantName={p.fullName} />
+                  ) : (
+                    <p className="text-xs text-slate-400 italic">El participante debe reportar su pago primero</p>
+                  )}
                 </div>
               )
             })}
