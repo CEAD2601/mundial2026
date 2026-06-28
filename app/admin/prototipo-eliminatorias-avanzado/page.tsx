@@ -160,8 +160,11 @@ function pickComplete(p: Pick | undefined): boolean {
   return true
 }
 
-// Central scoring function — max 5 pts per match:
-// +2 classified correct, +2 exact score, +1 penalty winner (only when real result is a draw)
+// Central scoring function — max 5 pts per match (Eliminatorias only):
+// Priority: classified team is always first. If classified is wrong → 0 pts total.
+// +2 classified correct
+// +2 exact score (only if classified also correct)
+// Bonus +1 if real draw + predicted draw + correct penalty winner (only if classified correct)
 function calcKOPoints(
   pick: Pick,
   result: { home: number; away: number; penaltyWinner?: 'home' | 'away' | null }
@@ -171,9 +174,10 @@ function calcKOPoints(
   const realWinner  = realIsDraw  ? result.penaltyWinner : (result.home > result.away ? 'home' : 'away')
   const pickWinner  = pickIsDraw  ? pick.penaltyWinner   : (pick.home  > pick.away  ? 'home' : 'away')
   const classified  = realWinner === pickWinner ? 2 : 0
-  const exact       = (pick.home === result.home && pick.away === result.away) ? 2 : 0
-  // Penalty bonus: real draw + predicted draw + correct penalty winner (exact score NOT required)
-  const penalty     = (realIsDraw && pickIsDraw && pick.penaltyWinner === result.penaltyWinner) ? 1 : 0
+  // Exact score only counts when classified is also correct
+  const exact       = (classified > 0 && pick.home === result.home && pick.away === result.away) ? 2 : 0
+  // Bonus +1: classified correct + real draw + predicted draw (penalty winner already implied by classified check)
+  const penalty     = (classified > 0 && realIsDraw && pickIsDraw) ? 1 : 0
   return { classified, exact, penalty, total: classified + exact + penalty }
 }
 
@@ -1479,8 +1483,7 @@ export default function PrototipoEliminatoriasV3() {
                 Sistema de <span className="text-green-600">Puntuación</span>
               </h2>
               <p className="text-slate-500 mt-2 text-sm max-w-md mx-auto">
-                Predice el marcador de cada partido. Acertar el clasificado da 2 pts, el marcador exacto suma 2 pts más,
-                y si el partido termina empatado, acertar al ganador por penales da 1 pt extra. Máximo 5 pts por partido.
+                Predice el marcador de cada partido. Acertar el clasificado da 2 pts. Si también aciertas el marcador exacto sumas 2 pts más. Si el partido termina empatado y aciertas quién clasifica por penales, ganas 1 pt de Bonus. Máximo 5 pts por partido.
               </p>
             </div>
 
@@ -1496,13 +1499,13 @@ export default function PrototipoEliminatoriasV3() {
                 {
                   icon: '🎯', pts: '+2', extra: '',
                   title: 'Marcador exacto',
-                  desc: 'Aciertas el marcador exacto además del clasificado. Suma 2+2 = 4 pts (más +1 si también aciertas penales).',
+                  desc: 'Solo si también acertaste el clasificado. El marcador exacto no incluye penales.',
                   bg: 'bg-yellow-50', border: 'border-yellow-300', ptsBg: 'bg-yellow-400', ptsText: 'text-slate-900',
                 },
                 {
-                  icon: '🥅', pts: '+1', extra: 'extra',
-                  title: 'Penales correctos',
-                  desc: 'Si predices empate y aciertas quién avanza por penales, sumas 1 pt extra.',
+                  icon: '⭐', pts: '+1', extra: 'bonus',
+                  title: 'Bonus penales',
+                  desc: 'Si pronosticas empate y aciertas quién clasifica por penales, sumas 1 pt bonus.',
                   bg: 'bg-amber-50', border: 'border-amber-300', ptsBg: 'bg-amber-500', ptsText: 'text-white',
                 },
                 {
@@ -1529,13 +1532,13 @@ export default function PrototipoEliminatoriasV3() {
 
             {/* Penalty rule callout */}
             <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 mb-6 flex gap-3 items-start">
-              <span className="text-2xl shrink-0">🥅</span>
+              <span className="text-2xl shrink-0">⭐</span>
               <div>
-                <p className="font-bold text-amber-900 text-sm mb-1">Bono por penales — +1 pt extra</p>
+                <p className="font-bold text-amber-900 text-sm mb-1">Bonus penales — +1 pt</p>
                 <p className="text-xs text-amber-700 leading-relaxed">
-                  Si predices <strong>empate</strong>, deberás elegir también quién avanza por penales (obligatorio).
-                  Si el partido real termina empatado y aciertas el ganador por penales, sumas <strong>1 punto extra</strong>.
-                  Este bono solo aplica cuando el resultado real termina en empate con definición por penales.
+                  En eliminatorias no hay empate final: si colocas empate, debes elegir qué equipo clasifica por penales (obligatorio).
+                  Si el partido real termina empatado y aciertas el equipo que clasifica por penales, sumas <strong>1 pt de bonus</strong>.
+                  Este bonus solo aplica si también acertaste el clasificado.
                 </p>
               </div>
             </div>
@@ -1565,15 +1568,15 @@ export default function PrototipoEliminatoriasV3() {
             {/* Example block — draw + penalties */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
               <div className="bg-amber-700 text-white px-5 py-3 text-sm font-semibold">
-                🥅 Ejemplo B — Resultado real: <span className="text-yellow-200">Argentina 1 – 1 Francia · Argentina avanza por penales</span>
+                ⭐ Ejemplo B — Resultado real: <span className="text-yellow-200">Argentina 1 – 1 Francia · Argentina clasifica por penales</span>
               </div>
               <div className="divide-y divide-slate-100">
                 {[
-                  { pred: 'Empate 1–1 · Penales: Argentina', note: 'Clasificado ✓ + Exacto ✓ + Penales ✓  →  2+2+1', pts: 5, cls: 'text-yellow-600', bg: 'bg-yellow-50' },
-                  { pred: 'Argentina 2–1 Francia',            note: 'Clasificado ✓ · No predijo empate → sin bono',   pts: 2, cls: 'text-green-600',  bg: '' },
-                  { pred: 'Empate 1–1 · Penales: Francia',   note: 'Exacto ✓, Clasificado ✗, Penales ✗  →  solo exacto', pts: 2, cls: 'text-green-600',  bg: '' },
-                  { pred: 'Empate 0–0 · Penales: Argentina', note: 'Clasificado ✓, marcador diferente, Penales ✓',   pts: 3, cls: 'text-green-600',  bg: '' },
-                  { pred: 'Francia 2–0 Argentina',           note: 'Clasificado ✗ — falla quien clasifica',           pts: 0, cls: 'text-slate-400',  bg: '' },
+                  { pred: 'Empate 1–1 · Penales: Argentina', note: 'Clasificado ✓ + Exacto ✓ + Bonus ✓  →  2+2+1',      pts: 5, cls: 'text-yellow-600', bg: 'bg-yellow-50' },
+                  { pred: 'Argentina 2–1 Francia',            note: 'Clasificado ✓ · No predijo empate → sin bonus',      pts: 2, cls: 'text-green-600',  bg: '' },
+                  { pred: 'Empate 1–1 · Penales: Francia',   note: 'Falló el clasificado → 0 pts aunque el marcador coincida', pts: 0, cls: 'text-slate-400',  bg: '' },
+                  { pred: 'Empate 0–0 · Penales: Argentina', note: 'Clasificado ✓ + Bonus ✓, marcador diferente  →  2+1', pts: 3, cls: 'text-green-600',  bg: '' },
+                  { pred: 'Francia 2–0 Argentina',           note: 'Clasificado ✗ — falla quien clasifica',               pts: 0, cls: 'text-slate-400',  bg: '' },
                 ].map((row) => (
                   <div key={row.pred} className={`flex items-center justify-between px-5 py-3.5 ${row.bg}`}>
                     <div>
@@ -1676,7 +1679,7 @@ export default function PrototipoEliminatoriasV3() {
                 { q: '¿Qué pasa si el partido va a penales?',
                   a: "En eliminatorias puede haber empate en tiempo reglamentario y definición por penales. Si predices empate, el formulario te pedirá que elijas también quién gana por penales. Para los puntos, lo que cuenta es el clasificado final (quien avanza, incluyendo penales). El marcador exacto se refiere al resultado en 90 minutos (ej: 1–1), sin contar la prórroga ni los penales." },
                 { q: '¿Cómo se calculan exactamente los puntos?',
-                  a: '+2 puntos si aciertas el equipo que clasifica o avanza. +2 puntos adicionales si además el marcador exacto coincide (goles en 90 minutos). +1 punto extra si predices empate y aciertas quién avanza por penales. 0 puntos si fallas el clasificado. El máximo por partido es 5 puntos.' },
+                  a: 'El equipo clasificado es la prioridad: si lo fallas, son 0 pts aunque el marcador coincida. Si aciertas el clasificado: +2 pts. Si además el marcador exacto coincide (goles en tiempo reglamentario, sin contar penales): +2 pts más. Bonus +1 si pronosticaste empate y acertaste quién clasifica por penales. Máximo 5 pts por partido.' },
               ].map((faq, i) => {
                 const isOpen = faqOpen === i
                 return (
@@ -1823,22 +1826,22 @@ export default function PrototipoEliminatoriasV3() {
             <div className="space-y-1 text-xs text-blue-700">
               <div className="flex items-center gap-2">
                 <span className="bg-green-500 text-white font-extrabold px-2 py-0.5 rounded-full text-[10px] shrink-0">🏆 +2</span>
-                <span>Aciertas el equipo clasificado</span>
+                <span>Aciertas el equipo que clasifica</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="bg-yellow-400 text-slate-900 font-extrabold px-2 py-0.5 rounded-full text-[10px] shrink-0">🎯 +2</span>
-                <span>Aciertas además el marcador exacto</span>
+                <span>Aciertas el marcador exacto <em>(solo si también acertaste el clasificado)</em></span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="bg-amber-500 text-white font-extrabold px-2 py-0.5 rounded-full text-[10px] shrink-0">🥅 +1</span>
-                <span>Si predices empate y aciertas quién avanza por penales</span>
+                <span className="bg-amber-500 text-white font-extrabold px-2 py-0.5 rounded-full text-[10px] shrink-0">⭐ +1</span>
+                <span>Bonus: pronosticas empate y aciertas quién clasifica por penales</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="bg-slate-300 text-slate-700 font-extrabold px-2 py-0.5 rounded-full text-[10px] shrink-0">❌ +0</span>
-                <span>Si fallas el clasificado, no sumas nada</span>
+                <span className="bg-slate-300 text-slate-700 font-extrabold px-2 py-0.5 rounded-full text-[10px] shrink-0">❌ 0</span>
+                <span>Si fallas el clasificado, son 0 pts aunque el marcador coincida</span>
               </div>
             </div>
-            <p className="text-[10px] text-blue-500 mt-2 font-medium">Máximo 5 pts por partido · 32 partidos · Máximo total: 160 pts</p>
+            <p className="text-[10px] text-blue-500 mt-2 font-medium">El marcador exacto no incluye penales · Máximo 5 pts por partido · 160 pts en total</p>
           </div>
 
           {/* Stage tabs */}
@@ -3030,9 +3033,9 @@ export default function PrototipoEliminatoriasV3() {
           {/* Scoring legend — updated to KO scoring */}
           <div className="bg-white rounded-xl border border-slate-100 p-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
             <span>🏆 Clasificado correcto = <strong>2 pts</strong></span>
-            <span>🎯 Marcador exacto = <strong>+2 pts</strong></span>
-            <span>🥅 Penales correctos = <strong>+1 pt</strong></span>
-            <span>❌ Fallo = <strong>0 pts</strong></span>
+            <span>🎯 Marcador exacto = <strong>+2 pts</strong> <span className="text-slate-400">(solo si acertó clasificado)</span></span>
+            <span>⭐ Bonus penales = <strong>+1 pt</strong></span>
+            <span>❌ Fallo clasificado = <strong>0 pts</strong></span>
             <span className="text-slate-400">· Máximo <strong>5 pts</strong> por partido</span>
           </div>
 
@@ -4549,9 +4552,9 @@ export default function PrototipoEliminatoriasV3() {
           {/* Legend */}
           <div className="bg-white rounded-xl border border-slate-100 px-3 py-2 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-slate-500">
             <span>🏆 <strong>+2</strong> clasificado correcto</span>
-            <span>🎯 <strong>+2</strong> marcador exacto</span>
-            <span>🥅 <strong>+1</strong> penales correctos</span>
-            <span>❌ <strong>0</strong> fallo</span>
+            <span>🎯 <strong>+2</strong> marcador exacto (solo si acertó clasificado)</span>
+            <span>⭐ <strong>+1</strong> bonus penales</span>
+            <span>❌ <strong>0</strong> falla clasificado</span>
             <span className="text-slate-400">· Máx. 5 pts por partido</span>
           </div>
 
