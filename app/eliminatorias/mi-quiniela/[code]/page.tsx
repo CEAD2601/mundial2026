@@ -112,9 +112,12 @@ export default function KOPicksPage() {
   const isComplete  = participant.isComplete
   const stageMatches = data.matches.filter(m => m.stage === stage)
 
-  // Contar picks completos en stage actual
-  const openMatches = stageMatches.filter(m => m.isOpenForPredictions && !isLocked(m.id))
-  const filledOpen  = openMatches.filter(m => picks[m.id]).length
+  // Todos los partidos de la etapa (para contador total = 16)
+  // openMatches = solo los que se pueden editar (para confirmar)
+  const openMatches  = stageMatches.filter(m => m.isOpenForPredictions && !isLocked(m.id))
+  const filledOpen   = openMatches.filter(m => picks[m.id]).length
+  const totalStage   = stageMatches.length   // siempre 16 para R32
+  const filledAll    = stageMatches.filter(m => picks[m.id]).length
 
   return (
     <div className="space-y-4">
@@ -159,11 +162,11 @@ export default function KOPicksPage() {
       </div>
 
       {/* Avance picks */}
-      {openMatches.length > 0 && !isComplete && (
+      {totalStage > 0 && !isComplete && (
         <div className="bg-blue-50 border border-blue-100 rounded-xl px-3 py-2 text-sm text-blue-700">
-          {filledOpen}/{openMatches.length} partidos completados en {STAGE_LABELS[stage]}
+          {filledAll}/{totalStage} partidos completados en {STAGE_LABELS[stage]}
           <div className="mt-1 h-1.5 bg-blue-100 rounded-full">
-            <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${openMatches.length ? (filledOpen/openMatches.length)*100 : 0}%` }} />
+            <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${totalStage ? (filledAll/totalStage)*100 : 0}%` }} />
           </div>
         </div>
       )}
@@ -292,7 +295,7 @@ export default function KOPicksPage() {
           </button>
           <button onClick={() => savePicks(true)} disabled={saving || confirming || filledOpen < openMatches.length}
             className="w-full bg-green-600 hover:bg-green-700 text-white font-extrabold py-4 rounded-xl shadow-lg transition-all disabled:opacity-50">
-            {confirming ? 'Confirmando...' : `✅ Confirmar quiniela (${filledOpen}/${openMatches.length})`}
+            {confirming ? 'Confirmando...' : `✅ Confirmar quiniela (${filledAll}/${totalStage})`}
           </button>
           <p className="text-center text-xs text-slate-400">Al confirmar, no podrás modificar tus picks.</p>
         </div>
@@ -308,6 +311,19 @@ export default function KOPicksPage() {
         <div className="bg-blue-50 text-blue-700 rounded-xl px-4 py-3 text-sm text-center">{msg}</div>
       )}
 
+      {/* CTA pago si aún no ha verificado */}
+      {!isVerified && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 text-center">
+          <p className="text-sm font-bold text-yellow-800 mb-1">⚠️ Pago pendiente</p>
+          <p className="text-xs text-yellow-700 mb-3">
+            Tu participación queda validada cuando el admin confirme el pago.
+          </p>
+          <a href={`/eliminatorias/pago/${code}`}
+            className="block w-full bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-extrabold py-3 rounded-xl text-sm transition-all active:scale-95">
+            💳 Ir a reportar pago →
+          </a>
+        </div>
+      )}
       <div className="text-center pb-4">
         <a href="/eliminatorias/ranking" className="text-sm text-green-600 hover:underline">Ver ranking →</a>
       </div>

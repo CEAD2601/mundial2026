@@ -97,13 +97,13 @@ export default function KORegistroPage() {
       const data = await res.json()
       if (!res.ok) {
         if (res.status === 409) {
-          router.push(`/eliminatorias/pago/${data.code}`)
+          router.push(`/eliminatorias/mi-quiniela/${data.code}`)
           return
         }
         setSubmitError(data.error ?? 'Error al inscribir')
         return
       }
-      router.push(`/eliminatorias/pago/${data.participant.participationCode}`)
+      router.push(`/eliminatorias/mi-quiniela/${data.participant.participationCode}`)
     } catch {
       setSubmitError('Error de conexión')
     } finally {
@@ -143,13 +143,13 @@ export default function KORegistroPage() {
       const data = await res.json()
       if (!res.ok) {
         if (res.status === 409) {
-          router.push(`/eliminatorias/pago/${data.code}`)
+          router.push(`/eliminatorias/mi-quiniela/${data.code}`)
           return
         }
         setSubmitError(data.error ?? 'Error al registrar')
         return
       }
-      router.push(`/eliminatorias/pago/${data.participant.participationCode}`)
+      router.push(`/eliminatorias/mi-quiniela/${data.participant.participationCode}`)
     } catch {
       setSubmitError('Error de conexión')
     } finally {

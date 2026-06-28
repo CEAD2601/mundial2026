@@ -196,10 +196,11 @@ function stagePartial(s: Stage, picks: Picks) {
   return open.some(m => picks[m.id] !== undefined) && !stageComplete(s, picks)
 }
 function totalOpen() {
-  return KNOCKOUT_MATCHES.filter(m => m.isOpenForPredictions).length
+  // Todos los partidos de R32 (16) — el locked #73 se muestra bloqueado pero cuenta
+  return KNOCKOUT_MATCHES.filter(m => m.stage === 'R32').length
 }
 function totalFilled(picks: Picks) {
-  return KNOCKOUT_MATCHES.filter(m => m.isOpenForPredictions && pickComplete(picks[m.id])).length
+  return KNOCKOUT_MATCHES.filter(m => m.stage === 'R32' && pickComplete(picks[m.id])).length
 }
 
 // ── Prize pool ─────────────────────────────────────────────────────────────────
@@ -868,9 +869,10 @@ export default function PrototipoEliminatoriasV3() {
   const filledCount = totalFilled(picks)
   const pctTotal = totalOpenCount > 0 ? Math.round(filledCount / totalOpenCount * 100) : 0
 
-  const activeOpenMatches = openMatches(activeStage)
-  const activeFilled = activeOpenMatches.filter(m => picks[m.id] !== undefined).length
-  const activeTotal = activeOpenMatches.length
+  const activeAllMatches  = allMatches(activeStage)      // todos (16) para display
+  const activeOpenMatches = openMatches(activeStage)     // editables (15) para confirmar/pending
+  const activeFilled = activeAllMatches.filter(m => picks[m.id] !== undefined).length
+  const activeTotal = activeAllMatches.length
   const activePct = activeTotal > 0 ? Math.round(activeFilled / activeTotal * 100) : 0
   const activeDone = stageComplete(activeStage, picks)
   const pendingInStage = activeOpenMatches.filter(m => !picks[m.id]).length
@@ -1950,7 +1952,7 @@ export default function PrototipoEliminatoriasV3() {
           </div>
 
           {/* Match list */}
-          {activeOpenMatches.length === 0 ? (
+          {activeAllMatches.length === 0 ? (
             <div className="text-center py-14 text-slate-400">
               <Lock size={36} className="mx-auto mb-3 opacity-40" />
               <p className="font-semibold text-slate-500 text-base">Etapa bloqueada</p>
@@ -1960,7 +1962,7 @@ export default function PrototipoEliminatoriasV3() {
             </div>
           ) : (
             <div className="space-y-3">
-              {activeOpenMatches.map(m => (
+              {activeAllMatches.map(m => (
                 <div key={m.id} id={`match-${m.id}`}>
                   <KOMatchCard
                     match={m}
@@ -1974,7 +1976,7 @@ export default function PrototipoEliminatoriasV3() {
           )}
 
           {/* Stage completion block */}
-          {activeOpenMatches.length > 0 && (
+          {activeAllMatches.length > 0 && (
             <div className="mt-6">
               {activeDone ? (
                 <div className="bg-green-600 rounded-2xl p-5 shadow-lg">
@@ -2458,25 +2460,34 @@ export default function PrototipoEliminatoriasV3() {
   // ── MI QUINIELA ─────────────────────────────────────────────────────────────
 
   function renderMiQuiniela() {
-    const allOpen = KNOCKOUT_MATCHES.filter(m => m.isOpenForPredictions)
-    const filled  = allOpen.filter(m => picks[m.id] !== undefined).length
-    const pct     = allOpen.length > 0 ? Math.round(filled / allOpen.length * 100) : 0
+    const allR32  = KNOCKOUT_MATCHES.filter(m => m.stage === 'R32')
+    const filled  = allR32.filter(m => picks[m.id] !== undefined).length
+    const pct     = allR32.length > 0 ? Math.round(filled / allR32.length * 100) : 0
 
-    // Determine if we're showing the registered user's quiniela or search mode
-    const showQuiniela = registered || miqFound || filledCount > 0
-    const displayName  = registered ? regForm.nombre || DEMO_NAME : DEMO_NAME
-    const displayCed   = registered ? regForm.cedula || DEMO_CEDULA : DEMO_CEDULA
+    // Solo mostrar quiniela si el usuario se registró en esta sesión
+    const showQuiniela = registered || (miqFound && participantSession != null)
+    const displayName  = participantSession?.displayName ?? regForm.nombre ?? ''
+    const displayCed   = participantSession?.cedula      ?? regForm.cedula  ?? ''
 
-    // Search handler (demo: matches cedula or WhatsApp)
-    function handleSearch() {
+    // Busca en la API real, no en demo
+    async function handleSearch() {
       const q = miqQuery.trim()
-      if (q === DEMO_CEDULA || q === DEMO_WA || q === '04141234567' || q.toLowerCase() === 'carlos') {
-        setMiqFound(true)
-        activateSession({ cedula: DEMO_CEDULA, displayName: DEMO_NAME })
-        trackEvent('PARTICIPANT_LOOKUP', { cedula: DEMO_CEDULA, displayName: DEMO_NAME })
-      } else {
-        setToast('❌ No se encontró ninguna quiniela con ese dato')
-      }
+      if (!q) return
+      try {
+        const digits  = q.replace(/\D/g, '')
+        const isPhone = digits.length >= 9 && (digits.startsWith('04') || digits.startsWith('58'))
+        const param   = isPhone ? `phone=${encodeURIComponent(q)}` : `nationalId=${encodeURIComponent(digits)}`
+        const res     = await fetch(`/api/ko/participants?${param}`)
+        if (res.ok) {
+          const data = await res.json()
+          const participationCode = data.participationCode
+          if (participationCode) {
+            router.push(`/eliminatorias/mi-quiniela/${participationCode}`)
+            return
+          }
+        }
+      } catch { /* ignore */ }
+      setToast('❌ No se encontró ninguna quiniela con ese dato')
     }
 
     if (!showQuiniela) {
@@ -2519,14 +2530,14 @@ export default function PrototipoEliminatoriasV3() {
             </button>
           </div>
           <p className="text-xs text-slate-400 text-center mt-4">
-            Demo: prueba con cédula <strong>12345678</strong> o WhatsApp <strong>04141234567</strong>
+            Ingresa tu cédula o WhatsApp para ver tu quiniela
           </p>
         </div>
       )
     }
 
     const isReviewMode = adminUnlocked && adminReview
-    const missingCount = allOpen.length - filled
+    const missingCount = allR32.length - filled
 
     return (
       <div className="max-w-2xl mx-auto px-4 py-6 pb-10">
@@ -2577,10 +2588,10 @@ export default function PrototipoEliminatoriasV3() {
         {/* Stats grid */}
         <div className="grid grid-cols-4 gap-2 mb-5">
           {[
-            { val: '#1',        label: 'Posición',   color: 'text-yellow-600' },
-            { val: '28 pts',    label: 'Puntos',     color: 'text-green-600' },
+            { val: '—',         label: 'Posición',   color: 'text-slate-400' },
+            { val: '0 pts',     label: 'Puntos',     color: 'text-slate-400' },
             { val: `${filled}`, label: 'Llenados',   color: 'text-emerald-600' },
-            { val: '6',         label: '🎯 Exactos', color: 'text-blue-600' },
+            { val: '—',         label: '🎯 Exactos', color: 'text-slate-400' },
           ].map(s => (
             <div key={s.label} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-3 text-center">
               <p className={`text-lg font-extrabold leading-tight ${s.color}`}>{s.val}</p>
@@ -2593,7 +2604,7 @@ export default function PrototipoEliminatoriasV3() {
         <div className="bg-white rounded-2xl border border-slate-200 p-4 mb-6">
           <div className="flex justify-between text-sm mb-2">
             <span className="font-semibold text-slate-700">Progreso total</span>
-            <span className="font-extrabold text-green-600">{filled}/{allOpen.length}</span>
+            <span className="font-extrabold text-green-600">{filled}/{allR32.length}</span>
           </div>
           <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
             <div
@@ -2612,23 +2623,23 @@ export default function PrototipoEliminatoriasV3() {
         <h2 className="font-extrabold text-slate-800 mb-3">Mis pronósticos por etapa</h2>
         <div className="space-y-4">
           {STAGES.map(s => {
-            const open = openMatches(s)
-            if (open.length === 0) return null
+            const stageAll = allMatches(s)
+            if (stageAll.length === 0) return null
             const done = stageComplete(s, picks)
-            const stageFilled = open.filter(m => picks[m.id]).length
+            const stageFilled = stageAll.filter(m => picks[m.id]).length
             return (
               <div key={s} className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
                 <div className={`px-4 py-3 flex items-center justify-between ${done ? 'bg-green-50 border-b border-green-100' : 'bg-slate-50 border-b border-slate-100'}`}>
                   <span className="font-bold text-slate-800 text-sm">{STAGE_META[s].label}</span>
                   <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${done ? 'bg-green-200 text-green-800' : 'bg-slate-200 text-slate-500'}`}>
-                    {stageFilled}/{open.length}
+                    {stageFilled}/{stageAll.length}
                   </span>
                 </div>
                 {stageFilled === 0 ? (
                   <div className="px-4 py-4 text-xs text-slate-400 italic">Sin pronósticos todavía.</div>
                 ) : (
                   <div className="divide-y divide-slate-100">
-                    {open.map(m => {
+                    {stageAll.map(m => {
                       const pick = picks[m.id]
                       const homeDisplay = m.home.name || m.home.placeholder
                       const awayDisplay = m.away.name || m.away.placeholder

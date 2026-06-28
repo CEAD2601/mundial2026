@@ -97,3 +97,29 @@ export async function GET(req: NextRequest) {
     },
   })
 }
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const { participationCode } = await req.json()
+    if (!participationCode) return NextResponse.json({ error: 'Código requerido' }, { status: 400 })
+
+    const participant = await prisma.kOParticipant.findUnique({
+      where: { participationCode },
+      include: { payment: true },
+    })
+    if (!participant) return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
+    if (!participant.payment) return NextResponse.json({ error: 'Sin registro de pago' }, { status: 404 })
+
+    if (participant.payment.paymentStatus === 'VERIFIED') {
+      return NextResponse.json({ ok: true, status: 'VERIFIED' })
+    }
+
+    await prisma.kOPayment.update({
+      where:  { participantId: participant.id },
+      data:   { paymentStatus: 'IN_REVIEW', adminNotes: 'Reportado por WhatsApp' },
+    })
+    return NextResponse.json({ ok: true, status: 'IN_REVIEW' })
+  } catch {
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}

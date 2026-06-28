@@ -50,13 +50,13 @@ export default function KOLookupPage() {
       <div className="text-center">
         <div className="text-3xl mb-1">🔍</div>
         <h1 className="text-xl font-extrabold text-slate-800">Busca tu quiniela</h1>
-        <p className="text-sm text-slate-500 mt-1">Ingresa tu código KO26-XXXXX, cédula o número de WhatsApp</p>
+        <p className="text-sm text-slate-500 mt-1">Ingresa tu cédula o número de WhatsApp para ver tu quiniela</p>
       </div>
 
       <form onSubmit={lookup} className="space-y-4">
         <input
           type="text"
-          placeholder="KO26-XXXXX · Cédula · WhatsApp"
+          placeholder="Cédula (ej: 12345678) o WhatsApp (ej: 04141234567)"
           value={query}
           onChange={e => setQuery(e.target.value)}
           className="w-full border-2 border-slate-200 focus:border-green-400 rounded-xl px-4 py-4 text-base focus:outline-none"
