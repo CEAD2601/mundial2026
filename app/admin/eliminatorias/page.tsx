@@ -21,10 +21,14 @@ function timeAgo(date: Date) {
   return `hace ${Math.floor(h / 24)}d`
 }
 
+function formatTime(date: Date) {
+  return date.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Caracas' })
+}
+
 const STATUS_LABEL: Record<string, string> = {
   PENDING:   'Sin pago',
   IN_REVIEW: 'En revisión',
-  VERIFIED:  'Verificado',
+  VERIFIED:  'Verificado ✅',
   REJECTED:  'Rechazado',
 }
 const STATUS_COLOR: Record<string, string> = {
@@ -35,17 +39,21 @@ const STATUS_COLOR: Record<string, string> = {
 }
 
 export default async function AdminEliminatoriasPage() {
-  // Todos los participantes KO con sus picks y pago
+  // Inicio del día de hoy en horario VET (UTC-4)
+  const nowUtc   = new Date()
+  const todayVet = new Date(nowUtc.toLocaleDateString('en-CA', { timeZone: 'America/Caracas' }) + 'T00:00:00-04:00')
+
+  // Un solo query trae todo
   const allParticipants = await prisma.kOParticipant.findMany({
     where: { phase: 'R32' },
     include: {
       payment: true,
-      picks: { select: { matchId: true } },
+      picks:   { select: { matchId: true } },
     },
     orderBy: { createdAt: 'desc' },
   })
 
-  // Stats derivadas del mismo array
+  // Stats globales
   const totalKO    = allParticipants.length
   const completeKO = allParticipants.filter(p => p.isComplete).length
   const verifiedKO = allParticipants.filter(p => p.payment?.paymentStatus === 'VERIFIED').length
@@ -61,14 +69,16 @@ export default async function AdminEliminatoriasPage() {
   const prize2   = pozoUSD * 0.20
   const prizeOrg = pozoUSD * 0.15
 
-  // Secciones
-  const completedPendingPayment = allParticipants.filter(
-    p => p.isComplete && p.payment && p.payment.paymentStatus !== 'VERIFIED'
-  )
-  const inReviewList = allParticipants.filter(
-    p => p.payment?.paymentStatus === 'IN_REVIEW'
-  )
-  const recentList = allParticipants.slice(0, 10)
+  // Participantes de HOY con quiniela completa — pago pendiente de confirmar
+  const todayCompleted = allParticipants.filter(p => {
+    const inscritoHoy = p.createdAt >= todayVet
+    const quinelaCompleta = p.isComplete
+    const pagoSinConfirmar = p.payment?.paymentStatus !== 'VERIFIED'
+    return inscritoHoy && quinelaCompleta && pagoSinConfirmar
+  })
+
+  // Todos los de hoy (para registros recientes)
+  const todayAll = allParticipants.filter(p => p.createdAt >= todayVet)
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
@@ -77,16 +87,13 @@ export default async function AdminEliminatoriasPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-800">Eliminatorias 2026</h1>
-          <p className="text-slate-500 text-sm">Dashboard KO — Dieciseisavos de Final</p>
+          <p className="text-slate-500 text-sm">Dashboard KO — Dieciseisavos · {nowUtc.toLocaleDateString('es-VE', { timeZone: 'America/Caracas', weekday: 'long', day: 'numeric', month: 'long' })}</p>
         </div>
-        <form action="" method="GET">
-          <button formAction={undefined}
-            onClick={() => window.location.reload()}
-            type="button"
-            className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-xl font-semibold">
-            🔄 Actualizar
-          </button>
-        </form>
+        {/* Link de recarga (válido en server component) */}
+        <Link href="/admin/eliminatorias"
+          className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-xl font-semibold transition-colors">
+          🔄 Actualizar
+        </Link>
       </div>
 
       {/* Stats */}
@@ -112,7 +119,7 @@ export default async function AdminEliminatoriasPage() {
           <h2 className="font-bold text-lg">💰 Pozo · Dieciseisavos</h2>
           <span className="text-xs text-green-200">{FIXED_RATE} Bs/USD · ${ENTRY_USD}/entrada</span>
         </div>
-        <div className="text-3xl font-extrabold">${pozoUSD.toLocaleString('es-VE')} USD</div>
+        <div className="text-3xl font-extrabold">${pozoUSD} USD</div>
         <div className="text-green-200 text-sm mb-3">{fmtVes(pozoBs)} Bs · {verifiedKO} pago{verifiedKO !== 1 ? 's' : ''} verificado{verifiedKO !== 1 ? 's' : ''}</div>
         <div className="grid grid-cols-3 gap-2 text-center">
           {[
@@ -128,153 +135,133 @@ export default async function AdminEliminatoriasPage() {
         </div>
       </div>
 
-      {/* ── QUINIELAS COMPLETAS CON PAGO PENDIENTE ── */}
-      {completedPendingPayment.length > 0 && (
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <h2 className="font-extrabold text-slate-800">
-              🔒 Quinielas completas — confirmar pago
-            </h2>
-            <span className="bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-              {completedPendingPayment.length}
-            </span>
-          </div>
-          <div className="space-y-2">
-            {completedPendingPayment.map(p => {
-              const pay = p.payment!
-              const pStatus = pay.paymentStatus as string
-              return (
-                <div key={p.id} className="bg-white border-2 border-green-200 rounded-2xl px-4 py-4 shadow-sm">
-                  <div className="flex items-start justify-between gap-3 flex-wrap">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <p className="font-extrabold text-slate-800">{p.fullName}</p>
-                        <span className="text-[10px] bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full">
-                          🔒 16/16 completa
-                        </span>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_COLOR[pStatus]}`}>
-                          {STATUS_LABEL[pStatus]}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-500">
-                        CI: {p.nationalId} · {p.phone}
-                      </p>
-                      {pay.paymentMethod && (
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          {pay.paymentMethod === 'PAGO_MOVIL' ? 'Pago Móvil' : 'Zelle'}
-                          {pay.senderBank ? ` · ${pay.senderBank}` : ''}
-                          {pay.paymentReference ? ` · Ref: ${pay.paymentReference}` : ''}
-                          {pay.senderName ? ` · ${pay.senderName}` : ''}
-                        </p>
-                      )}
-                      <p className="text-[10px] text-slate-400 mt-0.5">
-                        ${pay.amountUsd} USD
-                        {pay.amountVes ? ` / ${fmtVes(pay.amountVes)} Bs` : ''}
-                        {' · '}{timeAgo(p.createdAt)}
-                      </p>
-                    </div>
-                    <PaymentActions paymentId={pay.id} participantName={p.fullName} />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+      {/* ── QUINIELAS COMPLETAS HOY — CONFIRMAR PAGO ── */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <h2 className="font-extrabold text-slate-800 text-base">
+            🔒 Quinielas completas hoy — confirmar pago
+          </h2>
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+            todayCompleted.length > 0
+              ? 'bg-green-600 text-white'
+              : 'bg-slate-200 text-slate-500'
+          }`}>
+            {todayCompleted.length}
+          </span>
         </div>
-      )}
 
-      {/* ── PAGOS EN REVISIÓN (sin quiniela completa también) ── */}
-      {inReviewList.filter(p => !p.isComplete).length > 0 && (
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <h2 className="font-extrabold text-slate-700">⏳ Pagos reportados — quiniela incompleta</h2>
-            <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-              {inReviewList.filter(p => !p.isComplete).length}
-            </span>
+        {todayCompleted.length === 0 ? (
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 text-center text-slate-400 text-sm">
+            No hay quinielas completadas hoy pendientes de verificar
           </div>
-          <div className="space-y-2">
-            {inReviewList.filter(p => !p.isComplete).map(p => {
+        ) : (
+          <div className="space-y-3">
+            {todayCompleted.map(p => {
               const pay = p.payment!
+              const pStatus = pay.paymentStatus
               return (
-                <div key={p.id} className="bg-white border border-amber-100 rounded-2xl px-4 py-3 shadow-sm">
-                  <div className="flex items-start justify-between gap-3 flex-wrap">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-bold text-slate-800">{p.fullName}</p>
-                        <span className="text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded-full">
-                          {p.picks.length}/16 picks
-                        </span>
-                      </div>
+                <div key={p.id} className="bg-white border-2 border-green-300 rounded-2xl px-4 py-4 shadow-sm">
+                  {/* Nombre + badges */}
+                  <div className="flex items-start justify-between gap-2 flex-wrap mb-2">
+                    <div>
+                      <p className="font-extrabold text-slate-900 text-base">{p.fullName}</p>
                       <p className="text-xs text-slate-500">CI: {p.nationalId} · {p.phone}</p>
-                      {pay.paymentMethod && (
-                        <p className="text-xs text-slate-400">
-                          {pay.paymentMethod === 'PAGO_MOVIL' ? 'Pago Móvil' : 'Zelle'}
-                          {pay.senderBank ? ` · ${pay.senderBank}` : ''}
-                          {pay.paymentReference ? ` · Ref: ${pay.paymentReference}` : ''}
-                        </p>
-                      )}
                     </div>
-                    <PaymentActions paymentId={pay.id} participantName={p.fullName} />
+                    <div className="flex gap-1.5 flex-wrap">
+                      <span className="text-[10px] bg-green-100 text-green-700 font-bold px-2 py-1 rounded-full">
+                        🔒 16/16 completa
+                      </span>
+                      <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${STATUS_COLOR[pStatus]}`}>
+                        {STATUS_LABEL[pStatus]}
+                      </span>
+                    </div>
                   </div>
+
+                  {/* Info pago */}
+                  <div className="bg-slate-50 rounded-xl px-3 py-2 mb-3 text-xs space-y-1">
+                    {pay.paymentMethod ? (
+                      <>
+                        <div>
+                          <span className="text-slate-500">Método: </span>
+                          <strong>{pay.paymentMethod === 'PAGO_MOVIL' ? 'Pago Móvil Banesco' : 'Zelle'}</strong>
+                        </div>
+                        {pay.senderBank    && <div><span className="text-slate-500">Banco: </span><strong>{pay.senderBank}</strong></div>}
+                        {pay.senderName    && <div><span className="text-slate-500">Remitente: </span><strong>{pay.senderName}</strong></div>}
+                        {pay.paymentReference && <div><span className="text-slate-500">Referencia: </span><strong>{pay.paymentReference}</strong></div>}
+                        <div><span className="text-slate-500">Monto: </span><strong>${pay.amountUsd} USD{pay.amountVes ? ` / ${fmtVes(pay.amountVes)} Bs` : ''}</strong></div>
+                      </>
+                    ) : (
+                      <p className="text-slate-400 italic">Pago no reportado aún</p>
+                    )}
+                    <div className="text-slate-400">Inscripción: {formatTime(p.createdAt)} · {timeAgo(p.createdAt)}</div>
+                  </div>
+
+                  {/* Botones */}
+                  <PaymentActions paymentId={pay.id} participantName={p.fullName} />
                 </div>
               )
             })}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* ── REGISTROS RECIENTES ── */}
+      {/* ── REGISTROS DE HOY ── */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-extrabold text-slate-700">👥 Todos los inscritos</h2>
+          <h2 className="font-extrabold text-slate-700">
+            📋 Inscritos hoy
+            <span className="ml-2 text-sm font-normal text-slate-400">({todayAll.length})</span>
+          </h2>
           <Link href="/admin/eliminatorias/participantes"
             className="text-xs text-green-600 hover:underline font-semibold">
-            Vista detallada →
+            Ver todos ({totalKO}) →
           </Link>
         </div>
-        <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
-          {recentList.length === 0 ? (
-            <p className="text-sm text-slate-400 text-center py-6">Sin registros aún</p>
-          ) : (
-            <>
-              <div className="grid px-4 py-2 bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-500 uppercase"
-                style={{ gridTemplateColumns: '1fr 52px 90px 70px' }}>
-                <span>Participante</span>
-                <span>Picks</span>
-                <span>Pago</span>
-                <span>Inscripción</span>
-              </div>
-              {recentList.map(p => {
-                const pStatus = p.payment?.paymentStatus ?? 'PENDING'
-                return (
-                  <div key={p.id}
-                    className="grid px-4 py-2.5 border-b border-slate-100 last:border-b-0 items-center gap-2"
-                    style={{ gridTemplateColumns: '1fr 52px 90px 70px' }}>
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold text-slate-800 truncate">{p.fullName}</p>
-                      <p className="text-[10px] text-slate-400">{p.nationalId}</p>
-                    </div>
-                    <span className="text-xs font-bold text-slate-700 tabular-nums">
-                      {p.picks.length}/16{p.isComplete ? ' 🔒' : ''}
-                    </span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg ${STATUS_COLOR[pStatus]}`}>
-                      {STATUS_LABEL[pStatus]}
-                    </span>
-                    <span className="text-[10px] text-slate-400">{timeAgo(p.createdAt)}</span>
+
+        {todayAll.length === 0 ? (
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 text-center text-slate-400 text-sm">
+            Sin inscripciones hoy
+          </div>
+        ) : (
+          <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
+            <div className="grid px-4 py-2 bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-500 uppercase"
+              style={{ gridTemplateColumns: '1fr 60px 100px 60px' }}>
+              <span>Participante</span>
+              <span>Picks</span>
+              <span>Pago</span>
+              <span>Hora</span>
+            </div>
+            {todayAll.map(p => {
+              const pStatus = p.payment?.paymentStatus ?? 'PENDING'
+              return (
+                <div key={p.id}
+                  className="grid px-4 py-2.5 border-b border-slate-100 last:border-b-0 items-center"
+                  style={{ gridTemplateColumns: '1fr 60px 100px 60px' }}>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-slate-800 truncate">{p.fullName}</p>
+                    <p className="text-[10px] text-slate-400">{p.nationalId}</p>
                   </div>
-                )
-              })}
-            </>
-          )}
-        </div>
+                  <span className="text-xs font-bold text-slate-700">
+                    {p.picks.length}/16{p.isComplete ? ' 🔒' : ''}
+                  </span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg ${STATUS_COLOR[pStatus]}`}>
+                    {STATUS_LABEL[pStatus]}
+                  </span>
+                  <span className="text-[10px] text-slate-400">{formatTime(p.createdAt)}</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Navegación */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { href: '/admin/eliminatorias/pagos',         label: '💳 Gestión de pagos',   desc: `${inReviewKO} en revisión`  },
-          { href: '/admin/eliminatorias/participantes', label: '👥 Participantes',       desc: `${totalKO} inscritos`       },
-          { href: '/admin/eliminatorias/resultados',    label: '⚽ Resultados',          desc: 'Ingresar resultados KO'     },
-          { href: '/admin/eliminatorias/ranking',       label: '🏆 Ranking KO',         desc: `${verifiedKO} verificados`  },
+          { href: '/admin/eliminatorias/pagos',         label: '💳 Gestión de pagos',   desc: `${inReviewKO} en revisión` },
+          { href: '/admin/eliminatorias/participantes', label: '👥 Todos los inscritos', desc: `${totalKO} total`          },
+          { href: '/admin/eliminatorias/resultados',    label: '⚽ Resultados',          desc: 'Ingresar resultados KO'    },
+          { href: '/admin/eliminatorias/ranking',       label: '🏆 Ranking KO',         desc: `${verifiedKO} verificados` },
         ].map(({ href, label, desc }) => (
           <Link key={href} href={href}
             className="bg-white border border-slate-200 rounded-2xl px-4 py-3 hover:shadow-md transition-shadow">
