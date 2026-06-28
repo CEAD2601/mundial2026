@@ -191,36 +191,22 @@ async function DashboardDieciseisavos() {
   const ENTRY_USD  = 20
   const FIXED_RATE = 730
 
-  const [
-    totalKO, completeKO,
-    verifiedKO, inReviewKO, rejectedKO, pendingKO,
-    finishedKO,
-    recentPaymentsKO, recentRegistrationsKO,
-  ] = await Promise.all([
-    prisma.kOParticipant.count({ where: { phase: 'R32' } }),
-    prisma.kOParticipant.count({ where: { phase: 'R32', isComplete: true } }),
-    prisma.kOPayment.count({ where: { paymentStatus: 'VERIFIED',  participant: { phase: 'R32' } } }),
-    prisma.kOPayment.count({ where: { paymentStatus: 'IN_REVIEW', participant: { phase: 'R32' } } }),
-    prisma.kOPayment.count({ where: { paymentStatus: 'REJECTED',  participant: { phase: 'R32' } } }),
-    prisma.kOPayment.count({ where: { paymentStatus: 'PENDING',   participant: { phase: 'R32' } } }),
-    prisma.kOMatchResult.count({ where: { status: { not: 'SCHEDULED' } } }),
-    prisma.kOPayment.findMany({
-      where: { paymentStatus: 'IN_REVIEW', participant: { phase: 'R32' } },
-      include: { participant: true },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-    }),
-    prisma.kOParticipant.findMany({
-      where: { phase: 'R32' },
-      include: { payment: true, picks: { select: { matchId: true } } },
-      orderBy: { createdAt: 'desc' },
-      take: 8,
-    }),
-  ])
+  // Un solo query — evita filtros de relación anidada que pueden fallar con Neon
+  const allKO = await prisma.kOParticipant.findMany({
+    where:   { phase: 'R32' },
+    include: { payment: true, picks: { select: { matchId: true } } },
+    orderBy: { createdAt: 'desc' },
+  })
 
-  const sinPagoKO = totalKO - verifiedKO - inReviewKO - rejectedKO - pendingKO >= 0
-    ? totalKO - verifiedKO - inReviewKO - rejectedKO - pendingKO
-    : pendingKO
+  const totalKO    = allKO.length
+  const completeKO = allKO.filter(p => p.isComplete).length
+  const verifiedKO = allKO.filter(p => p.payment?.paymentStatus === 'VERIFIED').length
+  const inReviewKO = allKO.filter(p => p.payment?.paymentStatus === 'IN_REVIEW').length
+  const rejectedKO = allKO.filter(p => p.payment?.paymentStatus === 'REJECTED').length
+  const pendingKO  = allKO.filter(p => !p.payment || p.payment.paymentStatus === 'PENDING').length
+
+  const recentPaymentsKO      = allKO.filter(p => p.payment?.paymentStatus === 'IN_REVIEW').slice(0, 5)
+  const recentRegistrationsKO = allKO.slice(0, 8)
 
   const totalPool = verifiedKO * ENTRY_USD
   const prize1    = totalPool * 0.65
@@ -255,8 +241,8 @@ async function DashboardDieciseisavos() {
           { val: inReviewKO, label: 'En revisión',         color: 'text-orange-500',  icon: '⏳' },
           { val: pendingKO,  label: 'Sin pago',            color: 'text-slate-500',   icon: '❌' },
           { val: rejectedKO, label: 'Rechazados',          color: 'text-red-500',     icon: '🚫' },
-          { val: 16,         label: 'Partidos',            color: 'text-purple-600',  icon: '⚽' },
-          { val: finishedKO, label: 'Jugados',             color: 'text-indigo-500',  icon: '📅' },
+          { val: 16,         label: 'Partidos totales',    color: 'text-purple-600',  icon: '⚽' },
+          { val: completeKO, label: 'Quinielas completas', color: 'text-indigo-500',  icon: '🔒' },
         ].map(({ val, label, color, icon }) => (
           <div key={label} className="bg-white rounded-xl shadow-sm p-3 sm:p-4 border border-slate-100">
             <div className="text-lg sm:text-xl mb-0.5">{icon}</div>
@@ -308,14 +294,17 @@ async function DashboardDieciseisavos() {
               {recentPaymentsKO.map((p) => (
                 <div key={p.id} className="flex items-start justify-between py-2 border-b border-slate-50 last:border-0 gap-2">
                   <div className="min-w-0">
-                    <div className="text-sm font-medium text-slate-700 truncate">{p.participant.fullName}</div>
+                    <div className="text-sm font-medium text-slate-700 truncate">{p.fullName}</div>
                     <div className="text-xs text-slate-400">
-                      CI: {p.participant.nationalId} · {p.participant.phone}
+                      CI: {p.nationalId} · {p.phone}
                     </div>
-                    {p.paymentReference && (
-                      <div className="text-xs text-slate-400">Ref: {p.paymentReference}</div>
+                    {p.payment?.paymentReference && (
+                      <div className="text-xs text-slate-400">Ref: {p.payment.paymentReference}</div>
                     )}
-                    <div className="text-xs text-slate-500">${p.amountUsd} USD{p.amountVes ? ` / ${fmtVes(p.amountVes)} Bs` : ''}</div>
+                    <div className="text-xs text-slate-500">
+                      {p.payment?.amountUsd ? `$${p.payment.amountUsd} USD` : 'Monto no registrado'}
+                      {p.payment?.amountVes ? ` / ${fmtVes(p.payment.amountVes)} Bs` : ''}
+                    </div>
                   </div>
                   <Link href="/admin/eliminatorias/pagos"
                     className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full hover:bg-orange-200 shrink-0 whitespace-nowrap">

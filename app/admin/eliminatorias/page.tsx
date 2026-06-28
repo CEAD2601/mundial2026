@@ -39,9 +39,7 @@ const STATUS_COLOR: Record<string, string> = {
 }
 
 export default async function AdminEliminatoriasPage() {
-  // Inicio del día de hoy en horario VET (UTC-4)
-  const nowUtc   = new Date()
-  const todayVet = new Date(nowUtc.toLocaleDateString('en-CA', { timeZone: 'America/Caracas' }) + 'T00:00:00-04:00')
+  const nowUtc = new Date()
 
   // Un solo query trae todo
   const allParticipants = await prisma.kOParticipant.findMany({
@@ -69,16 +67,13 @@ export default async function AdminEliminatoriasPage() {
   const prize2   = pozoUSD * 0.20
   const prizeOrg = pozoUSD * 0.15
 
-  // Participantes de HOY con quiniela completa — pago pendiente de confirmar
-  const todayCompleted = allParticipants.filter(p => {
-    const inscritoHoy = p.createdAt >= todayVet
-    const quinelaCompleta = p.isComplete
-    const pagoSinConfirmar = p.payment?.paymentStatus !== 'VERIFIED'
-    return inscritoHoy && quinelaCompleta && pagoSinConfirmar
-  })
+  // Quinielas completas pendientes de confirmar pago (sin filtro de fecha)
+  const todayCompleted = allParticipants.filter(p =>
+    p.isComplete && p.payment?.paymentStatus !== 'VERIFIED'
+  )
 
-  // Todos los de hoy (para registros recientes)
-  const todayAll = allParticipants.filter(p => p.createdAt >= todayVet)
+  // Inscritos recientes (últimos 20)
+  const todayAll = allParticipants.slice(0, 20)
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
@@ -87,7 +82,7 @@ export default async function AdminEliminatoriasPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-800">Eliminatorias 2026</h1>
-          <p className="text-slate-500 text-sm">Dashboard KO — Dieciseisavos · {nowUtc.toLocaleDateString('es-VE', { timeZone: 'America/Caracas', weekday: 'long', day: 'numeric', month: 'long' })}</p>
+          <p className="text-slate-500 text-sm">Dashboard KO — Dieciseisavos · {nowUtc.toLocaleDateString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', year: 'numeric' })}</p>
         </div>
         {/* Link de recarga (válido en server component) */}
         <Link href="/admin/eliminatorias"
@@ -139,7 +134,7 @@ export default async function AdminEliminatoriasPage() {
       <div>
         <div className="flex items-center gap-2 mb-3">
           <h2 className="font-extrabold text-slate-800 text-base">
-            🔒 Quinielas completas hoy — confirmar pago
+            🔒 Quinielas completas — confirmar pago
           </h2>
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
             todayCompleted.length > 0
@@ -152,7 +147,7 @@ export default async function AdminEliminatoriasPage() {
 
         {todayCompleted.length === 0 ? (
           <div className="bg-white border border-slate-100 rounded-2xl p-6 text-center text-slate-400 text-sm">
-            No hay quinielas completadas hoy pendientes de verificar
+            No hay quinielas completas pendientes de verificar 🎉
           </div>
         ) : (
           <div className="space-y-3">
@@ -209,7 +204,7 @@ export default async function AdminEliminatoriasPage() {
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-extrabold text-slate-700">
-            📋 Inscritos hoy
+            📋 Inscritos recientes
             <span className="ml-2 text-sm font-normal text-slate-400">({todayAll.length})</span>
           </h2>
           <Link href="/admin/eliminatorias/participantes"
@@ -220,7 +215,7 @@ export default async function AdminEliminatoriasPage() {
 
         {todayAll.length === 0 ? (
           <div className="bg-white border border-slate-100 rounded-2xl p-6 text-center text-slate-400 text-sm">
-            Sin inscripciones hoy
+            Sin inscripciones aún
           </div>
         ) : (
           <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
