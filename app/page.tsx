@@ -3,138 +3,15 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Trophy, Users, Clock, Star, ChevronDown, ChevronUp, Zap, Shield, BarChart2, MessageCircle } from 'lucide-react'
-import { getWhatsAppShareUrl, getInviteMessage } from '@/lib/share'
-import { getPublicAppUrl } from '@/lib/app-url'
-import type { PrizePoolStats } from '@/lib/prizes'
-import { DEFAULT_PRIZE_SETTINGS, calculatePrizePool } from '@/lib/prizes'
-import { REGISTRATION_DEADLINE, isRegistrationOpen } from '@/lib/deadline'
-import type { PublicPoolInfo, PoolStatus } from '@/lib/pool-status'
-
-const EMPTY_POOL: PrizePoolStats = calculatePrizePool({ verifiedPaymentsCount: 0, ...DEFAULT_PRIZE_SETTINGS })
-
-const TOURNAMENT_START = new Date('2026-06-11T19:00:00Z') // June 11 3PM VET = 7PM UTC
-
-/* ── Countdown ─────────────────────────────────────────────────── */
-function Countdown() {
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
-  const [started, setStarted] = useState(false)
-
-  useEffect(() => {
-    const tick = () => {
-      const diff = TOURNAMENT_START.getTime() - Date.now()
-      if (diff <= 0) { setStarted(true); return }
-      setTimeLeft({
-        days:    Math.floor(diff / 86400000),
-        hours:   Math.floor((diff % 86400000) / 3600000),
-        minutes: Math.floor((diff % 3600000) / 60000),
-        seconds: Math.floor((diff % 60000) / 1000),
-      })
-    }
-    tick()
-    const id = setInterval(tick, 1000)
-    return () => clearInterval(id)
-  }, [])
-
-  if (started) {
-    return (
-      <div className="inline-flex items-center gap-2 bg-yellow-400/20 border border-yellow-400/40 rounded-full px-5 py-2 text-yellow-200 font-semibold animate-pulse">
-        🟢 ¡El torneo ya comenzó!
-      </div>
-    )
-  }
-
-  const pad = (n: number) => String(n).padStart(2, '0')
-  const units = [
-    { label: 'Días',   value: pad(timeLeft.days) },
-    { label: 'Horas',  value: pad(timeLeft.hours) },
-    { label: 'Min',    value: pad(timeLeft.minutes) },
-    { label: 'Seg',    value: pad(timeLeft.seconds) },
-  ]
-
-  return (
-    <div className="flex gap-2 sm:gap-3 justify-center">
-      {units.map(({ label, value }, i) => (
-        <div key={label} className="flex flex-col items-center">
-          <div className="bg-white/15 backdrop-blur-sm border border-white/20 rounded-xl px-3 py-3 sm:px-5 sm:py-4 min-w-[64px] sm:min-w-[80px] text-center shadow-lg">
-            <span className="text-3xl sm:text-4xl font-extrabold text-white tabular-nums leading-none">{value}</span>
-          </div>
-          <span className="text-[11px] text-green-200 mt-1.5 font-medium tracking-wide">{label}</span>
-          {i < 3 && <span className="absolute text-white/60 font-bold text-2xl" style={{ marginTop: '10px', marginLeft: '92px' }} />}
-        </div>
-      ))}
-    </div>
-  )
-}
-
-/* ── FAQ ────────────────────────────────────────────────────────── */
-const faqs = [
-  { q: '¿Cómo funciona la quiniela?',
-    a: 'Predices el marcador exacto (número de goles de cada equipo) para cada uno de los 72 partidos de la fase de grupos. Marcador exacto = 3 puntos, ganador/empate correcto = 1 punto. Gana quien acumule más puntos.' },
-  { q: '¿Cuánto cuesta participar?',
-    a: 'La inscripción es de 20 USD. Puedes pagar por Pago Móvil Banesco (14.600 Bs a tasa fija 730 Bs/USD) o por Zelle (20 USD directamente).' },
-  { q: '¿Cómo puedo pagar?',
-    a: 'Puedes pagar por Pago Móvil Banesco (Teléfono: 04143043337 · CI: 4561947 · Monto: 14.600 Bs) o por Zelle (kissigloxxi@hotmail.com · 20 USD). Después de pagar, reporta la referencia o comprobante para que el administrador verifique tu participación.' },
-  { q: '¿Hasta cuándo puedo inscribirme?',
-    a: 'Puedes registrarte hasta el inicio del primer partido: 11 de junio de 2026 a las 3:00 PM hora Venezuela. Después no se aceptan más inscripciones.' },
-  { q: '\u{BF}C\u{F3}mo se distribuyen los premios?',
-    a: 'El 65% del fondo va al 1er lugar, el 20% al 2do lugar y el 15% restante cubre los gastos de organizaci\u{F3}n.' },
-  { q: '¿Qué pasa si hay empate en puntos?',
-    a: 'Se desempata por: 1) Mayor número de predicciones exactas, 2) Mayor efectividad porcentual, 3) Orden de inscripción.' },
-  { q: '¿Puedo ver la quiniela de otros participantes?',
-    a: 'Sí, después del cierre de inscripciones el administrador puede habilitar la vista pública de todas las quinielas.' },
-  { q: '¿Los horarios están en hora Venezuela?',
-    a: 'Sí, todos los partidos se muestran en hora Venezuela (UTC-4, sin horario de verano).' },
-  { q: '¿Puedo modificar mi quiniela después de enviarla?',
-    a: 'No. Una vez confirmada, la quiniela queda bloqueada permanentemente para garantizar la transparencia del concurso.' },
-]
-
-function FAQ() {
-  const [open, setOpen] = useState<number | null>(null)
-  return (
-    <div className="space-y-2">
-      {faqs.map((faq, i) => (
-        <div key={i} className="border border-slate-200 rounded-xl overflow-hidden hover:border-green-300 transition-colors">
-          <button
-            onClick={() => setOpen(open === i ? null : i)}
-            className="w-full flex items-center justify-between p-4 text-left font-medium hover:bg-slate-50 transition-colors"
-          >
-            <span className="text-slate-800">{faq.q}</span>
-            {open === i
-              ? <ChevronUp size={18} className="text-green-600 shrink-0 ml-3" />
-              : <ChevronDown size={18} className="text-slate-400 shrink-0 ml-3" />}
-          </button>
-          {open === i && (
-            <div className="px-4 pb-4 text-slate-600 text-sm leading-relaxed border-t border-slate-100 pt-3">{faq.a}</div>
-          )}
-        </div>
-      ))}
-    </div>
-  )
-}
-
-/* ── Steps ──────────────────────────────────────────────────────── */
-const steps = [
-  { icon: '📝', title: 'Regístrate',           desc: 'Nombre, cédula y teléfono' },
-  { icon: '⚽', title: 'Llena tu quiniela',     desc: 'Predice los 72 partidos' },
-  { icon: '✅', title: 'Confirma',               desc: 'Revisa y confirma. Queda bloqueada' },
-  { icon: '💳', title: 'Paga',                   desc: 'Pago Móvil Banesco o Zelle' },
-  { icon: '📷', title: 'Reporta el pago',        desc: 'Ingresa la referencia de pago' },
-  { icon: '⏳', title: 'Verificación',           desc: 'El admin confirma tu participación' },
-  { icon: '📊', title: 'Sigue el ranking',       desc: 'Ve tu posición en tiempo real' },
-  { icon: '🏆', title: '¡Gana!',                desc: 'El mejor quinielero gana el 65%' },
-]
+import { Trophy, ChevronDown, ChevronUp } from 'lucide-react'
 
 /* ── AnimatedNumber ─────────────────────────────────────────────── */
 function AnimatedNumber({ target, suffix = '' }: { target: number; suffix?: string }) {
-  // Start at target to prevent "stuck at zero" on fast/cached loads
   const [val, setVal] = useState(target)
   const ref = useRef<HTMLSpanElement>(null)
   const animated = useRef(false)
-
   useEffect(() => {
     if (animated.current) return
-    // Reset to 0 then animate up once the element is visible
     setVal(0)
     const obs = new IntersectionObserver(([entry]) => {
       if (!entry.isIntersecting) return
@@ -151,228 +28,161 @@ function AnimatedNumber({ target, suffix = '' }: { target: number; suffix?: stri
     if (ref.current) obs.observe(ref.current)
     return () => obs.disconnect()
   }, [target])
-
   return <span ref={ref}>{val.toLocaleString('es-VE')}{suffix}</span>
+}
+
+/* ── FAQ ────────────────────────────────────────────────────────── */
+const faqs = [
+  { q: '¿Cómo funciona la quiniela de Eliminatorias?',
+    a: 'Predices el marcador de cada partido de eliminación directa (Dieciseisavos, Octavos, Cuartos, Semis, Final). En eliminatorias el marcador es el del tiempo reglamentario — no cuenta prórroga ni penales para los goles, pero si predices empate debes elegir quién avanza por penales.' },
+  { q: '¿Cuánto cuesta participar?',
+    a: 'La inscripción es de 20 USD. Pagas por Pago Móvil Banesco (14.600 Bs a tasa fija 730 Bs/USD) o por Zelle (20 USD).' },
+  { q: '¿Cómo funciona la puntuación?',
+    a: '⚽ Clasificado correcto: +2 pts. 🎯 Marcador exacto (requiere clasificado correcto): +2 pts adicionales. ⭐ Bonus penales (predices empate y aciertas quién avanza): +1 pt. Máximo 5 pts por partido. Si no aciertas el clasificado, 0 pts aunque el marcador sea exacto.' },
+  { q: '¿Cuándo se cierran los picks?',
+    a: 'Los picks se pueden editar hasta el inicio de cada partido. Una vez comenzado el partido, los picks de ese partido quedan bloqueados. Puedes seguir modificando los picks de partidos que aún no han comenzado.' },
+  { q: '¿Cómo se distribuyen los premios?',
+    a: 'El 65% del fondo va al 1er lugar, el 20% al 2do lugar y el 15% restante cubre los gastos de organización.' },
+  { q: '¿Puedo participar si ya estuve en la Fase de Grupos?',
+    a: 'Sí. Son quinielas independientes. Debes hacer una nueva inscripción y pagar de nuevo. Puedes usar los mismos datos (cédula, WhatsApp) pero necesitas un código nuevo KO26-XXXXXX.' },
+  { q: '¿Qué pasa en el desempate?',
+    a: 'Se desempata por: 1) Clasificados correctos, 2) Marcadores exactos, 3) Bonus de penales, 4) Orden de inscripción.' },
+  { q: '¿Los horarios están en hora Venezuela?',
+    a: 'Sí, todos los partidos se muestran en hora Venezuela (UTC-4). Los Dieciseisavos comienzan el 27 de junio de 2026.' },
+]
+
+function FAQ() {
+  const [open, setOpen] = useState<number | null>(null)
+  return (
+    <div className="space-y-2">
+      {faqs.map((faq, i) => (
+        <div key={i} className="border border-slate-200 rounded-xl overflow-hidden hover:border-green-300 transition-colors">
+          <button onClick={() => setOpen(open === i ? null : i)}
+            className="w-full flex items-center justify-between p-4 text-left font-medium hover:bg-slate-50 transition-colors">
+            <span className="text-slate-800 text-sm">{faq.q}</span>
+            {open === i
+              ? <ChevronUp size={18} className="text-green-600 shrink-0 ml-3" />
+              : <ChevronDown size={18} className="text-slate-400 shrink-0 ml-3" />}
+          </button>
+          {open === i && (
+            <div className="px-4 pb-4 text-slate-600 text-sm leading-relaxed border-t border-slate-100 pt-3">{faq.a}</div>
+          )}
+        </div>
+      ))}
+    </div>
+  )
 }
 
 /* ── Main ───────────────────────────────────────────────────────── */
 export default function Home() {
-  // Use NEXT_PUBLIC_APP_URL — never window.location.origin (returns Vercel preview URLs)
-  const whatsappUrl = getWhatsAppShareUrl(getInviteMessage())
-
-  const [pool, setPool] = useState<PrizePoolStats>(EMPTY_POOL)
-  const [poolInfo, setPoolInfo] = useState<PublicPoolInfo>({
-    status: isRegistrationOpen() ? 'OPEN' : 'CLOSED',
-    poolName: 'Quiniela Mundial 2026 - Fase de Grupos',
-    poolPhase: 'GROUP_STAGE',
-    nextPhaseLabel: 'Octavos · Cuartos · Semifinales · Final',
-    registrationOpen: isRegistrationOpen(),
-  })
+  const [koVerified, setKoVerified] = useState(0)
+  const [koPool, setKoPool] = useState(0)
 
   useEffect(() => {
-    fetch('/api/public/prize-stats')
+    fetch('/api/ko/ranking')
       .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data) setPool(data) })
-      .catch(() => {})
-    fetch('/api/public/pool-status')
-      .then(r => r.ok ? r.json() : null)
-      .then((data: PublicPoolInfo | null) => { if (data) setPoolInfo(data) })
+      .then(d => {
+        if (d?.ranking) {
+          setKoVerified(d.ranking.length)
+          setKoPool(d.ranking.length * 20)
+        }
+      })
       .catch(() => {})
   }, [])
-
-  // Flip to CLOSED client-side at the exact deadline
-  useEffect(() => {
-    const msUntilClose = REGISTRATION_DEADLINE.getTime() - Date.now()
-    if (msUntilClose <= 0) {
-      setPoolInfo(prev => prev.status === 'OPEN' ? { ...prev, status: 'CLOSED' as PoolStatus, registrationOpen: false } : prev)
-      return
-    }
-    const t = setTimeout(() => {
-      setPoolInfo(prev => prev.status === 'OPEN' ? { ...prev, status: 'CLOSED' as PoolStatus, registrationOpen: false } : prev)
-    }, msUntilClose)
-    return () => clearTimeout(t)
-  }, [])
-
-  const registrationOpen = poolInfo.registrationOpen
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
 
       {/* ── HERO ─────────────────────────────────────────────────── */}
-      {/* Mobile: fill full viewport height so the portrait image shows completely
-          Desktop: fixed minimum height that suits the landscape image          */}
-      {/* min-h-screen on mobile → portrait fills entire viewport
-          sm:min-h-[600px] on desktop → landscape gets fixed height     */}
-      <header className="relative overflow-hidden text-white flex flex-col min-h-screen sm:min-h-[600px]">
+      <header className="relative overflow-hidden text-white flex flex-col min-h-screen sm:min-h-[620px]">
 
-        {/* ── DESKTOP IMAGE (sm and up) ──────────────────────────── */}
+        {/* Desktop image */}
         <div className="absolute inset-0 hidden sm:block">
-          <Image
-            src="/assets/hero/hero-desktop.webp"
-            alt="Quiniela Mundial 2026 — jugadores internacionales"
-            fill
-            className="object-cover object-center"
-            priority
-            sizes="100vw"
-          />
+          <Image src="/assets/hero/hero-desktop.webp" alt="Quiniela Eliminatorias 2026"
+            fill className="object-cover object-center" priority sizes="100vw" />
         </div>
-
-        {/* ── MOBILE IMAGE (below sm) ────────────────────────────── */}
-        {/* Portrait 768×1376 — fills the full-screen-height container.
-            object-position: center top → shows Ronaldo (top-left) + Messi (top-right)
-            + flags first, then Mbappe/Haaland/Vinicius in the middle zone. */}
+        {/* Mobile image */}
         <div className="absolute inset-0 block sm:hidden">
-          <Image
-            src="/assets/hero/hero-mobile.webp"
-            alt="Quiniela Mundial 2026 — jugadores internacionales"
-            fill
-            className="object-cover"
-            style={{ objectPosition: 'center top' }}
-            priority
-            sizes="100vw"
-          />
+          <Image src="/assets/hero/hero-mobile.webp" alt="Quiniela Eliminatorias 2026"
+            fill className="object-cover" style={{ objectPosition: 'center top' }} priority sizes="100vw" />
         </div>
 
-        {/* ── OVERLAYS ───────────────────────────────────────────── */}
-        {/* Mobile: gradient from top + strong bottom so text sits in readable zone */}
-        <div className="absolute inset-0 sm:hidden bg-gradient-to-b from-black/55 via-transparent to-black/80" />
-        {/* Desktop: original radial + vignette */}
+        {/* Overlays */}
+        <div className="absolute inset-0 sm:hidden bg-gradient-to-b from-black/55 via-transparent to-black/85" />
         <div className="absolute inset-0 hidden sm:block bg-[radial-gradient(ellipse_60%_80%_at_50%_40%,rgba(0,0,0,0.55)_0%,transparent_100%)]" />
-        <div className="absolute inset-0 hidden sm:block bg-gradient-to-t from-black/70 via-transparent to-black/30" />
-        {/* Shared: color tint */}
-        <div className="absolute inset-0 bg-gradient-to-r from-green-900/20 via-transparent to-blue-900/20" />
+        <div className="absolute inset-0 hidden sm:block bg-gradient-to-t from-black/75 via-transparent to-black/30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-green-900/25 via-transparent to-blue-900/25" />
 
-        {/* ── CONTENT ────────────────────────────────────────────── */}
-        {/* Mobile: flex-grow + justify-end pushes content toward the bottom,
-            sitting in the dark gradient zone above the wave, away from faces.
-            Desktop: top-aligned with standard padding.                       */}
+        {/* Content */}
         <div className="relative flex-1 flex flex-col max-w-3xl mx-auto px-4 w-full
                         sm:pt-14 sm:pb-20 sm:justify-start
                         pt-8 pb-16 justify-end text-center items-center">
 
-          {/* Host badge */}
-          <div className="inline-flex items-center gap-2 bg-black/30 backdrop-blur-md border border-white/20 rounded-full px-4 py-1.5 text-xs sm:text-sm font-semibold mb-6 shadow-lg">
-            <span>🇲🇽 🇺🇸 🇨🇦</span>
-            <span className="text-white/90">México · EE.UU. · Canadá 2026</span>
+          {/* Stage badge */}
+          <div className="inline-flex items-center gap-2 bg-black/35 backdrop-blur-md border border-white/20 rounded-full px-4 py-1.5 text-xs sm:text-sm font-semibold mb-4 shadow-lg">
+            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-white/90">Inscripciones abiertas · Dieciseisavos de Final</span>
           </div>
 
           {/* Title */}
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold mb-4 leading-[1.05] tracking-tight"
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold mb-3 leading-[1.05] tracking-tight"
               style={{ textShadow: '0 2px 20px rgba(0,0,0,0.8), 0 4px 40px rgba(0,0,0,0.5)' }}>
             Quiniela{' '}
             <span className="text-yellow-300"
                   style={{ textShadow: '0 0 30px rgba(251,191,36,0.6), 0 2px 20px rgba(0,0,0,0.8)' }}>
-              Mundial 2026
+              Eliminatorias
             </span>
+            <br />
+            <span className="text-3xl sm:text-4xl font-bold text-white/80">Mundial 2026</span>
           </h1>
 
-          <p className="text-base sm:text-xl text-white/90 mb-8 max-w-lg mx-auto leading-relaxed"
+          <p className="text-base sm:text-xl text-white/90 mb-6 max-w-lg mx-auto leading-relaxed"
              style={{ textShadow: '0 1px 8px rgba(0,0,0,0.8)' }}>
-            Predice los <strong className="text-yellow-300 font-bold">72 partidos</strong> de la fase de grupos,
-            compite con tus amigos y gana el pozo acumulado.
+            Predice <strong className="text-yellow-300 font-bold">16 partidos de Dieciseisavos</strong> y
+            sigue hasta la Final. Sistema de puntos nuevo. Máx. <strong className="text-yellow-300">5 pts</strong> por partido.
           </p>
 
-          {/* Countdown */}
-          <div className="mb-8 w-full">
-            <p className="text-white/60 text-[11px] font-medium uppercase tracking-widest mb-3">
-              ⏱ Tiempo para el primer partido
-            </p>
-            <Countdown />
-          </div>
-
-          {/* CTAs — change when registration closes */}
-          {registrationOpen ? (
-            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center w-full max-w-sm sm:max-w-none">
-              <Link
-                href="/registro"
-                className="group relative bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-extrabold px-8 py-4 rounded-2xl text-base sm:text-lg transition-all shadow-2xl hover:shadow-yellow-400/40 hover:-translate-y-1 inline-flex items-center gap-2 w-full sm:w-auto justify-center"
-                style={{ boxShadow: '0 8px 32px rgba(251,191,36,0.4), 0 2px 8px rgba(0,0,0,0.3)' }}
-              >
-                <span className="text-xl group-hover:scale-110 transition-transform">⚽</span>
-                Crear mi quiniela
-                <span className="absolute -top-2.5 -right-2.5 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg border border-red-400">
-                  20 USD
-                </span>
-              </Link>
-              <Link
-                href="/ranking"
-                className="bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white font-semibold px-7 py-4 rounded-2xl text-base transition-all inline-flex items-center gap-2 hover:-translate-y-0.5 w-full sm:w-auto justify-center"
-              >
-                {'🏆'} Ver ranking
-              </Link>
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-[#25D366]/80 hover:bg-[#25D366] backdrop-blur-md border border-[#25D366]/50 text-white font-semibold px-7 py-4 rounded-2xl text-base transition-all inline-flex items-center gap-2 hover:-translate-y-0.5 w-full sm:w-auto justify-center"
-              >
-                <MessageCircle size={18} className="shrink-0" />
-                Invitar amigos
-              </a>
-            </div>
-          ) : (
-            /* ── INSCRIPCIONES CERRADAS ── */
-            <div className="w-full max-w-lg mx-auto">
-              {/* Status message */}
-              <div className="bg-white/15 backdrop-blur-sm border border-white/30 rounded-2xl px-6 py-4 mb-4 text-center">
-                <p className="text-white font-bold text-lg mb-1">
-                  {poolInfo.status === 'WAITING_NEXT_ROUND' ? '⏳' : '🔒'}{' '}
-                  {poolInfo.status === 'WAITING_NEXT_ROUND'
-                    ? 'Fase de grupos cerrada'
-                    : 'Inscripciones cerradas'}
-                </p>
-                <p className="text-white/80 text-sm">
-                  {poolInfo.status === 'WAITING_NEXT_ROUND'
-                    ? 'La quiniela de fase de grupos ya cerró. Próximamente abriremos la quiniela de la siguiente fase.'
-                    : 'La quiniela de fase de grupos ya cerró. Ahora puedes seguir el ranking, resultados y posiciones en vivo.'}
-                </p>
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
-                <Link href="/ranking"
-                  className="bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-extrabold px-6 py-3.5 rounded-2xl text-sm transition-all inline-flex items-center justify-center gap-2 shadow-xl">
-                  {'🏆'} Ver ranking
-                </Link>
-                <Link href="/resultados"
-                  className="bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white font-semibold px-6 py-3.5 rounded-2xl text-sm transition-all inline-flex items-center justify-center gap-2">
-                  {'⚽'} Ver resultados
-                </Link>
-                <Link href="/mi-quiniela"
-                  className="bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white font-semibold px-6 py-3.5 rounded-2xl text-sm transition-all inline-flex items-center justify-center gap-2">
-                  Ver mi quiniela
-                </Link>
-              </div>
-
-              {/* Eliminatorias — ABIERTA */}
-              <div className="bg-gradient-to-r from-yellow-400/20 to-green-400/20 backdrop-blur-sm border border-yellow-400/40 rounded-2xl px-5 py-4 text-center">
-                <p className="text-yellow-300 text-xs font-bold uppercase tracking-widest mb-1">⚡ ¡Nueva quiniela disponible!</p>
-                <p className="text-white font-extrabold text-lg mb-1">Quiniela Eliminatorias 2026</p>
-                <p className="text-white/80 text-sm mb-3">
-                  Dieciseisavos · Octavos · Cuartos · Semis · Final<br/>
-                  Sistema de puntos nuevo · Máx. 5 pts por partido
-                </p>
-                <Link
-                  href="/eliminatorias"
-                  className="inline-block bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-extrabold px-6 py-2.5 rounded-xl text-sm transition-all shadow-lg"
-                >
-                  Ver quiniela eliminatorias →
-                </Link>
-              </div>
+          {/* Live stats */}
+          {koVerified > 0 && (
+            <div className="flex items-center gap-4 mb-6 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-5 py-2">
+              <span className="text-white/90 text-sm"><strong className="text-yellow-300">{koVerified}</strong> participantes verificados</span>
+              <span className="w-px h-4 bg-white/20" />
+              <span className="text-white/90 text-sm">Pozo: <strong className="text-yellow-300">${koPool}</strong> USD</span>
             </div>
           )}
 
-          {/* Trust indicator */}
-          <div className="mt-6 flex items-center gap-4 text-white/50 text-xs">
-            <span className="flex items-center gap-1"><span className="text-green-400">✓</span> Pago M{'ó'}vil o Zelle</span>
+          {/* CTAs */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center w-full max-w-sm sm:max-w-none mb-5">
+            <Link href="/eliminatorias/registro"
+              className="group relative bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-extrabold px-8 py-4 rounded-2xl text-base sm:text-lg transition-all shadow-2xl hover:shadow-yellow-400/40 hover:-translate-y-1 inline-flex items-center gap-2 w-full sm:w-auto justify-center"
+              style={{ boxShadow: '0 8px 32px rgba(251,191,36,0.4), 0 2px 8px rgba(0,0,0,0.3)' }}>
+              <span className="text-xl group-hover:scale-110 transition-transform">⚡</span>
+              Participar ahora
+              <span className="absolute -top-2.5 -right-2.5 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg border border-red-400">
+                20 USD
+              </span>
+            </Link>
+            <Link href="/eliminatorias/ranking"
+              className="bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white font-semibold px-7 py-4 rounded-2xl text-base transition-all inline-flex items-center gap-2 hover:-translate-y-0.5 w-full sm:w-auto justify-center">
+              <Trophy size={18} className="shrink-0" /> Ver ranking
+            </Link>
+            <Link href="/eliminatorias/mi-quiniela"
+              className="bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white font-semibold px-7 py-4 rounded-2xl text-base transition-all inline-flex items-center gap-2 hover:-translate-y-0.5 w-full sm:w-auto justify-center">
+              Mi quiniela
+            </Link>
+          </div>
+
+          {/* Trust */}
+          <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-1 text-white/50 text-xs">
+            <span className="flex items-center gap-1"><span className="text-green-400">✓</span> Pago Móvil o Zelle</span>
             <span className="w-px h-3 bg-white/20" />
             <span className="flex items-center gap-1"><span className="text-green-400">✓</span> 20 USD / 14.600 Bs · Tasa fija</span>
             <span className="w-px h-3 bg-white/20" />
-            <span className="flex items-center gap-1"><span className="text-green-400">✓</span> Ranking en tiempo real</span>
+            <span className="flex items-center gap-1"><span className="text-green-400">✓</span> Código propio KO26-XXXXXX</span>
           </div>
         </div>
 
-        {/* Bottom wave */}
+        {/* Wave */}
         <div className="absolute bottom-0 left-0 right-0">
           <svg viewBox="0 0 1440 60" xmlns="http://www.w3.org/2000/svg" className="w-full">
             <path d="M0,30 Q360,60 720,30 Q1080,0 1440,30 L1440,60 L0,60 Z" fill="#f8fafc"/>
@@ -384,11 +194,11 @@ export default function Home() {
       <div className="bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-5 grid grid-cols-3 sm:grid-cols-5 gap-4 text-center">
           {[
-            { value: 72,   suffix: '',     label: 'Partidos',           color: 'text-green-600' },
-            { value: 48,   suffix: '',     label: 'Equipos',            color: 'text-blue-600' },
-            { value: 20,   suffix: ' USD', label: 'Entrada',            color: 'text-yellow-600' },
-            { value: 14600, suffix: ' Bs', label: 'Monto fijo',         color: 'text-amber-600' },
-            { value: 65,   suffix: '%',    label: 'Premio 1er lugar',   color: 'text-purple-600' },
+            { value: 16,    suffix: '',     label: 'Partidos R32',      color: 'text-green-600' },
+            { value: 32,    suffix: '',     label: 'Equipos',            color: 'text-blue-600' },
+            { value: 20,    suffix: ' USD', label: 'Entrada',            color: 'text-yellow-600' },
+            { value: 14600, suffix: ' Bs',  label: 'Monto fijo',         color: 'text-amber-600' },
+            { value: 65,    suffix: '%',    label: 'Premio 1er lugar',   color: 'text-purple-600' },
           ].map(({ value, suffix, label, color }, i) => (
             <div key={i} className={i >= 3 ? 'hidden sm:block' : ''}>
               <div className={`text-2xl font-extrabold ${color}`}>
@@ -402,175 +212,129 @@ export default function Home() {
 
       <main className="flex-1 max-w-4xl mx-auto px-4 py-14 w-full space-y-20">
 
+        {/* ── STAGES ──────────────────────────────────────────────── */}
+        <section>
+          <div className="text-center mb-8">
+            <span className="inline-block bg-green-100 text-green-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Formato</span>
+            <h2 className="text-3xl font-extrabold text-slate-900">Etapas de la <span className="text-green-600">Eliminatoria</span></h2>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {[
+              { stage: 'Dieciseisavos', matches: 16, icon: '⚡', active: true,  sub: 'R32' },
+              { stage: 'Octavos',       matches: 8,  icon: '🔥', active: false, sub: 'R16' },
+              { stage: 'Cuartos',       matches: 4,  icon: '⭐', active: false, sub: 'QF'  },
+              { stage: 'Semis',         matches: 2,  icon: '🏅', active: false, sub: 'SF'  },
+              { stage: 'Final',         matches: 1,  icon: '🏆', active: false, sub: 'F'   },
+            ].map(s => (
+              <div key={s.sub} className={`rounded-2xl p-4 text-center border-2 ${s.active ? 'bg-green-50 border-green-400 shadow-md' : 'bg-white border-slate-200'}`}>
+                <div className="text-2xl mb-1">{s.icon}</div>
+                <div className={`font-extrabold text-sm ${s.active ? 'text-green-700' : 'text-slate-600'}`}>{s.stage}</div>
+                <div className="text-xs text-slate-400 mt-0.5">{s.matches} partido{s.matches > 1 ? 's' : ''}</div>
+                {s.active && <div className="mt-1.5 text-[10px] font-bold text-green-600 bg-green-100 rounded-full px-2 py-0.5 inline-block">Abierto</div>}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── SCORING ─────────────────────────────────────────────── */}
+        <section>
+          <div className="text-center mb-8">
+            <span className="inline-block bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Puntuación</span>
+            <h2 className="text-3xl font-extrabold text-slate-900">Sistema de <span className="text-blue-700">Puntos</span></h2>
+            <p className="text-slate-500 mt-2 text-sm">Eliminatorias tiene un sistema diferente al de la Fase de Grupos.</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            {[
+              { icon: '🏆', pts: '+2', title: 'Clasificado correcto', desc: 'Aciertas quién avanza al siguiente partido. Requisito para los demás puntos.', bg: 'bg-green-50', border: 'border-green-300', ptsBg: 'bg-green-500 text-white' },
+              { icon: '🎯', pts: '+2', title: 'Marcador exacto', desc: 'Aciertas los goles exactos de reglamento. Solo suma si el clasificado es correcto.', bg: 'bg-blue-50', border: 'border-blue-300', ptsBg: 'bg-blue-600 text-white' },
+              { icon: '⭐', pts: '+1', title: 'Bonus penales', desc: 'Predices empate en reglamento Y aciertas quién gana la tanda de penales.', bg: 'bg-amber-50', border: 'border-amber-300', ptsBg: 'bg-amber-500 text-white' },
+            ].map(card => (
+              <div key={card.pts + card.title} className={`${card.bg} border-2 ${card.border} rounded-2xl p-5 text-center`}>
+                <div className="text-4xl mb-3">{card.icon}</div>
+                <div className={`inline-block ${card.ptsBg} font-extrabold text-2xl rounded-xl px-4 py-2 mb-3`}>{card.pts} pts</div>
+                <div className="font-bold text-slate-800 text-sm mb-2">{card.title}</div>
+                <div className="text-xs text-slate-500 leading-relaxed">{card.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-slate-800 text-white px-5 py-3 text-sm font-semibold">
+              ⚽ Máximo: <span className="text-yellow-300">5 pts por partido</span> (2 clasificado + 2 exacto + 1 penales)
+            </div>
+            <div className="divide-y divide-slate-100">
+              {[
+                { pred: 'Argentina gana 2-1 (real: 2-1)',           pts: '5', note: 'Clasificado + Exacto',            cls: 'text-green-700', bg: 'bg-green-50' },
+                { pred: 'Argentina gana 3-0 (real: 2-1)',           pts: '2', note: 'Solo clasificado correcto',       cls: 'text-blue-600',  bg: '' },
+                { pred: 'Empate 1-1 + penales ok (real: idem)',     pts: '5', note: 'Clasificado + Exacto + Penales',  cls: 'text-amber-600', bg: 'bg-amber-50' },
+                { pred: 'México gana 1-0 (real: Argentina 2-1)',    pts: '0', note: 'Clasificado incorrecto → 0 pts',  cls: 'text-slate-400', bg: '' },
+              ].map(row => (
+                <div key={row.pred} className={`flex items-center justify-between px-5 py-3 ${row.bg}`}>
+                  <div>
+                    <span className="font-mono text-slate-700 text-xs">{row.pred}</span>
+                    <span className="text-xs text-slate-400 ml-2 hidden sm:inline">{row.note}</span>
+                  </div>
+                  <div className={`font-extrabold ${row.cls} text-lg ml-3 flex-shrink-0`}>{row.pts} pts</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* ── HOW TO PARTICIPATE ──────────────────────────────────── */}
         <section>
-          <div className="text-center mb-10">
+          <div className="text-center mb-8">
             <span className="inline-block bg-green-100 text-green-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Proceso</span>
-            <h2 className="text-3xl font-extrabold text-slate-900">
-              ¿Cómo <span className="text-green-600">participar?</span>
-            </h2>
-            <p className="text-slate-500 mt-2">En 5 pasos simples, completa tu quiniela y compite por el premio.</p>
+            <h2 className="text-3xl font-extrabold text-slate-900">¿Cómo <span className="text-green-600">participar?</span></h2>
           </div>
 
-          {/* Steps — 5 cards in a row on desktop, 2-3 on tablet, 1 on mobile */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              {
-                num: 1,
-                icon: (
-                  <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                  </svg>
-                ),
-                title: 'Regístrate',
-                desc: 'Nombre, cédula y WhatsApp.',
-                color: 'text-green-600',
-                bg: 'bg-green-50',
-                border: 'border-green-200',
-              },
-              {
-                num: 2,
-                icon: (
-                  <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
-                  </svg>
-                ),
-                title: 'Llena tu quiniela',
-                desc: 'Predice los 72 marcadores.',
-                color: 'text-blue-600',
-                bg: 'bg-blue-50',
-                border: 'border-blue-200',
-              },
-              {
-                num: 3,
-                icon: (
-                  <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
-                  </svg>
-                ),
-                title: 'Paga y reporta',
-                desc: 'Pago Móvil + referencia.',
-                note: 'Tu pago será revisado por el administrador.',
-                color: 'text-purple-600',
-                bg: 'bg-purple-50',
-                border: 'border-purple-200',
-              },
-              {
-                num: 4,
-                icon: (
-                  <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
-                  </svg>
-                ),
-                title: 'Sigue el ranking',
-                desc: 'Mira tu posición en vivo.',
-                color: 'text-amber-600',
-                bg: 'bg-amber-50',
-                border: 'border-amber-200',
-              },
-              {
-                num: 5,
-                icon: <Trophy className="w-8 h-8" />,
-                title: '¡Gana!',
-                desc: 'El mejor puntaje gana el premio.',
-                color: 'text-yellow-600',
-                bg: 'bg-yellow-50',
-                border: 'border-yellow-200',
-              },
-            ].map((step, i, arr) => (
-              <div key={step.num} className="flex lg:flex-col items-start lg:items-center gap-4 lg:gap-0 lg:text-center group">
-                {/* Card */}
-                <div className={`relative flex-1 lg:w-full bg-white rounded-2xl p-5 lg:p-6 shadow-sm border ${step.border} hover:shadow-md transition-all`}>
-                  {/* Number badge */}
-                  <div className={`absolute -top-3 -left-3 lg:left-1/2 lg:-translate-x-1/2 w-7 h-7 ${step.bg} border-2 ${step.border} ${step.color} text-sm font-extrabold rounded-full flex items-center justify-center shadow-sm`}>
-                    {step.num}
-                  </div>
-                  {/* Icon */}
-                  <div className={`${step.color} mb-3 mt-1`}>{step.icon}</div>
-                  {/* Text */}
-                  <div className="font-bold text-slate-800 text-sm mb-1">{step.title}</div>
-                  <div className="text-xs text-slate-500 leading-snug">{step.desc}</div>
-                  {step.note && (
-                    <div className="mt-2 text-[11px] text-slate-400 italic leading-tight">{step.note}</div>
-                  )}
-                </div>
-                {/* Connector arrow (desktop only, between cards) */}
-                {i < arr.length - 1 && (
-                  <div className="hidden lg:flex absolute items-center justify-center" style={{ left: `calc(${(i + 1) * 20}% - 10px)`, top: '50%', transform: 'translateY(-50%)' }}>
-                  </div>
-                )}
+              { num: 1, icon: '📝', title: 'Regístrate', desc: 'Nombre, cédula y WhatsApp. Recibes tu código KO26-XXXXXX.', border: 'border-green-200', bg: 'bg-green-50', color: 'text-green-600' },
+              { num: 2, icon: '💳', title: 'Paga', desc: 'Pago Móvil Banesco (14.600 Bs) o Zelle (20 USD). Reporta la referencia.', border: 'border-blue-200', bg: 'bg-blue-50', color: 'text-blue-600' },
+              { num: 3, icon: '⚽', title: 'Llena tu quiniela', desc: 'Predice los 16 partidos de Dieciseisavos. Editable hasta el inicio de cada partido.', border: 'border-purple-200', bg: 'bg-purple-50', color: 'text-purple-600' },
+              { num: 4, icon: '🏆', title: '¡Gana!', desc: 'El admin verifica tu pago. Sigue el ranking y gana el pozo acumulado.', border: 'border-yellow-200', bg: 'bg-yellow-50', color: 'text-yellow-600' },
+            ].map(step => (
+              <div key={step.num} className={`relative bg-white rounded-2xl p-5 shadow-sm border-2 ${step.border} hover:shadow-md transition-all`}>
+                <div className={`absolute -top-3 -left-3 w-7 h-7 ${step.bg} border-2 ${step.border} ${step.color} text-sm font-extrabold rounded-full flex items-center justify-center`}>{step.num}</div>
+                <div className="text-3xl mb-3 mt-1">{step.icon}</div>
+                <div className="font-bold text-slate-800 text-sm mb-1">{step.title}</div>
+                <div className="text-xs text-slate-500 leading-snug">{step.desc}</div>
               </div>
             ))}
           </div>
 
-          {/* Connector line — desktop only */}
-          <div className="hidden lg:flex items-center justify-between mt-2 px-12 pointer-events-none select-none">
-            {[1,2,3,4].map((n) => (
-              <div key={n} className="flex-1 flex items-center">
-                <div className="flex-1 h-px border-t-2 border-dashed border-slate-200" />
-                <svg className="w-3 h-3 text-slate-300 shrink-0" viewBox="0 0 12 12" fill="currentColor">
-                  <path d="M4 2l4 4-4 4"/>
-                </svg>
-              </div>
-            ))}
-          </div>
-
-          {/* CTA under steps */}
           <div className="text-center mt-8">
-            {registrationOpen ? (
-              <Link href="/registro"
-                className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-3.5 rounded-2xl transition-all shadow-lg hover:shadow-green-500/25 hover:-translate-y-0.5 text-sm">
-                ⚽ Empezar ahora · 20 USD
-              </Link>
-            ) : (
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Link href="/ranking" className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-3.5 rounded-2xl transition-all shadow-lg text-sm">
-                  🏆 Ver ranking en vivo
-                </Link>
-                <Link href="/resultados" className="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-8 py-3.5 rounded-2xl transition-all text-sm">
-                  ⚽ Ver resultados
-                </Link>
-              </div>
-            )}
+            <Link href="/eliminatorias/registro"
+              className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-3.5 rounded-2xl transition-all shadow-lg text-sm">
+              ⚡ Inscribirme ahora · 20 USD
+            </Link>
           </div>
         </section>
 
         {/* ── PRIZES ──────────────────────────────────────────────── */}
         <section>
-          <div className="text-center mb-10">
+          <div className="text-center mb-8">
             <span className="inline-block bg-yellow-100 text-yellow-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Premios</span>
-            <h2 className="text-3xl font-extrabold text-slate-900">
-              Tabla de <span className="text-yellow-600">Premios</span>
-            </h2>
+            <h2 className="text-3xl font-extrabold text-slate-900">Tabla de <span className="text-yellow-600">Premios</span></h2>
           </div>
           <div className="bg-white rounded-3xl shadow-md border border-slate-100 overflow-hidden">
-            {/* Header gradient */}
-            <div className="relative bg-gradient-to-br from-green-600 via-green-700 to-blue-800 text-white p-8 text-center overflow-hidden">
-              <div className="absolute inset-0 opacity-10"
-                style={{ backgroundImage: 'url(/assets/hero/football-pattern.svg)', backgroundSize: '100px' }} />
-              <div className="relative">
-                <p className="text-green-200 text-sm mb-2">
-                  Pozo acumulado {'·'} {pool.verifiedPaymentsCount} pago{pool.verifiedPaymentsCount !== 1 ? 's' : ''} verificado{pool.verifiedPaymentsCount !== 1 ? 's' : ''}
-                </p>
-                <p className="text-5xl font-extrabold text-white drop-shadow">
-                  ${pool.totalPoolUsd.toLocaleString('en-US')} <span className="text-2xl font-bold text-green-200">USD</span>
-                </p>
-                <p className="text-green-300 text-sm mt-1">
-                  {pool.totalPoolVes.toLocaleString('es-VE')} Bs <span className="text-xs">(tasa fija {pool.fixedExchangeRate} Bs/USD)</span>
-                </p>
-                <p className="text-green-400 text-xs mt-1">
-                  {pool.verifiedPaymentsCount} pagos verificados {'×'} ${pool.entryPriceUsd} USD {'='} ${pool.totalPoolUsd.toLocaleString('en-US')} USD
-                </p>
-              </div>
+            <div className="bg-gradient-to-br from-green-600 via-green-700 to-blue-800 text-white p-8 text-center">
+              <p className="text-green-200 text-sm mb-2">Pozo acumulado · {koVerified} participante{koVerified !== 1 ? 's' : ''} verificado{koVerified !== 1 ? 's' : ''}</p>
+              <p className="text-5xl font-extrabold text-white drop-shadow">
+                ${koPool.toLocaleString('en-US')} <span className="text-2xl font-bold text-green-200">USD</span>
+              </p>
+              <p className="text-green-300 text-sm mt-1">{(koPool * 730).toLocaleString('es-VE')} Bs · tasa fija 730 Bs/USD</p>
+              <p className="text-green-400 text-xs mt-1">{koVerified} pagos × $20 USD</p>
             </div>
-            {/* Prize rows */}
             <div className="divide-y divide-slate-100">
               {[
-                { medal: '🥇', pos: '1er Lugar',    pct: pool.firstPrizePercent,   usd: pool.firstPrizeUsd,   ves: pool.firstPrizeVes,   color: 'from-yellow-50 to-amber-50', badge: 'bg-yellow-100 text-yellow-800' },
-                { medal: '🥈', pos: '2do Lugar',    pct: pool.secondPrizePercent,  usd: pool.secondPrizeUsd,  ves: pool.secondPrizeVes,  color: 'from-slate-50 to-slate-50',  badge: 'bg-slate-100 text-slate-600' },
-                { medal: '\u{1F3DB}\u{FE0F}', pos: 'Organizaci\u{F3}n', pct: pool.organizationPercent, usd: pool.organizationUsd, ves: pool.organizationVes, color: '', badge: 'bg-blue-50 text-blue-600' },
-              ].map((row) => (
-                <div key={row.pos} className={`flex items-center justify-between px-6 py-5 bg-gradient-to-r ${row.color} hover:bg-opacity-80 transition-colors`}>
+                { medal: '🥇', pos: '1er Lugar',    pct: 65, usd: Math.round(koPool * 0.65), badge: 'bg-yellow-100 text-yellow-800', color: 'from-yellow-50 to-amber-50' },
+                { medal: '🥈', pos: '2do Lugar',    pct: 20, usd: Math.round(koPool * 0.20), badge: 'bg-slate-100 text-slate-600',   color: '' },
+                { medal: '🏛️', pos: 'Organización', pct: 15, usd: Math.round(koPool * 0.15), badge: 'bg-blue-50 text-blue-600',     color: '' },
+              ].map(row => (
+                <div key={row.pos} className={`flex items-center justify-between px-6 py-5 bg-gradient-to-r ${row.color}`}>
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{row.medal}</span>
                     <span className="font-bold text-slate-700">{row.pos}</span>
@@ -579,36 +343,28 @@ export default function Home() {
                     <span className={`text-sm font-bold px-3 py-1 rounded-full ${row.badge}`}>{row.pct}%</span>
                     <div className="text-right">
                       <div className="font-extrabold text-lg text-slate-800">${row.usd.toLocaleString('en-US')} USD</div>
-                      <div className="text-xs text-slate-500">{row.ves.toLocaleString('es-VE')} Bs</div>
+                      <div className="text-xs text-slate-500">{(row.usd * 730).toLocaleString('es-VE')} Bs</div>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-            <p className="text-center text-xs text-slate-400 p-4">
-              El pozo se actualiza autom{'á'}ticamente seg{'ú'}n los pagos verificados por el administrador. {'·'} Tasa fija: {pool.fixedExchangeRate} Bs/USD
-            </p>
+            <p className="text-center text-xs text-slate-400 p-4">El pozo se actualiza según los pagos verificados por el administrador.</p>
           </div>
         </section>
 
-        {/* ── PAYMENT CARD ────────────────────────────────────────── */}
+        {/* ── PAYMENT ─────────────────────────────────────────────── */}
         <section>
           <div className="text-center mb-8">
             <span className="inline-block bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Pago</span>
-            <h2 className="text-3xl font-extrabold text-slate-900">
-              M{'é'}todos de <span className="text-blue-700">Pago</span>
-            </h2>
-            <p className="text-slate-500 mt-2 text-sm">
-              Puedes pagar por Pago M{'ó'}vil Banesco o por Zelle. Elige el que prefieras.
-            </p>
+            <h2 className="text-3xl font-extrabold text-slate-900">Métodos de <span className="text-blue-700">Pago</span></h2>
           </div>
           <div className="grid sm:grid-cols-2 gap-5">
-            {/* Pago Móvil */}
             <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-3xl p-6 text-white shadow-xl">
               <div className="text-center mb-5">
-                <div className="text-3xl mb-1">{'📱'}</div>
-                <h3 className="font-extrabold text-xl">Pago M{'ó'}vil</h3>
-                <div className="text-green-200 text-sm mt-1">Pago en bol{'í'}vares</div>
+                <div className="text-3xl mb-1">📱</div>
+                <h3 className="font-extrabold text-xl">Pago Móvil</h3>
+                <div className="text-green-200 text-sm mt-1">Pago en bolívares</div>
               </div>
               <div className="bg-white/10 rounded-2xl p-3 text-center mb-4">
                 <div className="text-green-200 text-xs mb-1">Monto</div>
@@ -618,8 +374,8 @@ export default function Home() {
               <div className="space-y-2">
                 {[
                   { label: 'Banco',    value: 'Banesco',     icon: '🏦' },
-                  { label: 'Tel\u{E9}fono', value: '04143043337', icon: '📞' },
-                  { label: 'C\u{E9}dula',   value: 'V-4.561.947', icon: '🪪' },
+                  { label: 'Teléfono', value: '04143043337', icon: '📞' },
+                  { label: 'Cédula',   value: 'V-4.561.947', icon: '🪪' },
                 ].map(({ label, value, icon }) => (
                   <div key={label} className="bg-white/10 rounded-xl px-3 py-2.5 flex items-center gap-3">
                     <span className="text-lg">{icon}</span>
@@ -631,23 +387,22 @@ export default function Home() {
                 ))}
               </div>
             </div>
-            {/* Zelle */}
             <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-6 text-white shadow-xl">
               <div className="text-center mb-5">
-                <div className="text-3xl mb-1">{'💵'}</div>
+                <div className="text-3xl mb-1">💵</div>
                 <h3 className="font-extrabold text-xl">Zelle</h3>
-                <div className="text-blue-200 text-sm mt-1">Pago en d{'ó'}lares</div>
+                <div className="text-blue-200 text-sm mt-1">Pago en dólares</div>
               </div>
               <div className="bg-white/10 rounded-2xl p-3 text-center mb-4">
                 <div className="text-blue-200 text-xs mb-1">Monto</div>
                 <div className="text-3xl font-extrabold">20 <span className="text-lg font-semibold">USD</span></div>
-                <div className="text-blue-200 text-xs mt-1">Pago directo en d{'ó'}lares</div>
+                <div className="text-blue-200 text-xs mt-1">Pago directo en dólares</div>
               </div>
               <div className="space-y-2">
                 {[
-                  { label: 'M\u{E9}todo', value: 'Zelle',                       icon: '💵' },
-                  { label: 'Correo',  value: 'kissigloxxi@hotmail.com',      icon: '📧' },
-                  { label: 'Monto',   value: '20 USD',                        icon: '💲' },
+                  { label: 'Método', value: 'Zelle',                  icon: '💵' },
+                  { label: 'Correo', value: 'kissigloxxi@hotmail.com', icon: '📧' },
+                  { label: 'Monto',  value: '20 USD',                  icon: '💲' },
                 ].map(({ label, value, icon }) => (
                   <div key={label} className="bg-white/10 rounded-xl px-3 py-2.5 flex items-center gap-3">
                     <span className="text-lg">{icon}</span>
@@ -661,120 +416,27 @@ export default function Home() {
             </div>
           </div>
           <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-sm text-yellow-800 text-center">
-            {'📌'} Entrada: <strong>20 USD</strong> · Pago M{'ó'}vil: <strong>14.600 Bs</strong> · Zelle: <strong>20 USD</strong> · Tasa fija: 730 Bs/USD
-          </div>
-        </section>
-
-        {/* ── SCORING ─────────────────────────────────────────────── */}
-        <section>
-          <div className="text-center mb-8">
-            <span className="inline-block bg-green-100 text-green-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Puntuación</span>
-            <h2 className="text-3xl font-extrabold text-slate-900">
-              Sistema de <span className="text-green-600">Puntuación</span>
-            </h2>
-            <p className="text-slate-500 mt-2 text-sm max-w-md mx-auto">
-              Predice el marcador exacto de cada partido y suma puntos según tu precisión.
-              <br />
-              <span className="font-semibold text-slate-700">No eliges solo ganador — debes colocar los goles de cada equipo.</span>
-            </p>
-          </div>
-
-          {/* 3 cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            {[
-              {
-                icon: '🏆',
-                pts: '3',
-                title: 'Marcador exacto',
-                desc: 'Aciertas exactamente los goles de ambos equipos.',
-                bg: 'bg-yellow-50',
-                border: 'border-yellow-300',
-                ptsBg: 'bg-yellow-400',
-                ptsText: 'text-slate-900',
-              },
-              {
-                icon: '✅',
-                pts: '1',
-                title: 'Ganador o empate correcto',
-                desc: 'Aciertas quién gana o si empatan, aunque el marcador sea diferente.',
-                bg: 'bg-green-50',
-                border: 'border-green-300',
-                ptsBg: 'bg-green-500',
-                ptsText: 'text-white',
-              },
-              {
-                icon: '❌',
-                pts: '0',
-                title: 'Resultado incorrecto',
-                desc: 'No aciertas el ganador ni si hubo empate.',
-                bg: 'bg-slate-50',
-                border: 'border-slate-200',
-                ptsBg: 'bg-slate-300',
-                ptsText: 'text-slate-700',
-              },
-            ].map((card) => (
-              <div
-                key={card.pts}
-                className={`${card.bg} border-2 ${card.border} rounded-2xl p-5 text-center hover:shadow-md transition-shadow`}
-              >
-                <div className="text-4xl mb-3">{card.icon}</div>
-                <div className={`inline-block ${card.ptsBg} ${card.ptsText} font-extrabold text-3xl rounded-xl px-5 py-2 mb-3 shadow-sm`}>
-                  {card.pts} <span className="text-lg font-semibold">pts</span>
-                </div>
-                <div className="font-bold text-slate-800 text-sm mb-2">{card.title}</div>
-                <div className="text-xs text-slate-500 leading-relaxed">{card.desc}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Example */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="bg-slate-800 text-white px-5 py-3 text-sm font-semibold">
-              ⚽ Ejemplo — Resultado real: <span className="text-yellow-300">Argentina 2 – 1 México</span>
-            </div>
-            <div className="divide-y divide-slate-100">
-              {[
-                { pred: 'Argentina 2 – 1 México', note: 'Marcador exacto', pts: 3, cls: 'text-yellow-600', bg: 'bg-yellow-50' },
-                { pred: 'Argentina 3 – 1 México', note: 'Ganador correcto (Argentina gana)', pts: 1, cls: 'text-green-600', bg: '' },
-                { pred: 'Argentina 1 – 1 México', note: 'Incorrecto (predijiste empate)', pts: 0, cls: 'text-slate-400', bg: '' },
-              ].map((row) => (
-                <div key={row.pred} className={`flex items-center justify-between px-5 py-3.5 ${row.bg}`}>
-                  <div>
-                    <span className="font-mono font-bold text-slate-800 text-sm">{row.pred}</span>
-                    <span className="text-xs text-slate-400 ml-3">{row.note}</span>
-                  </div>
-                  <div className={`font-extrabold text-lg ${row.cls} flex items-center gap-1`}>
-                    {row.pts > 0 && <Zap size={14} className="shrink-0" />}
-                    {row.pts} pts
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="px-5 py-3 bg-slate-50 text-xs text-slate-500 text-center">
-              Máximo posible: <strong>3 pts × 72 partidos = 216 puntos</strong>
-            </div>
+            📌 Entrada: <strong>20 USD</strong> · Pago Móvil: <strong>14.600 Bs</strong> · Zelle: <strong>20 USD</strong> · Tasa fija: 730 Bs/USD
           </div>
         </section>
 
         {/* ── FEATURES ────────────────────────────────────────────── */}
         <section>
-          <div className="text-center mb-10">
+          <div className="text-center mb-8">
             <span className="inline-block bg-purple-100 text-purple-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Plataforma</span>
-            <h2 className="text-3xl font-extrabold text-slate-900">
-              Todo lo que <span className="text-purple-600">necesitas</span>
-            </h2>
+            <h2 className="text-3xl font-extrabold text-slate-900">Todo lo que <span className="text-purple-600">necesitas</span></h2>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { icon: <Trophy size={22} className="text-yellow-600" />, bg: 'bg-yellow-50', title: 'Ranking en tiempo real', desc: 'Ve tu posición actualizada después de cada partido jugado.' },
-              { icon: <Users size={22} className="text-blue-600" />,   bg: 'bg-blue-50',   title: 'Quinielas comparables',  desc: 'Compara tu estrategia con otros participantes después del cierre.' },
-              { icon: <Clock size={22} className="text-green-600" />,  bg: 'bg-green-50',  title: 'Hora Venezuela',          desc: 'Todos los horarios en VET (UTC-4). Sin confusiones de zona horaria.' },
-              { icon: <BarChart2 size={22} className="text-purple-600" />, bg: 'bg-purple-50', title: 'Estadísticas completas', desc: 'Efectividad, pronósticos populares, líderes, tendencias.' },
-              { icon: <Shield size={22} className="text-red-600" />,   bg: 'bg-red-50',    title: 'Transparencia total',     desc: 'Auditoría anti-trampa. Hash de confirmación. Logs de cambios.' },
-              { icon: <Star size={22} className="text-amber-600" />,   bg: 'bg-amber-50',  title: 'Soporte WhatsApp',        desc: 'Contacta al administrador directamente para cualquier duda.' },
+              { icon: '🏆', bg: 'bg-yellow-50', title: 'Ranking en tiempo real', desc: 'Tu posición se actualiza automáticamente al ingresar resultados.' },
+              { icon: '⚽', bg: 'bg-green-50',  title: 'Picks por partido', desc: 'Rellena tu quiniela partido por partido. Editable hasta que empiece.' },
+              { icon: '⭐', bg: 'bg-blue-50',   title: 'Penales incluidos', desc: 'Predice quién avanza en empates. Ganas el bonus si aciertas.' },
+              { icon: '📱', bg: 'bg-purple-50', title: 'Código personal', desc: 'Accede siempre con tu código KO26-XXXXXX, cédula o WhatsApp.' },
+              { icon: '🔒', bg: 'bg-red-50',    title: 'Cierre automático', desc: 'Cada partido se bloquea al inicio. Transparencia garantizada.' },
+              { icon: '💳', bg: 'bg-amber-50',  title: 'Pago Móvil o Zelle', desc: 'Dos métodos de pago disponibles. El admin verifica manualmente.' },
             ].map((feat, i) => (
-              <div key={i} className="bg-white rounded-2xl p-5 flex items-start gap-4 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all">
-                <div className={`${feat.bg} rounded-xl p-2.5 shrink-0`}>{feat.icon}</div>
+              <div key={i} className="bg-white rounded-2xl p-5 flex items-start gap-4 shadow-sm border border-slate-100 hover:shadow-md transition-all">
+                <div className={`${feat.bg} rounded-xl p-2.5 shrink-0 text-2xl`}>{feat.icon}</div>
                 <div>
                   <div className="font-bold text-slate-800 text-sm">{feat.title}</div>
                   <div className="text-xs text-slate-500 mt-1 leading-relaxed">{feat.desc}</div>
@@ -786,75 +448,53 @@ export default function Home() {
 
         {/* ── FAQ ─────────────────────────────────────────────────── */}
         <section>
-          <div className="text-center mb-10">
+          <div className="text-center mb-8">
             <span className="inline-block bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Dudas</span>
-            <h2 className="text-3xl font-extrabold text-slate-900">
-              Preguntas <span className="text-green-600">Frecuentes</span>
-            </h2>
+            <h2 className="text-3xl font-extrabold text-slate-900">Preguntas <span className="text-green-600">Frecuentes</span></h2>
           </div>
           <FAQ />
-          <div className="text-center mt-6">
-            <Link href="/faq" className="text-green-600 hover:text-green-700 text-sm font-semibold underline underline-offset-2">
-              Ver todas las preguntas frecuentes →
-            </Link>
+        </section>
+
+        {/* ── FASE DE GRUPOS HISTÓRICO ─────────────────────────────── */}
+        <section>
+          <div className="text-center mb-6">
+            <span className="inline-block bg-slate-200 text-slate-600 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Fase anterior</span>
+            <h2 className="text-2xl font-extrabold text-slate-700">Quiniela Fase de Grupos — <span className="text-slate-500">Histórico</span></h2>
+            <p className="text-slate-400 text-sm mt-1">La Fase de Grupos ya cerró. Puedes consultar el ranking final y los resultados.</p>
+          </div>
+          <div className="bg-slate-100 rounded-2xl p-5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { href: '/ranking',     icon: '🏆', label: 'Ranking final',         desc: 'Posiciones finales Grupos' },
+                { href: '/resultados',  icon: '⚽', label: 'Resultados',            desc: '72 partidos de grupos' },
+                { href: '/mi-quiniela', icon: '📋', label: 'Mi quiniela (Grupos)',  desc: 'Ver predicciones anteriores' },
+                { href: '/estadisticas',icon: '📊', label: 'Estadísticas',          desc: 'Análisis de la fase' },
+              ].map(({ href, icon, label, desc }) => (
+                <Link key={href} href={href}
+                  className="bg-white border border-slate-200 rounded-xl py-4 px-3 text-center hover:shadow-sm transition-all hover:border-slate-300">
+                  <div className="text-2xl mb-1">{icon}</div>
+                  <div className="font-semibold text-slate-700 text-xs">{label}</div>
+                  <div className="text-slate-400 text-[10px] mt-0.5">{desc}</div>
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* ── QUICK LINKS ─────────────────────────────────────────── */}
-        <section className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-          {[
-            { href: '/ranking',    icon: '🏆', label: 'Ranking',     color: 'hover:border-yellow-400' },
-            { href: '/resultados', icon: '⚽', label: 'Resultados',  color: 'hover:border-green-400' },
-            { href: '/reglas',     icon: '📋', label: 'Reglas',      color: 'hover:border-blue-400' },
-            { href: '/faq',        icon: '❓', label: 'FAQ',         color: 'hover:border-purple-400' },
-          ].map(({ href, icon, label, color }) => (
-            <Link key={href} href={href}
-              className={`bg-white border-2 border-slate-200 ${color} rounded-2xl py-5 font-semibold text-slate-700 hover:text-slate-900 transition-all hover:shadow-md hover:-translate-y-0.5`}>
-              <span className="text-3xl block mb-2">{icon}</span>
-              {label}
-            </Link>
-          ))}
-        </section>
-
-        {/* ── CTA ─────────────────────────────────────────────────── */}
+        {/* ── CTA FINAL ───────────────────────────────────────────── */}
         <section className="relative bg-gradient-to-br from-green-700 via-green-600 to-blue-700 rounded-3xl p-10 text-white text-center overflow-hidden shadow-2xl">
-          <div className="absolute inset-0 opacity-[0.05]"
-            style={{ backgroundImage: 'url(/assets/hero/football-pattern.svg)', backgroundSize: '120px' }} />
           <div className="relative">
-            {registrationOpen ? (
-              <>
-                <div className="text-5xl mb-4">🏆</div>
-                <h2 className="text-2xl sm:text-3xl font-extrabold mb-3">¡El torneo comienza el 11 de junio!</h2>
-                <p className="text-green-100 mb-8 max-w-md mx-auto">Regístrate ahora y no pierdas la oportunidad de ganar el pozo acumulado.</p>
-                <Link href="/registro"
-                  className="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-extrabold px-10 py-4 rounded-2xl text-lg transition-all shadow-xl hover:shadow-yellow-400/40 hover:shadow-2xl hover:-translate-y-1">
-                  ⚽ Crear mi quiniela — 20 USD
-                </Link>
-                <p className="text-green-200 text-xs mt-4">Pago M{'ó'}vil Banesco · Zelle · 20 USD / 14.600 Bs · Tasa fija 730 Bs/USD</p>
-              </>
-            ) : (
-              <>
-                <div className="text-5xl mb-4">⚽</div>
-                <h2 className="text-2xl sm:text-3xl font-extrabold mb-3">Fase de grupos en curso</h2>
-                <p className="text-green-100 mb-4 max-w-md mx-auto">
-                  Ya no se aceptan nuevas quinielas para esta fase. Sigue el ranking en vivo y prepar{'á'}te para la pr{'ó'}xima ronda.
-                </p>
-                <div className="inline-flex items-center gap-2 bg-white/15 border border-white/30 rounded-xl px-5 py-2.5 text-sm text-white/80 mb-6">
-                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                  Pr{'ó'}xima quiniela: <strong className="text-yellow-300 ml-1">{poolInfo.nextPhaseLabel}</strong> — En espera
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Link href="/ranking"
-                    className="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-extrabold px-8 py-4 rounded-2xl text-base transition-all shadow-xl hover:-translate-y-1">
-                    🏆 Ver ranking fase de grupos
-                  </Link>
-                  <Link href="/resultados"
-                    className="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 border border-white/30 text-white font-semibold px-8 py-4 rounded-2xl text-base transition-all">
-                    ⚽ Ver resultados
-                  </Link>
-                </div>
-              </>
-            )}
+            <div className="text-5xl mb-4">⚡</div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold mb-3">¡Inscripciones abiertas!</h2>
+            <p className="text-green-100 mb-6 max-w-md mx-auto">
+              Dieciseisavos de Final · 16 partidos · Máx. 5 pts cada uno.<br/>
+              Elimina a la competencia y gana el pozo.
+            </p>
+            <Link href="/eliminatorias/registro"
+              className="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-extrabold px-10 py-4 rounded-2xl text-lg transition-all shadow-xl hover:-translate-y-1">
+              ⚽ Participar ahora — 20 USD
+            </Link>
+            <p className="text-green-200 text-xs mt-4">Pago Móvil Banesco · Zelle · 20 USD / 14.600 Bs · Tasa fija 730 Bs/USD</p>
           </div>
         </section>
 
@@ -863,17 +503,16 @@ export default function Home() {
       {/* ── FOOTER ──────────────────────────────────────────────────── */}
       <footer className="bg-slate-900 text-slate-400 py-8 text-center text-sm">
         <div className="max-w-4xl mx-auto px-4">
-          <p className="font-semibold text-white mb-1">Quiniela Mundial 2026 🏆</p>
-          <p className="text-xs mb-4">Pago M{'ó'}vil Banesco 04143043337 · CI 4561947 · Zelle: kissigloxxi@hotmail.com · 20 USD / 14.600 Bs · Tasa fija 730 Bs/USD</p>
+          <p className="font-semibold text-white mb-1">Quiniela Eliminatorias 2026 ⚡</p>
+          <p className="text-xs mb-4">Pago Móvil Banesco 04143043337 · CI 4561947 · Zelle: kissigloxxi@hotmail.com · 20 USD / 14.600 Bs · Tasa fija 730 Bs/USD</p>
           <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs">
             {[
-              { href: '/registro',    label: 'Participar' },
-              { href: '/ranking',     label: 'Ranking' },
-              { href: '/resultados',  label: 'Resultados' },
-              { href: '/estadisticas',label: 'Estadísticas' },
-              { href: '/reglas',      label: 'Reglas' },
-              { href: '/faq',         label: 'FAQ' },
-              { href: '/admin',       label: 'Admin' },
+              { href: '/eliminatorias/registro',  label: 'Inscribirme' },
+              { href: '/eliminatorias/ranking',   label: 'Ranking KO' },
+              { href: '/eliminatorias/resultados',label: 'Resultados KO' },
+              { href: '/eliminatorias/mi-quiniela',label: 'Mi quiniela KO' },
+              { href: '/ranking',                 label: 'Ranking Grupos' },
+              { href: '/admin',                   label: 'Admin' },
             ].map(({ href, label }) => (
               <Link key={href} href={href} className="hover:text-white transition-colors">{label}</Link>
             ))}
