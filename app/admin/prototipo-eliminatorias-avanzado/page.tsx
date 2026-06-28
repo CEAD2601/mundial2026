@@ -531,9 +531,13 @@ function KOMatchCard({ match, pick, onPick, highlight }: {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
+// Cierre de inscripciones Dieciseisavos — 28 jun 2026 a las 15:00 VET (UTC-4 = 19:00 UTC)
+const REGISTRATION_DEADLINE = new Date('2026-06-28T19:00:00Z')
+
 export default function PrototipoEliminatoriasV3() {
   const router = useRouter()
-  const [view, setView] = useState<View>('home')
+  const [view, setView] = useState<View>('registro')
+  const isOpen = Date.now() < REGISTRATION_DEADLINE.getTime()
   const [picks, setPicks] = useState<Picks>({})
   const [activeStage, setActiveStage] = useState<Stage>('R32')
   const [toast, setToast] = useState<string | null>(null)
@@ -1909,7 +1913,7 @@ export default function PrototipoEliminatoriasV3() {
                   <KOMatchCard
                     match={m}
                     pick={picks[m.id]}
-                    onPick={updatePick}
+                    onPick={isOpen ? updatePick : () => { setToast('⛔ Plazo cerrado. Los Dieciseisavos ya comenzaron.') }}
                     highlight={highlightId === m.id}
                   />
                 </div>
@@ -2618,6 +2622,10 @@ export default function PrototipoEliminatoriasV3() {
                 ✅ Confirmar quiniela (bloqueado — incompleta)
               </button>
             </div>
+          ) : filled === totalOpenCount && !confirmed && !isOpen ? (
+            <div className="w-full bg-slate-200 text-slate-500 font-extrabold py-3 rounded-xl text-sm text-center cursor-not-allowed">
+              ⛔ Plazo cerrado · Dieciseisavos en curso
+            </div>
           ) : filled === totalOpenCount && !confirmed ? (
             <button
               onClick={() => { storePicks(picks); setConfirmed(true); setToast('🎉 ¡Quiniela confirmada!') }}
@@ -2973,19 +2981,22 @@ export default function PrototipoEliminatoriasV3() {
 
                       {/* Action button */}
                       <div className="px-4 pb-3">
-                        <button
-                          onClick={() => setView('resultados')}
-                          className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all touch-manipulation ${
-                            isFinished
-                              ? 'bg-yellow-400 hover:bg-yellow-500 text-slate-900'
-                              : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                          }`}
-                        >
-                          {isFinished
-                            ? `🏆 Ver puntos (${DEMO_PRED_COUNT})`
-                            : `👁️ Ver pronósticos (${DEMO_PRED_COUNT})`
-                          }
-                        </button>
+                        {isOpen ? (
+                          <div className="w-full py-2.5 rounded-xl text-xs font-bold text-center bg-slate-100 text-slate-400">
+                            🔒 Pronósticos disponibles al cierre
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setView('resultados')}
+                            className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all touch-manipulation ${
+                              isFinished
+                                ? 'bg-yellow-400 hover:bg-yellow-500 text-slate-900'
+                                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                            }`}
+                          >
+                            {isFinished ? `🏆 Ver puntos (${DEMO_PRED_COUNT})` : `👁️ Ver pronósticos (${DEMO_PRED_COUNT})`}
+                          </button>
+                        )}
                       </div>
                     </div>
                   )
@@ -3359,7 +3370,7 @@ export default function PrototipoEliminatoriasV3() {
           </div>
         </div>
 
-        <button onClick={() => setView('home')} className="w-full text-slate-400 text-xs py-2 hover:text-slate-600 transition-colors">
+        <button onClick={() => router.push('/')} className="w-full text-slate-400 text-xs py-2 hover:text-slate-600 transition-colors">
           ← Volver al inicio
         </button>
       </div>
@@ -3433,7 +3444,7 @@ export default function PrototipoEliminatoriasV3() {
                 Ingresar
               </button>
               <button
-                onClick={() => setView('home')}
+                onClick={() => router.push('/')}
                 className="w-full mt-2 text-slate-500 hover:text-slate-300 text-xs py-2 transition-colors"
               >
                 ← Volver al inicio
@@ -4178,6 +4189,7 @@ export default function PrototipoEliminatoriasV3() {
 
     async function handleConfirmExisting() {
       if (!lookupResult) return
+      if (!isOpen) { setToast('⛔ Inscripción cerrada. Los Dieciseisavos ya comenzaron.'); return }
       setLookupLoading(true)
       try {
         const res = await fetch('/api/ko/participants', {
@@ -4215,6 +4227,7 @@ export default function PrototipoEliminatoriasV3() {
     }
 
     async function handleNewSubmit() {
+      if (!isOpen) { setToast('⛔ Inscripción cerrada. Los Dieciseisavos ya comenzaron.'); return }
       const errs = validateNew(); setRegErrors(errs)
       if (Object.keys(errs).length > 0) return
       setLookupLoading(true)
@@ -4263,11 +4276,23 @@ export default function PrototipoEliminatoriasV3() {
 
     // ── Header ─────────────────────────────────────────────────────────────────
     const header = (
-      <div className="bg-gradient-to-r from-green-700 to-blue-700 rounded-2xl p-5 text-white mb-6 shadow-lg">
-        <button onClick={() => { setRegStep('choose'); setLookupQuery(''); setLookupResult(null); setRegErrors({}); setView('home') }}
-          className="text-green-200 text-xs mb-3 flex items-center gap-1 hover:text-white">← Volver</button>
-        <h1 className="text-xl font-extrabold mb-0.5">📝 Inscripción</h1>
-        <p className="text-green-200 text-sm">Quiniela Eliminatorias 2026 · Mundial 2026</p>
+      <div className="mb-6">
+        <div className="bg-gradient-to-r from-green-700 to-blue-700 rounded-2xl p-5 text-white shadow-lg">
+          <button onClick={() => { setRegStep('choose'); setLookupQuery(''); setLookupResult(null); setRegErrors({}); router.push('/') }}
+            className="text-green-200 text-xs mb-3 flex items-center gap-1 hover:text-white">← Volver</button>
+          <h1 className="text-xl font-extrabold mb-0.5">📝 Inscripción</h1>
+          <p className="text-green-200 text-sm">Quiniela Eliminatorias 2026 · Mundial 2026</p>
+        </div>
+        {!isOpen && (
+          <div className="mt-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 font-semibold text-center">
+            ⛔ Inscripción cerrada · Dieciseisavos en curso
+          </div>
+        )}
+        {isOpen && (
+          <div className="mt-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-700 font-semibold text-center">
+            ✅ Inscripción abierta · Cierra hoy a las 3:00 p.m. VET
+          </div>
+        )}
       </div>
     )
 
@@ -4699,6 +4724,7 @@ export default function PrototipoEliminatoriasV3() {
               <button
                 key={item.id}
                 onClick={() => {
+                  if (item.id === 'home') { router.push('/'); return }
                   if (item.id === 'llenado' && !participantSession && !adminUnlocked) {
                     setView('registro'); return
                   }
