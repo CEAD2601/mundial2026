@@ -53,7 +53,7 @@ dev.db
 /public/uploads
 /uploads
 
-# Prisma config override
-prisma.config.ts
+# Prisma config — debe estar en git para Vercel
+# prisma.config.ts
 
 .vercel
