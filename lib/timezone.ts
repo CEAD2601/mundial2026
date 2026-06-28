@@ -17,9 +17,13 @@ export function formatMatchDate(utcDate: Date): string {
 }
 
 export function formatMatchTime(utcDate: Date): string {
+  return formatVenezuelaTime(utcDate, 'HH:mm')
+}
+
+export function formatMatchTimePublic(utcDate: Date): string {
   return formatVenezuelaTime(utcDate, 'h:mm a')
 }
 
 export function formatMatchDateTime(utcDate: Date): string {
-  return formatVenezuelaTime(utcDate, "d MMM, h:mm a")
+  return formatVenezuelaTime(utcDate, 'd MMM, HH:mm')
 }

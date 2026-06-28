@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { formatMatchDate, formatMatchTime } from '@/lib/timezone'
+import { formatMatchDate, formatMatchTimePublic } from '@/lib/timezone'
 import { AlertCircle, Save, ArrowRight, CheckCircle, Minus, Plus, Lock } from 'lucide-react'
 import TeamFlag from '@/components/TeamFlag'
 import { isRegistrationOpen } from '@/lib/deadline'
@@ -98,7 +98,7 @@ function MatchCard({
 }) {
   const kickoff = new Date(match.kickoffUtc)
   const dateStr = formatMatchDate(kickoff)
-  const timeStr = formatMatchTime(kickoff)
+  const timeStr = formatMatchTimePublic(kickoff)
   const current = pick ?? { team1Goals: 0, team2Goals: 0 }
   const hasPick = pick !== undefined
   const result =

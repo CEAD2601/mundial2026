@@ -16,6 +16,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { runLiveResultsUpdate } from '@/lib/liveResultsService'
+import { prisma } from '@/lib/prisma'
 
 function validateCronSecret(req: NextRequest): boolean {
   const cronSecret = process.env.CRON_SECRET?.trim()
@@ -49,14 +50,30 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 503 })
   }
   if (!validateCronSecret(req)) {
+    await prisma.liveResultsLog.create({
+      data: { type: 'CRON_UNAUTHORIZED', message: 'Unauthorized cron attempt — check Authorization header and CRON_SECRET match' },
+    }).catch(() => {})
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  await prisma.liveResultsLog.create({
+    data: { type: 'EXTERNAL_CRON_RUN_STARTED', message: 'External cron started (cron-job.org)' },
+  }).catch(() => {})
+
   try {
     const summary = await runLiveResultsUpdate()
-    return NextResponse.json({ success: true, summary })
+    await prisma.liveResultsLog.create({
+      data: {
+        type: 'EXTERNAL_CRON_RUN_COMPLETED',
+        message: `External cron completed: ${summary.matchesChecked} checked, ${summary.resultsAutoApplied} applied, ${summary.resultsPendingReview} pending`,
+      },
+    }).catch(() => {})
+    return NextResponse.json({ success: true, source: 'external-cron', summary })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Error interno'
+    await prisma.liveResultsLog.create({
+      data: { type: 'EXTERNAL_CRON_RUN_ERROR', message: `External cron error: ${message}` },
+    }).catch(() => {})
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

@@ -150,7 +150,7 @@ function MatchCard({ match, now }: { match: Match; now: Date }) {
   const isStarted = now >= kickoff
 
   const vetTime = kickoff.toLocaleTimeString('es-VE', {
-    timeZone: 'America/Caracas', hour: '2-digit', minute: '2-digit',
+    timeZone: 'America/Caracas', hour: 'numeric', minute: '2-digit', hour12: true,
   })
   const vetDate = kickoff.toLocaleDateString('es-VE', {
     timeZone: 'America/Caracas', day: 'numeric', month: 'short',

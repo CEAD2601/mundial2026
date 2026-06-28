@@ -14,7 +14,15 @@ export async function GET(
   const { matchId } = await params
 
   const [match, settings] = await Promise.all([
-    prisma.match.findUnique({ where: { id: matchId }, include: { team1: true, team2: true } }),
+    prisma.match.findUnique({
+      where: { id: matchId },
+      select: {
+        id: true, matchNumber: true, group: true, kickoffUtc: true,
+        status: true, team1Goals: true, team2Goals: true, result: true,
+        team1: { select: { displayName: true, flagEmoji: true, shortName: true } },
+        team2: { select: { displayName: true, flagEmoji: true, shortName: true } },
+      },
+    }),
     prisma.setting.findFirst({ select: { poolStatus: true } }),
   ])
   if (!match) return NextResponse.json({ error: 'Partido no encontrado' }, { status: 404 })

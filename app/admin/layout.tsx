@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 // Emoji constants as JS string escapes (safe on any OS/encoding)
 const IC_GLOBE  = '\u{1F310}'  // 🌐
@@ -55,6 +55,69 @@ function NavLinks({ onSelect }: { onSelect?: () => void }) {
         </Link>
       </div>
     </>
+  )
+}
+
+// ── STAGE TYPES ──────────────────────────────────────────────────────────────
+export type AdminPhase = 'group_stage' | 'knockout_round_32' | 'knockout_round_16_to_final'
+
+const PHASES: { key: AdminPhase; label: string; short: string; status: string }[] = [
+  { key: 'group_stage',                label: 'Fase de Grupos',   short: 'Grupos',       status: 'Histórico'    },
+  { key: 'knockout_round_32',          label: 'Dieciseisavos',    short: 'Dieciseisavos', status: 'Activa'      },
+  { key: 'knockout_round_16_to_final', label: 'Octavos a Final',  short: 'Octavos+',     status: 'Próximamente' },
+]
+
+const PHASE_COLORS: Record<AdminPhase, string> = {
+  group_stage:                'bg-slate-600',
+  knockout_round_32:          'bg-green-600',
+  knockout_round_16_to_final: 'bg-blue-600',
+}
+
+function StageBannerInner() {
+  const searchParams = useSearchParams()
+  const router       = useRouter()
+  const pathname     = usePathname()
+  const phase = (searchParams.get('phase') ?? 'group_stage') as AdminPhase
+  const current = PHASES.find(p => p.key === phase) ?? PHASES[0]
+
+  const navigate = (key: AdminPhase) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('phase', key)
+    router.push(`${pathname}?${params.toString()}`)
+  }
+
+  return (
+    <div className="bg-slate-800 text-white px-4 py-2 flex flex-col sm:flex-row sm:items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0">
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${PHASE_COLORS[phase]}`}>
+          {current.status}
+        </span>
+        <span className="text-xs text-slate-300 font-medium hidden sm:inline">Etapa:</span>
+      </div>
+      <div className="flex gap-1 overflow-x-auto scrollbar-none">
+        {PHASES.map(p => (
+          <button
+            key={p.key}
+            onClick={() => navigate(p.key)}
+            className={`shrink-0 text-xs px-3 py-1 rounded-lg font-semibold transition-colors border ${
+              phase === p.key
+                ? 'bg-white text-slate-900 border-white'
+                : 'bg-white/10 text-slate-300 border-white/20 hover:bg-white/20 hover:text-white'
+            }`}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function StageBanner() {
+  return (
+    <Suspense fallback={<div className="bg-slate-800 h-10" />}>
+      <StageBannerInner />
+    </Suspense>
   )
 }
 
@@ -166,6 +229,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* ── MAIN CONTENT ────────────────────────────────────────── */}
       <main className="md:ml-56 min-h-screen overflow-x-hidden">
+        <StageBanner />
         {children}
       </main>
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 
 interface Team {
   displayName: string
@@ -44,6 +44,9 @@ interface LiveStatus {
   source: string
   autoApply: boolean
   lastRunAt: string | null
+  lastExternalCronAt: string | null
+  lastCronUnauthorizedAt: string | null
+  nextCronAt: string | null
   lastRunMessage: string | null
 }
 
@@ -54,9 +57,7 @@ interface UpcomingCheck {
   team2: { displayName: string; flagEmoji: string }
   kickoffUtc: string
   firstCheckAt: string
-  lastAutoCheckAt: string | null
-  autoCheckAttempts: number
-  status: 'WAITING' | 'CHECKING' | 'REQUIRES_MANUAL'
+  status: 'WAITING' | 'LIVE_WAITING' | 'CHECKING' | 'REQUIRES_MANUAL'
 }
 
 interface LogEntry {
@@ -71,12 +72,27 @@ interface LogEntry {
   createdAt: string
 }
 
-const GROUPS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
+const VET = 'America/Caracas'
+
+function toVetDateKey(utc: string): string {
+  return new Date(utc).toLocaleDateString('sv-SE', { timeZone: VET })
+}
+
+function formatDateTab(dateKey: string, todayKey: string): string {
+  const [y, m, d] = dateKey.split('-').map(Number)
+  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+  const label = `${d} ${months[m - 1]}`
+  if (dateKey === todayKey) return `Hoy · ${label}`
+  // weekday
+  const dt = new Date(y, m - 1, d)
+  const days = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb']
+  return `${days[dt.getDay()]} ${label}`
+}
 
 export default function ResultadosAdminPage() {
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeGroup, setActiveGroup] = useState('A')
+  const [activeDate, setActiveDate] = useState<string | null>(null)
   const [scores, setScores] = useState<Record<string, { g1: string; g2: string }>>({})
   const [saving, setSaving] = useState<string | null>(null)
   const [recalculating, setRecalculating] = useState(false)
@@ -100,6 +116,32 @@ export default function ResultadosAdminPage() {
     errors: string[]
     timestamp: string
   } | null>(null)
+
+  const todayVet = useMemo(() => new Date().toLocaleDateString('sv-SE', { timeZone: VET }), [])
+
+  // Group matches by VET date, sorted by time within each day
+  const matchesByDate = useMemo(() => {
+    const groups: Record<string, Match[]> = {}
+    for (const m of matches) {
+      const key = toVetDateKey(m.kickoffUtc)
+      if (!groups[key]) groups[key] = []
+      groups[key].push(m)
+    }
+    for (const key of Object.keys(groups)) {
+      groups[key].sort((a, b) => new Date(a.kickoffUtc).getTime() - new Date(b.kickoffUtc).getTime())
+    }
+    return groups
+  }, [matches])
+
+  const sortedDates = useMemo(() => Object.keys(matchesByDate).sort(), [matchesByDate])
+
+  // Effective active date: user selection → today → nearest future → last past
+  const effectiveDate = useMemo(() => {
+    if (activeDate !== null && matchesByDate[activeDate]) return activeDate
+    if (matchesByDate[todayVet]) return todayVet
+    const future = sortedDates.find((d) => d >= todayVet)
+    return future ?? sortedDates[sortedDates.length - 1] ?? ''
+  }, [activeDate, matchesByDate, sortedDates, todayVet])
 
   const loadMatches = useCallback(async () => {
     const res = await fetch('/api/results')
@@ -217,8 +259,6 @@ export default function ResultadosAdminPage() {
     }
   }
 
-  const groupMatches = matches.filter((m) => m.group === activeGroup)
-
   const confidenceBadge = (c: string | null) => {
     if (c === 'HIGH') return 'bg-green-100 text-green-700'
     if (c === 'MEDIUM') return 'bg-yellow-100 text-yellow-700'
@@ -232,6 +272,8 @@ export default function ResultadosAdminPage() {
     if (t === 'ERROR') return 'bg-red-100 text-red-700'
     return 'bg-slate-100 text-slate-600'
   }
+
+  const dateMatches = matchesByDate[effectiveDate] ?? []
 
   return (
     <div className="p-4 sm:p-6">
@@ -281,103 +323,119 @@ export default function ResultadosAdminPage() {
       {/* ── MANUAL TAB ──────────────────────────────────────────────── */}
       {activeTab === 'manual' && (
         <>
-          {/* Group tabs */}
-          <div className="flex gap-1 mb-4 overflow-x-auto pb-1">
-            {GROUPS.map((g) => (
-              <button
-                key={g}
-                onClick={() => setActiveGroup(g)}
-                className={`shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
-                  activeGroup === g
-                    ? 'bg-green-600 text-white'
-                    : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                {g}
-              </button>
-            ))}
-          </div>
-
+          {/* Date tabs */}
           {loading ? (
             <div className="text-center py-12 text-slate-400">Cargando...</div>
           ) : (
-            <div className="space-y-3">
-              {groupMatches.map((match) => {
-                const s = scores[match.id] ?? { g1: '', g2: '' }
-                const isFinished = match.status === 'FINISHED'
-                return (
-                  <div
-                    key={match.id}
-                    className={`bg-white rounded-xl border p-4 shadow-sm ${
-                      isFinished ? 'border-green-200' : 'border-slate-100'
+            <>
+              <div className="flex gap-1 mb-4 overflow-x-auto pb-1">
+                {sortedDates.map((dateKey) => (
+                  <button
+                    key={dateKey}
+                    onClick={() => setActiveDate(dateKey)}
+                    className={`shrink-0 px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                      effectiveDate === dateKey
+                        ? 'bg-green-600 text-white'
+                        : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-slate-400">Partido #{match.matchNumber}</span>
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded-full ${
-                          isFinished ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
+                    {formatDateTab(dateKey, todayVet)}
+                  </button>
+                ))}
+              </div>
+
+              <div className="space-y-3">
+                {dateMatches.length === 0 ? (
+                  <div className="text-center py-12 text-slate-400 text-sm">
+                    No hay partidos para esta fecha
+                  </div>
+                ) : (
+                  dateMatches.map((match) => {
+                    const s = scores[match.id] ?? { g1: '', g2: '' }
+                    const isFinished = match.status === 'FINISHED'
+                    const timeVet = new Date(match.kickoffUtc).toLocaleTimeString('sv-SE', {
+                      timeZone: VET,
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: false,
+                    })
+                    return (
+                      <div
+                        key={match.id}
+                        className={`bg-white rounded-xl border p-4 shadow-sm ${
+                          isFinished ? 'border-green-200' : 'border-slate-100'
                         }`}
                       >
-                        {isFinished ? 'Finalizado' : 'Programado'}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 flex items-center gap-2">
-                        <span className="text-xl">{match.team1.flagEmoji}</span>
-                        <span className="font-semibold text-slate-800 text-sm">{match.team1.displayName}</span>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs text-slate-400">
+                            Partido #{match.matchNumber} · Grupo {match.group} · {timeVet} VET
+                          </span>
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded-full ${
+                              isFinished ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
+                            }`}
+                          >
+                            {isFinished ? 'Finalizado' : 'Programado'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 flex items-center gap-2">
+                            <span className="text-xl">{match.team1.flagEmoji}</span>
+                            <span className="font-semibold text-slate-800 text-sm">{match.team1.displayName}</span>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <input
+                              type="number"
+                              min="0"
+                              max="20"
+                              value={s.g1}
+                              onChange={(e) =>
+                                setScores({ ...scores, [match.id]: { ...s, g1: e.target.value } })
+                              }
+                              className="w-12 text-center border border-slate-300 rounded-lg py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                            />
+                            <span className="text-slate-400 font-bold">—</span>
+                            <input
+                              type="number"
+                              min="0"
+                              max="20"
+                              value={s.g2}
+                              onChange={(e) =>
+                                setScores({ ...scores, [match.id]: { ...s, g2: e.target.value } })
+                              }
+                              className="w-12 text-center border border-slate-300 rounded-lg py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                            />
+                            <button
+                              onClick={() => saveResult(match.id)}
+                              disabled={saving === match.id || s.g1 === '' || s.g2 === ''}
+                              className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors ml-1"
+                            >
+                              {saving === match.id ? '...' : 'Guardar'}
+                            </button>
+                          </div>
+                          <div className="flex-1 flex items-center gap-2 justify-end">
+                            <span className="font-semibold text-slate-800 text-sm text-right">
+                              {match.team2.displayName}
+                            </span>
+                            <span className="text-xl">{match.team2.flagEmoji}</span>
+                          </div>
+                        </div>
+                        {isFinished && match.result && (
+                          <div className="mt-2 text-center text-xs text-green-600 font-medium">
+                            Resultado:{' '}
+                            {match.result === 'G1'
+                              ? `Gana ${match.team1.shortName}`
+                              : match.result === 'G2'
+                              ? `Gana ${match.team2.shortName}`
+                              : 'Empate'}
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <input
-                          type="number"
-                          min="0"
-                          max="20"
-                          value={s.g1}
-                          onChange={(e) =>
-                            setScores({ ...scores, [match.id]: { ...s, g1: e.target.value } })
-                          }
-                          className="w-12 text-center border border-slate-300 rounded-lg py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                        />
-                        <span className="text-slate-400 font-bold">—</span>
-                        <input
-                          type="number"
-                          min="0"
-                          max="20"
-                          value={s.g2}
-                          onChange={(e) =>
-                            setScores({ ...scores, [match.id]: { ...s, g2: e.target.value } })
-                          }
-                          className="w-12 text-center border border-slate-300 rounded-lg py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                        />
-                        <button
-                          onClick={() => saveResult(match.id)}
-                          disabled={saving === match.id || s.g1 === '' || s.g2 === ''}
-                          className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors ml-1"
-                        >
-                          {saving === match.id ? '...' : 'Guardar'}
-                        </button>
-                      </div>
-                      <div className="flex-1 flex items-center gap-2 justify-end">
-                        <span className="font-semibold text-slate-800 text-sm text-right">
-                          {match.team2.displayName}
-                        </span>
-                        <span className="text-xl">{match.team2.flagEmoji}</span>
-                      </div>
-                    </div>
-                    {isFinished && match.result && (
-                      <div className="mt-2 text-center text-xs text-green-600 font-medium">
-                        Resultado:{' '}
-                        {match.result === 'G1'
-                          ? `Gana ${match.team1.shortName}`
-                          : match.result === 'G2'
-                          ? `Gana ${match.team2.shortName}`
-                          : 'Empate'}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
+                    )
+                  })
+                )}
+              </div>
+            </>
           )}
         </>
       )}
@@ -399,7 +457,7 @@ export default function ResultadosAdminPage() {
                     <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
                     Buscando resultados…
                   </>
-                ) : '▶ Actualizar ahora'}
+                ) : '▶ Actualizar ahora (manual)'}
               </button>
             </div>
 
@@ -426,25 +484,67 @@ export default function ResultadosAdminPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 bg-slate-50 rounded-xl p-3">
-                  <span className="text-lg">🤖</span>
-                  <div>
-                    <div className="text-xs text-slate-500">Auto-aplicar confianza alta</div>
-                    <div className="font-semibold text-sm text-slate-800">
-                      {liveStatus.autoApply ? 'Sí' : 'No (requiere revisión)'}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 bg-slate-50 rounded-xl p-3">
                   <span className="text-lg">🕐</span>
                   <div>
                     <div className="text-xs text-slate-500">Última ejecución</div>
                     <div className="font-semibold text-sm text-slate-800">
                       {liveStatus.lastRunAt
-                        ? new Date(liveStatus.lastRunAt).toLocaleString('es-VE')
+                        ? new Date(liveStatus.lastRunAt).toLocaleString('es-VE', { timeZone: VET })
                         : 'Nunca'}
                     </div>
                   </div>
                 </div>
+                <div className="flex items-center gap-3 bg-slate-50 rounded-xl p-3">
+                  <span className="text-lg">⏭</span>
+                  <div>
+                    <div className="text-xs text-slate-500">Próxima ejecución estimada</div>
+                    <div className="font-semibold text-sm text-slate-800">
+                      {liveStatus.nextCronAt
+                        ? new Date(liveStatus.nextCronAt).toLocaleString('es-VE', { timeZone: VET })
+                        : 'Pendiente configurar cron'}
+                    </div>
+                  </div>
+                </div>
+                {/* External cron health indicator */}
+                {(() => {
+                  const lastExt = liveStatus.lastExternalCronAt ? new Date(liveStatus.lastExternalCronAt) : null
+                  const minsSince = lastExt ? (Date.now() - lastExt.getTime()) / 60000 : null
+                  const hasUnauth = !!liveStatus.lastCronUnauthorizedAt
+                  const cronOk = minsSince !== null && minsSince <= 15
+                  const cronStale = minsSince !== null && minsSince > 15 && minsSince <= 60
+                  const cronNever = minsSince === null
+                  const cronMissing = minsSince === null || minsSince > 60
+                  return (
+                    <div className={`flex items-center gap-3 rounded-xl p-3 col-span-2 ${
+                      cronOk ? 'bg-green-50' : cronStale ? 'bg-amber-50' : 'bg-red-50'
+                    }`}>
+                      <span className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                        cronOk ? 'bg-green-500 animate-pulse' : cronStale ? 'bg-amber-400' : 'bg-red-400'
+                      }`} />
+                      <div>
+                        <div className={`text-xs font-semibold ${
+                          cronOk ? 'text-green-700' : cronStale ? 'text-amber-700' : 'text-red-700'
+                        }`}>
+                          Cron externo: {cronOk ? 'Detectado y funcionando' : cronStale ? 'Sin ejecución reciente' : cronNever ? 'Pendiente de primera ejecución' : 'Sin ejecución en >60 min'}
+                        </div>
+                        <div className={`text-xs mt-0.5 ${
+                          cronOk ? 'text-green-600' : cronStale ? 'text-amber-600' : 'text-red-600'
+                        }`}>
+                          {cronNever && !hasUnauth && 'Esperando primera ejecución externa desde cron-job.org'}
+                          {cronNever && hasUnauth && '⚠️ Error de autorización detectado — verifica que el CRON_SECRET coincida en Vercel y cron-job.org'}
+                          {!cronNever && cronOk && `Última ejecución hace ${Math.round(minsSince!)} min — OK`}
+                          {!cronNever && cronStale && `Última ejecución hace ${Math.round(minsSince!)} min — verifica cron-job.org`}
+                          {!cronNever && cronMissing && !cronStale && `Última ejecución hace ${Math.round(minsSince!)} min — posible problema`}
+                        </div>
+                        {lastExt && (
+                          <div className="text-xs text-slate-500 mt-0.5">
+                            {new Date(liveStatus.lastExternalCronAt!).toLocaleString('es-VE', { timeZone: 'America/Caracas' })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
             )}
 
@@ -462,11 +562,8 @@ export default function ResultadosAdminPage() {
                   <p className="text-green-700 mt-1">Ventana de revisión: desde 2 horas después del inicio hasta 6 horas. Reintento cada 10 minutos.</p>
                 </div>
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-sm text-blue-800">
-                  <p className="font-semibold mb-1">⏱ Estado del cron automático</p>
-                  <ul className="space-y-0.5 text-blue-700">
-                    <li>• Vercel Cron: corre una vez al día (3:00 AM UTC) — limitación del plan Hobby</li>
-                    <li>• Para cron cada 10 min: requiere configurar <strong>cron-job.org</strong> (ver abajo)</li>
-                  </ul>
+                  <p className="font-semibold mb-1">⏱ Motor de automatización: cron-job.org</p>
+                  <p className="text-blue-700">El cron externo en <strong>cron-job.org</strong> es el motor principal que ejecuta cada 10 minutos. Vercel Cron (plan Hobby) no se usa como motor principal porque solo permite ejecuciones diarias.</p>
                 </div>
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
                   <p className="font-semibold mb-2">📋 Configurar cron cada 10 minutos (una sola vez)</p>
@@ -474,7 +571,7 @@ export default function ResultadosAdminPage() {
                     <li>Ir a <strong>cron-job.org</strong> → crear cuenta gratis</li>
                     <li>Nuevo cron job → URL: <code className="bg-amber-100 px-1 rounded">https://mundial2026-nine-psi.vercel.app/api/cron/update-live-results</code></li>
                     <li>Método: GET · Intervalo: cada 10 minutos</li>
-                    <li>Header: <code className="bg-amber-100 px-1 rounded">Authorization: Bearer 7EuU0JAH6oN9rxyvCjOe3BFTIZlSKdzwYbGWRq1i</code></li>
+                    <li>Header: <code className="bg-amber-100 px-1 rounded">Authorization: Bearer [valor de CRON_SECRET en Vercel]</code></li>
                     <li>Guardar y activar</li>
                   </ol>
                 </div>
@@ -514,37 +611,49 @@ export default function ResultadosAdminPage() {
                   </div>
                 )}
                 <p className="text-xs text-slate-400 text-center mt-2">
-                  {new Date(cronSummary.timestamp).toLocaleString('es-VE')}
+                  {new Date(cronSummary.timestamp).toLocaleString('es-VE', { timeZone: VET })}
                 </p>
               </div>
             )}
           </div>
 
-          {/* Upcoming auto-checks */}
-          {upcomingChecks.length > 0 && (
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b border-slate-100">
-                <h2 className="font-bold text-slate-800">Próximas revisiones automáticas</h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Cada partido se revisa automáticamente 105 minutos después de su inicio.
-                </p>
+          {/* Upcoming auto-checks — always visible */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100">
+              <h2 className="font-bold text-slate-800">Próximas revisiones automáticas</h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                El cron revisa cada 10 min si algún partido llegó a su hora. Primera revisión = inicio + 2 h. Si no hay resultado final, reintenta cada 10 min.
+              </p>
+            </div>
+            {upcomingChecks.length === 0 ? (
+              <div className="py-8 text-center text-slate-400 text-sm">
+                No hay revisiones automáticas pendientes
               </div>
+            ) : (
               <div className="divide-y divide-slate-50">
                 {upcomingChecks.map((m) => {
-                  const kickoffVet = new Date(m.kickoffUtc).toLocaleString('es-VE', {
-                    timeZone: 'America/Caracas',
-                    month: 'short', day: 'numeric',
-                    hour: '2-digit', minute: '2-digit',
+                  const kickoffVet = new Date(m.kickoffUtc).toLocaleString('sv-SE', {
+                    timeZone: VET,
+                    weekday: 'short', month: 'short', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit', hour12: false,
                   })
-                  const firstCheckVet = new Date(m.firstCheckAt).toLocaleString('es-VE', {
-                    timeZone: 'America/Caracas',
-                    hour: '2-digit', minute: '2-digit',
+                  const firstCheckVet = new Date(m.firstCheckAt).toLocaleString('sv-SE', {
+                    timeZone: VET,
+                    hour: '2-digit', minute: '2-digit', hour12: false,
                   })
-                  const statusConfig = {
-                    WAITING: { label: 'Esperando inicio', color: 'bg-slate-100 text-slate-600' },
-                    CHECKING: { label: 'En revisión', color: 'bg-blue-100 text-blue-700' },
-                    REQUIRES_MANUAL: { label: 'Rev. manual', color: 'bg-red-100 text-red-700' },
-                  }[m.status]
+                  const nextAttemptVet = liveStatus?.nextCronAt
+                    ? new Date(liveStatus.nextCronAt).toLocaleString('sv-SE', {
+                        timeZone: VET,
+                        hour: '2-digit', minute: '2-digit', hour12: false,
+                      })
+                    : null
+                  const statusConfig: Record<string, { label: string; color: string }> = {
+                    WAITING:        { label: 'Programado',           color: 'bg-slate-100 text-slate-600' },
+                    LIVE_WAITING:   { label: 'En juego · espera 2h', color: 'bg-blue-100 text-blue-700' },
+                    CHECKING:       { label: 'En revisión',          color: 'bg-green-100 text-green-700' },
+                    REQUIRES_MANUAL:{ label: 'Rev. manual',          color: 'bg-red-100 text-red-700' },
+                  }
+                  const sc = statusConfig[m.status] ?? statusConfig.WAITING
                   return (
                     <div key={m.id} className="px-5 py-3 flex items-center gap-3">
                       <div className="flex-1 min-w-0">
@@ -552,19 +661,30 @@ export default function ResultadosAdminPage() {
                           {m.team1.flagEmoji} {m.team1.displayName} vs {m.team2.displayName} {m.team2.flagEmoji}
                         </div>
                         <div className="text-xs text-slate-400 mt-0.5">
-                          Inicio: {kickoffVet} · Primera revisión: {firstCheckVet}
-                          {m.autoCheckAttempts > 0 && ` · Intentos: ${m.autoCheckAttempts}`}
+                          <span>Inicio: {kickoffVet}</span>
+                          {(m.status === 'WAITING' || m.status === 'LIVE_WAITING') && (
+                            <span> · Primera revisión: {firstCheckVet}</span>
+                          )}
+                          {m.status === 'CHECKING' && nextAttemptVet && (
+                            <span> · Próximo intento: {nextAttemptVet}</span>
+                          )}
+                          {m.status === 'CHECKING' && !nextAttemptVet && (
+                            <span> · Primera revisión: {firstCheckVet}</span>
+                          )}
+                          {m.status === 'REQUIRES_MANUAL' && (
+                            <span> · Venció el plazo automático</span>
+                          )}
                         </div>
                       </div>
-                      <span className={`text-xs font-bold px-2 py-1 rounded-full shrink-0 ${statusConfig.color}`}>
-                        {statusConfig.label}
+                      <span className={`text-xs font-bold px-2 py-1 rounded-full shrink-0 ${sc.color}`}>
+                        {sc.label}
                       </span>
                     </div>
                   )
                 })}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Pending confirmation */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -621,7 +741,7 @@ export default function ResultadosAdminPage() {
                       <div className="text-xs text-blue-500 mt-1">
                         Fuente: {m.autoDetectedSource ?? 'desconocida'} ·{' '}
                         {m.autoDetectedAt
-                          ? new Date(m.autoDetectedAt).toLocaleString('es-VE')
+                          ? new Date(m.autoDetectedAt).toLocaleString('es-VE', { timeZone: VET })
                           : ''}
                       </div>
                     </div>
@@ -728,7 +848,7 @@ export default function ResultadosAdminPage() {
                     <div className="flex-1 min-w-0">
                       <div className="text-sm text-slate-700 truncate">{log.message}</div>
                       <div className="text-xs text-slate-400 mt-0.5">
-                        {new Date(log.createdAt).toLocaleString('es-VE')}
+                        {new Date(log.createdAt).toLocaleString('es-VE', { timeZone: VET })}
                         {log.source && ` · ${log.source}`}
                         {log.confidence && ` · ${log.confidence}`}
                       </div>

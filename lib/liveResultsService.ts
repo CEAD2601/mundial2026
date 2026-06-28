@@ -364,6 +364,7 @@ async function applyResultToDb(
       resultSource: source,
       autoResultStatus: 'CONFIRMED',
     },
+    select: { id: true },
   })
 
   // 3. Recalculate predictions for this match
@@ -397,7 +398,7 @@ async function applyResultToDb(
 async function recalculateParticipantRanking(participantId: string) {
   const predictions = await prisma.prediction.findMany({
     where: { participantId },
-    include: { match: true },
+    include: { match: { select: { status: true } } },
   })
 
   const played = predictions.filter((p) => p.match.status === 'FINISHED')
@@ -625,6 +626,7 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
             autoDetectedAt: new Date(),
             autoResultStatus: 'PENDING_REVIEW',
           },
+          select: { id: true },
         })
         summary.resultsPendingReview++
 
@@ -676,7 +678,19 @@ export async function runLiveResultsUpdate(): Promise<CronRunSummary> {
 }
 
 export async function confirmAutoResult(matchId: string): Promise<void> {
-  const match = await prisma.match.findUnique({ where: { id: matchId } })
+  const match = await prisma.match.findUnique({
+    where: { id: matchId },
+    select: {
+      id: true,
+      autoDetectedTeam1Goals: true,
+      autoDetectedTeam2Goals: true,
+      autoDetectedSource: true,
+      autoDetectedResult: true,
+      autoDetectionConfidence: true,
+      autoDetectedAt: true,
+      autoResultStatus: true,
+    },
+  })
   if (!match) throw new Error('Partido no encontrado')
   if (match.autoDetectedTeam1Goals === null || match.autoDetectedTeam2Goals === null) {
     throw new Error('No hay resultado automático pendiente para este partido')
@@ -703,6 +717,7 @@ export async function rejectAutoResult(matchId: string): Promise<void> {
   await prisma.match.update({
     where: { id: matchId },
     data: { autoResultStatus: 'REJECTED' },
+    select: { id: true },
   })
 
   await prisma.liveResultsLog.create({

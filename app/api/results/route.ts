@@ -16,7 +16,11 @@ export async function POST(req: NextRequest) {
 
     const match = await prisma.match.findUnique({
       where: { id: data.matchId },
-      include: { team1: true, team2: true },
+      select: {
+        matchNumber: true,
+        team1: { select: { shortName: true, displayName: true } },
+        team2: { select: { shortName: true, displayName: true } },
+      },
     })
     if (!match) return NextResponse.json({ error: 'Partido no encontrado' }, { status: 404 })
 
@@ -52,7 +56,12 @@ export async function POST(req: NextRequest) {
 
 export async function GET() {
   const matches = await prisma.match.findMany({
-    include: { team1: true, team2: true },
+    select: {
+      id: true, matchNumber: true, group: true, kickoffUtc: true,
+      status: true, team1Goals: true, team2Goals: true, result: true,
+      team1: { select: { displayName: true, flagEmoji: true, shortName: true } },
+      team2: { select: { displayName: true, flagEmoji: true, shortName: true } },
+    },
     orderBy: { kickoffUtc: 'asc' },
   })
   return NextResponse.json({ matches })

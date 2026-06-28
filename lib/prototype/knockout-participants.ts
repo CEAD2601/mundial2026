@@ -26,6 +26,7 @@ export interface KORankingEntry {
   totalPoints: number
   exactScores: number
   correctResults: number
+  penaltyCorrects: number   // partidos empatados con ganador por penales correcto (+1 pt c/u)
   wrongPredictions: number
   playedMatches: number
   previousPosition: number | null
@@ -45,18 +46,18 @@ export const PREV_PARTICIPANTS: KOParticipant[] = []
 // Con movimientos de posición (demo con 0 partidos jugados = todos empatan)
 
 export const KO_DEMO_RANKING: KORankingEntry[] = [
-  { cedula: '12345678', displayName: 'Carlos Acosta',    ciudad: 'Caracas',     totalPoints: 0, exactScores: 0, correctResults: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
-  { cedula: '8765432',  displayName: 'María López',      ciudad: 'Valencia',    totalPoints: 0, exactScores: 0, correctResults: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
-  { cedula: '15234567', displayName: 'José Ramírez',     ciudad: 'Maracaibo',   totalPoints: 0, exactScores: 0, correctResults: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
-  { cedula: '11987654', displayName: 'Luisa Torres',     ciudad: 'Barquisimeto',totalPoints: 0, exactScores: 0, correctResults: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
-  { cedula: '9876543',  displayName: 'Andrés Morales',   ciudad: 'Caracas',     totalPoints: 0, exactScores: 0, correctResults: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
-  { cedula: '14321987', displayName: 'Valentina Díaz',   ciudad: 'Mérida',      totalPoints: 0, exactScores: 0, correctResults: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
-  { cedula: '6789012',  displayName: 'Roberto Jiménez',  ciudad: 'Caracas',     totalPoints: 0, exactScores: 0, correctResults: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
-  { cedula: '13456789', displayName: 'Gabriela Suárez',  ciudad: 'Valencia',    totalPoints: 0, exactScores: 0, correctResults: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
-  { cedula: '20123456', displayName: 'Daniel Pérez',     ciudad: 'Maracay',     totalPoints: 0, exactScores: 0, correctResults: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
-  { cedula: '18765432', displayName: 'Sofía Castillo',   ciudad: 'Caracas',     totalPoints: 0, exactScores: 0, correctResults: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
-  { cedula: '7654321',  displayName: 'Miguel Herrera',   ciudad: 'Barinas',     totalPoints: 0, exactScores: 0, correctResults: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
-  { cedula: '16543210', displayName: 'Paola Rojas',      ciudad: 'Maturín',     totalPoints: 0, exactScores: 0, correctResults: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
+  { cedula: '12345678', displayName: 'Carlos Acosta',    ciudad: 'Caracas',      totalPoints: 0, exactScores: 0, correctResults: 0, penaltyCorrects: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
+  { cedula: '8765432',  displayName: 'María López',      ciudad: 'Valencia',     totalPoints: 0, exactScores: 0, correctResults: 0, penaltyCorrects: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
+  { cedula: '15234567', displayName: 'José Ramírez',     ciudad: 'Maracaibo',    totalPoints: 0, exactScores: 0, correctResults: 0, penaltyCorrects: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
+  { cedula: '11987654', displayName: 'Luisa Torres',     ciudad: 'Barquisimeto', totalPoints: 0, exactScores: 0, correctResults: 0, penaltyCorrects: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
+  { cedula: '9876543',  displayName: 'Andrés Morales',   ciudad: 'Caracas',      totalPoints: 0, exactScores: 0, correctResults: 0, penaltyCorrects: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
+  { cedula: '14321987', displayName: 'Valentina Díaz',   ciudad: 'Mérida',       totalPoints: 0, exactScores: 0, correctResults: 0, penaltyCorrects: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
+  { cedula: '6789012',  displayName: 'Roberto Jiménez',  ciudad: 'Caracas',      totalPoints: 0, exactScores: 0, correctResults: 0, penaltyCorrects: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
+  { cedula: '13456789', displayName: 'Gabriela Suárez',  ciudad: 'Valencia',     totalPoints: 0, exactScores: 0, correctResults: 0, penaltyCorrects: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
+  { cedula: '20123456', displayName: 'Daniel Pérez',     ciudad: 'Maracay',      totalPoints: 0, exactScores: 0, correctResults: 0, penaltyCorrects: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
+  { cedula: '18765432', displayName: 'Sofía Castillo',   ciudad: 'Caracas',      totalPoints: 0, exactScores: 0, correctResults: 0, penaltyCorrects: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
+  { cedula: '7654321',  displayName: 'Miguel Herrera',   ciudad: 'Barinas',      totalPoints: 0, exactScores: 0, correctResults: 0, penaltyCorrects: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
+  { cedula: '16543210', displayName: 'Paola Rojas',      ciudad: 'Maturín',      totalPoints: 0, exactScores: 0, correctResults: 0, penaltyCorrects: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: 'verified' },
 ]
 
 // Storage keys para el prototipo

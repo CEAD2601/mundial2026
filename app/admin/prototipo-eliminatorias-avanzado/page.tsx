@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Minus, Plus, ArrowRight, Save, Lock, CheckCircle,
   Trophy, TrendingUp, TrendingDown, ChevronRight,
@@ -39,7 +40,7 @@ const DEMO_NAME   = 'Carlos Demo'
 const DEMO_CEDULA = '12345678'
 const DEMO_WA     = '04141234567'
 
-const ADMIN_CODE         = 'Ko2026!'
+const ADMIN_CODE         = 'CEAD2601'
 const ADMIN_SESSION_KEY  = 'ko-admin-session'
 
 type AdminModule = 'dashboard' | 'participantes' | 'pagos' | 'quinielas' | 'resultados' | 'ranking' | 'backups' | 'configuracion' | 'analiticas'
@@ -47,6 +48,78 @@ type AdminModule = 'dashboard' | 'participantes' | 'pagos' | 'quinielas' | 'resu
 function maskCedula(c: string) {
   if (c.length <= 4) return 'V-' + '•'.repeat(c.length)
   return 'V-' + c.slice(0, 2) + '••••' + c.slice(-2)
+}
+
+// ── Analytics tracking ────────────────────────────────────────────────────────
+
+const ANALYTICS_KEY   = 'ko-proto-v3-analytics'
+const VISITOR_ID_KEY  = 'ko-proto-v3-visitor-id'
+const ANALYTICS_MAX   = 300
+
+type AnalyticsEventName =
+  | 'HOME_VIEW' | 'RANKING_VIEW' | 'RESULTS_VIEW' | 'BRACKET_VIEW'
+  | 'STATS_VIEW' | 'MY_QUINIELA_VIEW' | 'PREDICTIONS_OPENED' | 'ENTRY_STARTED'
+  | 'ENTRY_CONFIRMED' | 'PARTICIPANT_LOOKUP' | 'PAYMENT_INFO_VIEWED' | 'ADMIN_LOGIN'
+  | 'PARTICIPANT_SESSION_RESTORED'
+
+interface AnalyticsEvent {
+  id: string
+  visitorId: string
+  event: AnalyticsEventName
+  route: string
+  timestamp: string
+  participantCedula: string | null
+  participantName: string | null
+  cedulaMasked: string | null
+  whatsappMasked: string | null
+  phase: 'knockout_r32' | null
+  isAdmin: boolean
+  device: 'mobile' | 'desktop'
+  browser: string
+}
+
+function genId() { return '_' + Math.random().toString(36).slice(2, 9) }
+
+function getOrCreateVisitorId(): string {
+  if (typeof window === 'undefined') return ''
+  let id = localStorage.getItem(VISITOR_ID_KEY)
+  if (!id) { id = genId(); localStorage.setItem(VISITOR_ID_KEY, id) }
+  return id
+}
+
+function detectDevice(): 'mobile' | 'desktop' {
+  if (typeof window === 'undefined') return 'desktop'
+  return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
+}
+
+function detectBrowser(): string {
+  if (typeof window === 'undefined') return 'Unknown'
+  const ua = navigator.userAgent
+  if (/Edg\//i.test(ua)) return 'Edge'
+  if (/Chrome/i.test(ua) && !/Chromium/i.test(ua)) return 'Chrome'
+  if (/Firefox/i.test(ua)) return 'Firefox'
+  if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) return 'Safari'
+  if (/OPR|Opera/i.test(ua)) return 'Opera'
+  return 'Other'
+}
+
+function maskWa(wa: string): string {
+  if (!wa || wa.length < 6) return wa
+  return wa.slice(0, 4) + '••••' + wa.slice(-3)
+}
+
+function loadAnalytics(): AnalyticsEvent[] {
+  if (typeof window === 'undefined') return []
+  try { return JSON.parse(localStorage.getItem(ANALYTICS_KEY) || '[]') } catch { return [] }
+}
+function saveAnalytics(events: AnalyticsEvent[]) {
+  // Keep latest ANALYTICS_MAX events (circular buffer)
+  const trimmed = events.slice(-ANALYTICS_MAX)
+  localStorage.setItem(ANALYTICS_KEY, JSON.stringify(trimmed))
+}
+function appendAnalyticsEvent(ev: AnalyticsEvent) {
+  const current = loadAnalytics()
+  saveAnalytics([...current, ev])
 }
 
 // ── Participant session ────────────────────────────────────────────────────────
@@ -85,6 +158,23 @@ function pickComplete(p: Pick | undefined): boolean {
   if (!p) return false
   if (p.home === p.away && !p.penaltyWinner) return false  // draw without penalty winner
   return true
+}
+
+// Central scoring function — max 5 pts per match:
+// +2 classified correct, +2 exact score, +1 penalty winner (only when real result is a draw)
+function calcKOPoints(
+  pick: Pick,
+  result: { home: number; away: number; penaltyWinner?: 'home' | 'away' | null }
+): { classified: number; exact: number; penalty: number; total: number } {
+  const realIsDraw  = result.home === result.away
+  const pickIsDraw  = pick.home === pick.away
+  const realWinner  = realIsDraw  ? result.penaltyWinner : (result.home > result.away ? 'home' : 'away')
+  const pickWinner  = pickIsDraw  ? pick.penaltyWinner   : (pick.home  > pick.away  ? 'home' : 'away')
+  const classified  = realWinner === pickWinner ? 2 : 0
+  const exact       = (pick.home === result.home && pick.away === result.away) ? 2 : 0
+  // Penalty bonus: real draw + predicted draw + correct penalty winner (exact score NOT required)
+  const penalty     = (realIsDraw && pickIsDraw && pick.penaltyWinner === result.penaltyWinner) ? 1 : 0
+  return { classified, exact, penalty, total: classified + exact + penalty }
 }
 
 function openMatches(s: Stage) {
@@ -438,6 +528,7 @@ function KOMatchCard({ match, pick, onPick, highlight }: {
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function PrototipoEliminatoriasV3() {
+  const router = useRouter()
   const [view, setView] = useState<View>('home')
   const [picks, setPicks] = useState<Picks>({})
   const [activeStage, setActiveStage] = useState<Stage>('R32')
@@ -467,8 +558,8 @@ export default function PrototipoEliminatoriasV3() {
   const [resultMatchExpanded, setResultMatchExpanded] = useState<string | null>(null)
   const [resultPhaseFilter, setResultPhaseFilter] = useState<Stage | 'all'>('all')
 
-  // Ranking phase filter
-  const [rankingPhase, setRankingPhase] = useState<Stage | 'all'>('all')
+  // Ranking — vista por quiniela independiente
+  const [rankingView, setRankingView] = useState<'grupos' | 'dieciseisavos' | 'octavos'>('dieciseisavos')
   const [rankDay, setRankDay] = useState(() => {
     const dates = [...new Set(KNOCKOUT_MATCHES.map(m => m.date))].sort()
     const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Caracas' })
@@ -488,6 +579,13 @@ export default function PrototipoEliminatoriasV3() {
 
   // Sesión de participante — persiste en localStorage
   const [participantSession, setParticipantSession] = useState<ParticipantSession | null>(null)
+
+  // Analytics — visitorId y eventos registrados
+  const [visitorId, setVisitorId] = useState<string>('')
+  const [analyticsEvents, setAnalyticsEvents] = useState<AnalyticsEvent[]>([])
+  const [analyticsFilter, setAnalyticsFilter] = useState<'all' | 'identified' | 'anonymous'>('all')
+  const [analyticsSearch, setAnalyticsSearch] = useState('')
+  const [analyticsProfile, setAnalyticsProfile] = useState<string | null>(null) // cedula del perfil expandido
 
   // Admin — búsqueda participantes
   const [adminSearch, setAdminSearch] = useState('')
@@ -539,18 +637,40 @@ export default function PrototipoEliminatoriasV3() {
   const [statSimRunning, setStatSimRunning] = useState(false)
   const [pendingEvents, setPendingEvents] = useState<PendingMatchEvent[]>(DEMO_PENDING_EVENTS)
 
+  // Ref para acceder a participantSession y adminUnlocked en el efecto de tracking sin dependency loop
+  const sessionRef      = useRef<ParticipantSession | null>(null)
+  const adminRef        = useRef(false)
+  const visitorIdRef    = useRef('')
+  useEffect(() => { sessionRef.current   = participantSession }, [participantSession])
+  useEffect(() => { adminRef.current     = adminUnlocked     }, [adminUnlocked])
+  useEffect(() => { visitorIdRef.current = visitorId         }, [visitorId])
+
   useEffect(() => { setPicks(loadPicks()) }, [])
   useEffect(() => { setKoEnrolled(loadKOEnrolled()) }, [])
   useEffect(() => {
     const s = loadParticipantSession()
     if (s) {
       setParticipantSession(s)
-      // Restaurar estado de registered si la sesión coincide con el participante demo
       if (s.cedula === DEMO_CEDULA) {
         setRegistered(true)
         setRegForm(f => ({ ...f, nombre: s.displayName, cedula: s.cedula }))
       }
+      // Track sesión restaurada
+      const vid = getOrCreateVisitorId()
+      const ev: AnalyticsEvent = {
+        id: genId(), visitorId: vid, event: 'PARTICIPANT_SESSION_RESTORED',
+        route: '/admin/prototipo-eliminatorias-avanzado',
+        timestamp: new Date().toISOString(),
+        participantCedula: s.cedula, participantName: s.displayName,
+        cedulaMasked: maskCedula(s.cedula), whatsappMasked: null,
+        phase: s.phase, isAdmin: false,
+        device: detectDevice(), browser: detectBrowser(),
+      }
+      appendAnalyticsEvent(ev)
     }
+    const vid = getOrCreateVisitorId()
+    setVisitorId(vid)
+    setAnalyticsEvents(loadAnalytics())
   }, [])
   useEffect(() => {
     if (typeof window !== 'undefined' && localStorage.getItem(ADMIN_SESSION_KEY) === 'ok') {
@@ -558,7 +678,37 @@ export default function PrototipoEliminatoriasV3() {
     }
   }, [])
 
-  // Scroll-reveal — activa .ko-visible cuando la sección entra al viewport.
+  // ── Analytics — trackear cambio de vista ──────────────────────────────────
+  useEffect(() => {
+    if (!visitorIdRef.current) return  // aún no inicializado
+    const VIEW_MAP: Partial<Record<View, AnalyticsEventName>> = {
+      home:        'HOME_VIEW',
+      ranking:     'RANKING_VIEW',
+      resultados:  'RESULTS_VIEW',
+      bracket:     'BRACKET_VIEW',
+      estadisticas:'STATS_VIEW',
+      'mi-quiniela':'MY_QUINIELA_VIEW',
+      llenado:     'PREDICTIONS_OPENED',
+      registro:    'ENTRY_STARTED',
+    }
+    const evName = VIEW_MAP[view]
+    if (!evName) return
+    const s = sessionRef.current
+    const ev: AnalyticsEvent = {
+      id: genId(), visitorId: visitorIdRef.current, event: evName,
+      route: `/admin/prototipo-eliminatorias-avanzado#${view}`,
+      timestamp: new Date().toISOString(),
+      participantCedula: s?.cedula ?? null, participantName: s?.displayName ?? null,
+      cedulaMasked: s ? maskCedula(s.cedula) : null, whatsappMasked: null,
+      phase: s?.phase ?? null, isAdmin: adminRef.current,
+      device: detectDevice(), browser: detectBrowser(),
+    }
+    appendAnalyticsEvent(ev)
+    setAnalyticsEvents(loadAnalytics())
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view])
+
+  // ── Scroll-reveal — activa .ko-visible cuando la sección entra al viewport.
   // setTimeout(80) es crítico: sin él el observer fires antes de que el browser
   // pinte opacity:0, y la transición no es perceptible.
   useEffect(() => {
@@ -632,8 +782,9 @@ export default function PrototipoEliminatoriasV3() {
   const activeDone = stageComplete(activeStage, picks)
   const pendingInStage = activeOpenMatches.filter(m => !picks[m.id]).length
 
-  const nextStageIdx = STAGES.indexOf(activeStage) + 1
-  const nextStage = nextStageIdx < STAGES.length ? STAGES[nextStageIdx] : null
+  // Dieciseisavos es quiniela independiente — no hay "siguiente etapa" dentro de este flujo.
+  // Octavos a Final se abrirá después como nueva quiniela independiente.
+  const nextStage = null
 
   // ── Navigation ──────────────────────────────────────────────────────────────
 
@@ -646,6 +797,24 @@ export default function PrototipoEliminatoriasV3() {
     { id: 'bracket',       label: 'Cuadro',      emoji: '📊' },
     { id: 'estadisticas',  label: 'Stats',       emoji: '📈' },
   ]
+
+  // ── Analytics — trackear evento manual ───────────────────────────────────
+  function trackEvent(evName: AnalyticsEventName, participant?: { cedula: string; displayName: string; whatsapp?: string }) {
+    const s = participant ?? sessionRef.current ?? undefined
+    const vid = visitorIdRef.current || getOrCreateVisitorId()
+    const ev: AnalyticsEvent = {
+      id: genId(), visitorId: vid, event: evName,
+      route: `/admin/prototipo-eliminatorias-avanzado#${view}`,
+      timestamp: new Date().toISOString(),
+      participantCedula: s?.cedula ?? null, participantName: s?.displayName ?? null,
+      cedulaMasked: s ? maskCedula(s.cedula) : null,
+      whatsappMasked: (s as { whatsapp?: string })?.whatsapp ? maskWa((s as { whatsapp?: string }).whatsapp!) : null,
+      phase: 'knockout_r32', isAdmin: adminRef.current,
+      device: detectDevice(), browser: detectBrowser(),
+    }
+    appendAnalyticsEvent(ev)
+    setAnalyticsEvents(loadAnalytics())
+  }
 
   // ── Sesión participante — activar / limpiar ───────────────────────────────
   function activateSession(p: { cedula: string; displayName: string }) {
@@ -1292,55 +1461,63 @@ export default function PrototipoEliminatoriasV3() {
                 Sistema de <span className="text-green-600">Puntuación</span>
               </h2>
               <p className="text-slate-500 mt-2 text-sm max-w-md mx-auto">
-                Predice el marcador de cada partido. Lo más importante es acertar quién clasifica —
-                el marcador exacto te da puntos extra.
+                Predice el marcador de cada partido. Acertar el clasificado da 2 pts, el marcador exacto suma 2 pts más,
+                y si el partido termina empatado, acertar al ganador por penales da 1 pt extra. Máximo 5 pts por partido.
               </p>
             </div>
 
             {/* Points cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
               {[
                 {
-                  icon: '⚽', pts: '2', extra: '',
+                  icon: '🏆', pts: '+2', extra: '',
                   title: 'Clasificado correcto',
                   desc: 'Aciertas qué equipo gana (o quién avanza por penales si hay empate).',
                   bg: 'bg-green-50', border: 'border-green-300', ptsBg: 'bg-green-500', ptsText: 'text-white',
                 },
                 {
-                  icon: '🎯', pts: '4', extra: 'máx',
+                  icon: '🎯', pts: '+2', extra: '',
                   title: 'Marcador exacto',
-                  desc: 'Aciertas el marcador exacto Y al clasificado. Suma los 2+2 = 4 puntos.',
+                  desc: 'Aciertas el marcador exacto además del clasificado. Suma 2+2 = 4 pts (más +1 si también aciertas penales).',
                   bg: 'bg-yellow-50', border: 'border-yellow-300', ptsBg: 'bg-yellow-400', ptsText: 'text-slate-900',
                 },
                 {
+                  icon: '🥅', pts: '+1', extra: 'extra',
+                  title: 'Penales correctos',
+                  desc: 'Si predices empate y aciertas quién avanza por penales, sumas 1 pt extra.',
+                  bg: 'bg-amber-50', border: 'border-amber-300', ptsBg: 'bg-amber-500', ptsText: 'text-white',
+                },
+                {
                   icon: '❌', pts: '0', extra: '',
-                  title: 'Clasificado incorrecto',
-                  desc: 'Si fallas quién clasifica, no sumas ningún punto, aunque el marcador sea parecido.',
+                  title: 'Fallo',
+                  desc: 'Si fallas quién clasifica, no sumas puntos por clasificado ni por penales.',
                   bg: 'bg-slate-50', border: 'border-slate-200', ptsBg: 'bg-slate-300', ptsText: 'text-slate-700',
                 },
               ].map((card) => (
-                <div key={card.title} className={`${card.bg} border-2 ${card.border} rounded-2xl p-5 text-center hover:shadow-md transition-shadow`}>
-                  <div className="text-4xl mb-3">{card.icon}</div>
-                  <div className={`inline-flex items-end gap-1 ${card.ptsBg} ${card.ptsText} font-extrabold text-3xl rounded-xl px-5 py-2 mb-3 shadow-sm`}>
-                    {card.pts} <span className="text-lg font-semibold">pts</span>
-                    {card.extra && <span className="text-xs font-semibold opacity-70 mb-1">({card.extra})</span>}
+                <div key={card.title} className={`${card.bg} border-2 ${card.border} rounded-2xl p-4 text-center hover:shadow-md transition-shadow`}>
+                  <div className="text-3xl mb-2">{card.icon}</div>
+                  <div className={`inline-flex items-end gap-1 ${card.ptsBg} ${card.ptsText} font-extrabold text-2xl rounded-xl px-4 py-1.5 mb-2 shadow-sm`}>
+                    {card.pts} <span className="text-base font-semibold">pts</span>
+                    {card.extra && <span className="text-[10px] font-semibold opacity-80 mb-0.5">({card.extra})</span>}
                   </div>
-                  <div className="font-bold text-slate-800 text-sm mb-2">{card.title}</div>
-                  <div className="text-xs text-slate-500 leading-relaxed">{card.desc}</div>
+                  <div className="font-bold text-slate-800 text-xs mb-1">{card.title}</div>
+                  <div className="text-[11px] text-slate-500 leading-relaxed">{card.desc}</div>
                 </div>
               ))}
+            </div>
+            <div className="text-center text-xs text-slate-500 mb-6">
+              Máximo por partido: <strong className="text-slate-700">5 pts</strong> (2 + 2 + 1 bono penales) · 32 partidos · Máximo total: <strong className="text-slate-700">160 pts</strong>
             </div>
 
             {/* Penalty rule callout */}
             <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 mb-6 flex gap-3 items-start">
-              <span className="text-2xl shrink-0">⚖️</span>
+              <span className="text-2xl shrink-0">🥅</span>
               <div>
-                <p className="font-bold text-amber-900 text-sm mb-1">¿Y si el partido termina empatado?</p>
+                <p className="font-bold text-amber-900 text-sm mb-1">Bono por penales — +1 pt extra</p>
                 <p className="text-xs text-amber-700 leading-relaxed">
-                  En eliminatorias puede haber empate en 90 minutos y definición por penales.
-                  Si predices empate, deberás indicar también <strong>quién gana por penales</strong>.
-                  Lo que cuenta para los puntos es el <strong>clasificado final</strong> (incluyendo penales),
-                  no el resultado del tiempo regular.
+                  Si predices <strong>empate</strong>, deberás elegir también quién avanza por penales (obligatorio).
+                  Si el partido real termina empatado y aciertas el ganador por penales, sumas <strong>1 punto extra</strong>.
+                  Este bono solo aplica cuando el resultado real termina en empate con definición por penales.
                 </p>
               </div>
             </div>
@@ -1352,9 +1529,9 @@ export default function PrototipoEliminatoriasV3() {
               </div>
               <div className="divide-y divide-slate-100">
                 {[
-                  { pred: 'Argentina 2 – 1 México', note: 'Clasificado ✓ + Marcador exacto ✓',      pts: 4, cls: 'text-yellow-600', bg: 'bg-yellow-50' },
-                  { pred: 'Argentina 3 – 0 México', note: 'Clasificado ✓, marcador diferente',       pts: 2, cls: 'text-green-600',  bg: '' },
-                  { pred: 'México 1 – 0 Argentina', note: 'Clasificado ✗ — falla el ganador',        pts: 0, cls: 'text-slate-400',  bg: '' },
+                  { pred: 'Argentina 2 – 1 México', note: 'Clasificado ✓ + Marcador exacto ✓  →  2+2',  pts: 4, cls: 'text-yellow-600', bg: 'bg-yellow-50' },
+                  { pred: 'Argentina 3 – 0 México', note: 'Clasificado ✓, marcador diferente  →  2',    pts: 2, cls: 'text-green-600',  bg: '' },
+                  { pred: 'México 1 – 0 Argentina', note: 'Clasificado ✗ — falla el ganador  →  0',     pts: 0, cls: 'text-slate-400',  bg: '' },
                 ].map((row) => (
                   <div key={row.pred} className={`flex items-center justify-between px-5 py-3.5 ${row.bg}`}>
                     <div>
@@ -1370,13 +1547,15 @@ export default function PrototipoEliminatoriasV3() {
             {/* Example block — draw + penalties */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
               <div className="bg-amber-700 text-white px-5 py-3 text-sm font-semibold">
-                ⚖️ Ejemplo B — Resultado real: <span className="text-yellow-200">Sudáfrica 1 – 1 Canadá · Gana Canadá por penales</span>
+                🥅 Ejemplo B — Resultado real: <span className="text-yellow-200">Argentina 1 – 1 Francia · Argentina avanza por penales</span>
               </div>
               <div className="divide-y divide-slate-100">
                 {[
-                  { pred: 'Empate 1–1 · Gana Canadá por penales', note: 'Clasificado ✓ + Marcador exacto ✓', pts: 4, cls: 'text-yellow-600', bg: 'bg-yellow-50' },
-                  { pred: 'Empate 0–0 · Gana Canadá por penales', note: 'Clasificado ✓, marcador diferente', pts: 2, cls: 'text-green-600',  bg: '' },
-                  { pred: 'Empate 1–1 · Gana Sudáfrica por penales', note: 'Clasificado ✗ — falla quien pasa', pts: 0, cls: 'text-slate-400', bg: '' },
+                  { pred: 'Empate 1–1 · Penales: Argentina', note: 'Clasificado ✓ + Exacto ✓ + Penales ✓  →  2+2+1', pts: 5, cls: 'text-yellow-600', bg: 'bg-yellow-50' },
+                  { pred: 'Argentina 2–1 Francia',            note: 'Clasificado ✓ · No predijo empate → sin bono',   pts: 2, cls: 'text-green-600',  bg: '' },
+                  { pred: 'Empate 1–1 · Penales: Francia',   note: 'Exacto ✓, Clasificado ✗, Penales ✗  →  solo exacto', pts: 2, cls: 'text-green-600',  bg: '' },
+                  { pred: 'Empate 0–0 · Penales: Argentina', note: 'Clasificado ✓, marcador diferente, Penales ✓',   pts: 3, cls: 'text-green-600',  bg: '' },
+                  { pred: 'Francia 2–0 Argentina',           note: 'Clasificado ✗ — falla quien clasifica',           pts: 0, cls: 'text-slate-400',  bg: '' },
                 ].map((row) => (
                   <div key={row.pred} className={`flex items-center justify-between px-5 py-3.5 ${row.bg}`}>
                     <div>
@@ -1388,7 +1567,7 @@ export default function PrototipoEliminatoriasV3() {
                 ))}
               </div>
               <div className="px-5 py-3 bg-slate-50 text-xs text-slate-500 text-center">
-                Máximo posible: <strong>4 pts × 32 partidos = 128 puntos</strong>
+                Máximo posible: <strong>5 pts × 32 partidos = 160 puntos</strong>
               </div>
             </div>
           </section>
@@ -1459,7 +1638,7 @@ export default function PrototipoEliminatoriasV3() {
             <div className="space-y-2">
               {[
                 { q: '¿Cómo funciona la quiniela?',
-                  a: 'Predices el marcador de los 32 partidos de la fase eliminatoria. Por cada partido: si aciertas quién clasifica ganas 2 puntos, y si además aciertas el marcador exacto ganas 2 puntos más (total 4 puntos). Gana quien acumule más puntos al final del torneo.' },
+                  a: 'Predices el marcador de los 32 partidos de la fase eliminatoria. Por cada partido: acertar el clasificado da 2 pts, acertar además el marcador exacto da 2 pts más, y si el partido termina empatado y aciertas el ganador por penales sumas 1 pt extra (máximo 5 pts por partido). Gana quien acumule más puntos.' },
                 { q: '¿Cuánto cuesta participar?',
                   a: 'La inscripción es de 20 USD. Puedes pagar por Pago Móvil Banesco (14.600 Bs a tasa fija 730 Bs/USD) o por Zelle (20 USD directamente).' },
                 { q: '¿Cómo puedo pagar?',
@@ -1479,7 +1658,7 @@ export default function PrototipoEliminatoriasV3() {
                 { q: '¿Qué pasa si el partido va a penales?',
                   a: "En eliminatorias puede haber empate en tiempo reglamentario y definición por penales. Si predices empate, el formulario te pedirá que elijas también quién gana por penales. Para los puntos, lo que cuenta es el clasificado final (quien avanza, incluyendo penales). El marcador exacto se refiere al resultado en 90 minutos (ej: 1–1), sin contar la prórroga ni los penales." },
                 { q: '¿Cómo se calculan exactamente los puntos?',
-                  a: '2 puntos si aciertas el equipo que clasifica o gana. +2 puntos adicionales si además el marcador exacto coincide (considerando los goles en 90 minutos). 0 puntos si fallas el clasificado. El máximo por partido es 4 puntos.' },
+                  a: '+2 puntos si aciertas el equipo que clasifica o avanza. +2 puntos adicionales si además el marcador exacto coincide (goles en 90 minutos). +1 punto extra si predices empate y aciertas quién avanza por penales. 0 puntos si fallas el clasificado. El máximo por partido es 5 puntos.' },
               ].map((faq, i) => {
                 const isOpen = faqOpen === i
                 return (
@@ -1523,13 +1702,13 @@ export default function PrototipoEliminatoriasV3() {
             </div>
           </section>
 
-          {/* Admin footer link — discreto, solo visible si sabes que existe */}
-          <div className="text-center py-8">
+          {/* Admin footer link — discreto, al final del home */}
+          <div className="text-center py-8 border-t border-slate-100">
             <button
-              onClick={() => setView('admin')}
-              className="text-slate-300 hover:text-slate-400 text-[10px] transition-colors"
+              onClick={() => router.push('/admin?phase=knockout_round_32')}
+              className="text-slate-300 hover:text-slate-500 text-xs transition-colors"
             >
-              ·
+              Admin
             </button>
           </div>
 
@@ -1625,19 +1804,23 @@ export default function PrototipoEliminatoriasV3() {
             <p className="text-xs font-semibold text-blue-800 mb-2">⚡ Sistema de puntos — Eliminatorias:</p>
             <div className="space-y-1 text-xs text-blue-700">
               <div className="flex items-center gap-2">
-                <span className="bg-green-500 text-white font-extrabold px-2 py-0.5 rounded-full text-[10px] shrink-0">+2</span>
-                <span>Aciertas el equipo clasificado o ganador</span>
+                <span className="bg-green-500 text-white font-extrabold px-2 py-0.5 rounded-full text-[10px] shrink-0">🏆 +2</span>
+                <span>Aciertas el equipo clasificado</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="bg-yellow-400 text-slate-900 font-extrabold px-2 py-0.5 rounded-full text-[10px] shrink-0">+2</span>
+                <span className="bg-yellow-400 text-slate-900 font-extrabold px-2 py-0.5 rounded-full text-[10px] shrink-0">🎯 +2</span>
                 <span>Aciertas además el marcador exacto</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="bg-slate-300 text-slate-700 font-extrabold px-2 py-0.5 rounded-full text-[10px] shrink-0">+0</span>
+                <span className="bg-amber-500 text-white font-extrabold px-2 py-0.5 rounded-full text-[10px] shrink-0">🥅 +1</span>
+                <span>Si predices empate y aciertas quién avanza por penales</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="bg-slate-300 text-slate-700 font-extrabold px-2 py-0.5 rounded-full text-[10px] shrink-0">❌ +0</span>
                 <span>Si fallas el clasificado, no sumas nada</span>
               </div>
             </div>
-            <p className="text-[10px] text-blue-500 mt-2 font-medium">⚖️ Si predices empate, deberás elegir también quién gana por penales.</p>
+            <p className="text-[10px] text-blue-500 mt-2 font-medium">Máximo 5 pts por partido · 32 partidos · Máximo total: 160 pts</p>
           </div>
 
           {/* Stage tabs */}
@@ -1716,17 +1899,11 @@ export default function PrototipoEliminatoriasV3() {
               {activeDone ? (
                 <div className="bg-green-600 rounded-2xl p-5 shadow-lg">
                   <p className="text-white font-bold text-sm mb-1 flex items-center gap-2">
-                    ✅ ¡Etapa completada!
+                    ✅ ¡Dieciseisavos completados!
                   </p>
-                  <p className="text-green-200 text-xs mb-4">Todos los partidos de esta ronda están listos.</p>
-                  {nextStage ? (
-                    <button
-                      onClick={goToNextStage}
-                      className="w-full bg-white text-green-700 font-extrabold py-4 rounded-xl flex items-center justify-center gap-2 text-base hover:bg-green-50 shadow transition-all active:scale-95 touch-manipulation"
-                    >
-                      Continuar a {STAGE_META[nextStage].label} <ArrowRight size={20} />
-                    </button>
-                  ) : filledCount === totalOpenCount ? (
+                  <p className="text-green-200 text-xs mb-3">Todos los partidos de esta quiniela están listos.</p>
+                  <p className="text-green-300/80 text-[11px] mb-4">Octavos de final se abrirá más adelante como una nueva quiniela independiente.</p>
+                  {filledCount === totalOpenCount ? (
                     <button
                       onClick={() => setView('mi-quiniela')}
                       className="w-full bg-white text-green-700 font-extrabold py-4 rounded-xl flex items-center justify-center gap-2 text-base hover:bg-green-50 shadow transition-all active:scale-95 touch-manipulation"
@@ -2225,6 +2402,7 @@ export default function PrototipoEliminatoriasV3() {
       if (q === DEMO_CEDULA || q === DEMO_WA || q === '04141234567' || q.toLowerCase() === 'carlos') {
         setMiqFound(true)
         activateSession({ cedula: DEMO_CEDULA, displayName: DEMO_NAME })
+        trackEvent('PARTICIPANT_LOOKUP', { cedula: DEMO_CEDULA, displayName: DEMO_NAME })
       } else {
         setToast('❌ No se encontró ninguna quiniela con ese dato')
       }
@@ -2469,19 +2647,14 @@ export default function PrototipoEliminatoriasV3() {
   // ── RANKING ─────────────────────────────────────────────────────────────────
 
   function renderRanking() {
-    const PHASE_FILTERS: { key: Stage | 'all'; label: string }[] = [
-      { key: 'all',   label: 'Acumulado' },
-      { key: 'R32',   label: 'Dieciseisavos' },
-      { key: 'R16',   label: 'Octavos' },
-      { key: 'QF',    label: 'Cuartos' },
-      { key: 'SF',    label: 'Semis' },
-      { key: 'FINAL', label: 'Final' },
-    ]
+    // ── HISTÓRICO FASE DE GRUPOS (datos del torneo anterior) ──────────────────
+    // Puntos finales de Fase de Grupos; NO se mezclan con Eliminatorias.
+    const GRUPOS_HISTORICAL = DEMO_RANKING  // imported from knockout-data.ts
 
     const baseRanking = [...KO_DEMO_RANKING]
     koEnrolled.filter(p => p.paymentStatus !== 'rejected').forEach(ep => {
       if (!baseRanking.find(r => r.cedula === ep.cedula)) {
-        baseRanking.push({ cedula: ep.cedula, displayName: ep.displayName, ciudad: ep.ciudad, totalPoints: 0, exactScores: 0, correctResults: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: ep.paymentStatus })
+        baseRanking.push({ cedula: ep.cedula, displayName: ep.displayName, ciudad: ep.ciudad, totalPoints: 0, exactScores: 0, correctResults: 0, penaltyCorrects: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: ep.paymentStatus })
       }
     })
     const ranking = baseRanking.map((r, i) => ({ ...r, position: i + 1 }))
@@ -2520,13 +2693,146 @@ export default function PrototipoEliminatoriasV3() {
       <div className="min-h-screen bg-slate-50 pb-10">
         {/* Header */}
         <header className="bg-gradient-to-r from-green-700 to-blue-700 text-white shadow-lg">
-          <div className="max-w-3xl mx-auto px-4 py-5">
-            <h1 className="font-bold text-2xl">🏆 Ranking Eliminatorias</h1>
-            <p className="text-green-200 text-sm">Quiniela Mundial 2026 · Fase eliminatoria</p>
+          <div className="max-w-3xl mx-auto px-4 pt-5 pb-4">
+            <h1 className="font-bold text-2xl">🏆 Ranking</h1>
+            <p className="text-green-200 text-sm">Quiniela Mundial 2026 · Cada quiniela es independiente</p>
+            {/* 3 tabs — una quiniela por tab */}
+            <div className="flex gap-1 mt-4 overflow-x-auto scrollbar-none">
+              {([
+                { key: 'grupos',        label: 'Fase de Grupos' },
+                { key: 'dieciseisavos', label: 'Dieciseisavos'  },
+                { key: 'octavos',       label: 'Octavos a Final' },
+              ] as const).map(t => (
+                <button key={t.key} onClick={() => setRankingView(t.key)}
+                  className={`shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                    rankingView === t.key
+                      ? 'bg-white text-green-800 border-white shadow'
+                      : 'bg-white/10 text-white/75 border-white/20 hover:bg-white/20 hover:text-white'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            {/* Subtítulo por quiniela */}
+            <p className="text-green-300/80 text-[11px] mt-2">
+              {rankingView === 'dieciseisavos' && 'Ranking independiente de la quiniela Dieciseisavos.'}
+              {rankingView === 'grupos'        && 'Ranking histórico de la quiniela de Fase de Grupos.'}
+              {rankingView === 'octavos'       && 'Próxima quiniela independiente desde Octavos hasta la Final.'}
+            </p>
           </div>
         </header>
 
         <div className="max-w-3xl mx-auto px-4 mt-5 space-y-5">
+
+          {/* ── VISTA: FASE DE GRUPOS HISTÓRICO ── */}
+          {rankingView === 'grupos' && (
+            <div className="space-y-4">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2">
+                <span className="text-amber-500 text-sm mt-0.5">📜</span>
+                <div>
+                  <p className="text-amber-800 font-bold text-xs">Ranking histórico — Fase de Grupos 2026</p>
+                  <p className="text-amber-700 text-[10px] mt-0.5">Estos puntos son del torneo anterior y <strong>no se mezclan</strong> con el ranking de Dieciseisavos.</p>
+                </div>
+              </div>
+
+              {/* Podio Grupos */}
+              {GRUPOS_HISTORICAL.length >= 2 && (
+                <div className="flex items-end justify-center gap-3 pt-2">
+                  {[GRUPOS_HISTORICAL[1], GRUPOS_HISTORICAL[0], GRUPOS_HISTORICAL[2]].map((e, i) => {
+                    if (!e) return <div key={i} className="w-24" />
+                    const isMe = mySession ? e.name === mySession.displayName : false
+                    return (
+                      <div key={e.pos} className="flex flex-col items-center">
+                        <div className="text-2xl mb-1">{['🥈','🥇','🥉'][i]}</div>
+                        <div className="text-center mb-2">
+                          <p className="font-bold text-slate-800 text-sm leading-tight">{formatPublicName(e.name)}</p>
+                          {isMe && <span className="inline-block text-[10px] bg-yellow-400 text-slate-900 font-extrabold px-2 py-0.5 rounded-full mt-0.5">Tú</span>}
+                          <p className="text-xs text-slate-500 mt-0.5">{e.pts} pts</p>
+                        </div>
+                        <div className={`${['h-20','h-28','h-16'][i]} w-24 ${['bg-slate-300','bg-yellow-400','bg-amber-300'][i]} rounded-t-xl flex items-center justify-center font-bold text-lg text-white`}>
+                          {i === 1 ? 1 : i === 0 ? 2 : 3}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* Tabla Grupos */}
+              <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                <div className="bg-slate-50 border-b border-slate-100 px-3 py-2 grid grid-cols-12 text-xs font-medium text-slate-400">
+                  <div className="col-span-1 text-center">#</div>
+                  <div className="col-span-5">Participante</div>
+                  <div className="col-span-2 text-center">Pts</div>
+                  <div className="col-span-2 text-center">🎯 Exac.</div>
+                  <div className="col-span-2 text-center">✅ Clas.</div>
+                </div>
+                {GRUPOS_HISTORICAL.map(e => {
+                  const isMe = mySession ? e.name === mySession.displayName : false
+                  return (
+                    <div key={e.pos}
+                      className={`px-3 py-3 grid grid-cols-12 items-center border-b border-slate-50 last:border-0 ${isMe ? 'bg-yellow-50 border-l-4 border-l-yellow-400' : e.pos <= 3 ? 'bg-yellow-50/40' : 'hover:bg-slate-50'}`}
+                    >
+                      <div className="col-span-1 text-center flex flex-col items-center">
+                        <span className="font-bold text-slate-700 text-sm">
+                          {e.pos <= 3 ? ['🥇','🥈','🥉'][e.pos - 1] : e.pos}
+                        </span>
+                        {e.move > 0
+                          ? <span className="text-green-600 text-[10px] font-bold">↑{e.move}</span>
+                          : e.move < 0
+                          ? <span className="text-red-500 text-[10px] font-bold">↓{Math.abs(e.move)}</span>
+                          : <span className="text-slate-300 text-[10px]">—</span>}
+                      </div>
+                      <div className="col-span-5">
+                        <p className="font-semibold text-slate-800 text-sm leading-tight">{formatPublicName(e.name)}</p>
+                        {isMe && <span className="text-[10px] bg-yellow-400 text-slate-900 font-extrabold px-1.5 py-0.5 rounded-full">Tú</span>}
+                      </div>
+                      <div className="col-span-2 text-center"><span className="font-bold text-slate-700 text-base">{e.pts}</span></div>
+                      <div className="col-span-2 text-center"><span className="text-sm text-slate-600">{e.exact}</span></div>
+                      <div className="col-span-2 text-center"><span className="text-sm font-semibold text-slate-700">{e.correct}</span></div>
+                    </div>
+                  )
+                })}
+              </div>
+              <p className="text-xs text-slate-400 text-center">Ranking final · Fase de Grupos 2026 · {GRUPOS_HISTORICAL.length} participantes</p>
+              <button
+                onClick={() => setRankingView('dieciseisavos')}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl text-sm transition-all touch-manipulation"
+              >
+                Ver Ranking Dieciseisavos →
+              </button>
+            </div>
+          )}
+
+          {/* ── VISTA: OCTAVOS A FINAL (próxima quiniela) ── */}
+          {rankingView === 'octavos' && (
+            <div className="space-y-4">
+              <div className="bg-slate-100 border border-slate-200 rounded-2xl p-8 text-center">
+                <div className="text-5xl mb-4">⏳</div>
+                <p className="text-slate-700 font-extrabold text-lg mb-2">Quiniela Octavos a Final</p>
+                <p className="text-slate-500 text-sm max-w-xs mx-auto">
+                  Esta quiniela todavía no está abierta. Se activará cuando finalicen los Dieciseisavos y estén definidos los 16 clasificados.
+                </p>
+                <div className="mt-6 grid grid-cols-2 gap-2 max-w-xs mx-auto text-xs text-slate-500">
+                  {['Octavos · R16', 'Cuartos · QF', 'Semifinales · SF', 'Final + 3er lugar'].map(s => (
+                    <div key={s} className="bg-white border border-slate-200 rounded-lg px-3 py-2 flex items-center gap-1.5">
+                      <span>🔒</span> {s}
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setRankingView('dieciseisavos')}
+                  className="mt-6 inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-all touch-manipulation"
+                >
+                  Ver Ranking Dieciseisavos →
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── VISTA: RANKING DIECISEISAVOS (activo) ── */}
+          {rankingView === 'dieciseisavos' && (<>
 
           {/* ── PRONÓSTICOS DEL DÍA ── */}
           <section>
@@ -2664,10 +2970,10 @@ export default function PrototipoEliminatoriasV3() {
             )}
           </section>
 
-          {/* ── RANKING GENERAL ── */}
+          {/* ── RANKING DIECISEISAVOS ── */}
           <div className="flex items-center gap-2 pt-2">
             <span className="w-1 h-5 bg-yellow-400 rounded-full shrink-0" />
-            <h2 className="font-extrabold text-slate-800 text-base">Ranking general</h2>
+            <h2 className="font-extrabold text-slate-800 text-base">Ranking · Dieciseisavos</h2>
           </div>
 
           {/* Stats bar */}
@@ -2684,16 +2990,6 @@ export default function PrototipoEliminatoriasV3() {
               <p className="text-sm font-extrabold text-yellow-600 truncate">{top3[0] ? formatPublicName(top3[0].displayName) : '—'}</p>
               <p className="text-xs text-slate-500 mt-0.5">Líder actual</p>
             </div>
-          </div>
-
-          {/* Phase filters */}
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {PHASE_FILTERS.map(f => (
-              <button key={f.key} onClick={() => setRankingPhase(f.key)}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
-                  rankingPhase === f.key ? 'bg-green-600 text-white border-green-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                }`}>{f.label}</button>
-            ))}
           </div>
 
           {/* Podium */}
@@ -2726,8 +3022,9 @@ export default function PrototipoEliminatoriasV3() {
           <div className="bg-white rounded-xl border border-slate-100 p-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
             <span>🏆 Clasificado correcto = <strong>2 pts</strong></span>
             <span>🎯 Marcador exacto = <strong>+2 pts</strong></span>
+            <span>🥅 Penales correctos = <strong>+1 pt</strong></span>
             <span>❌ Fallo = <strong>0 pts</strong></span>
-            <span className="text-slate-400">· Máximo 4 pts por partido</span>
+            <span className="text-slate-400">· Máximo <strong>5 pts</strong> por partido</span>
           </div>
 
           {/* Ranking table */}
@@ -2735,10 +3032,11 @@ export default function PrototipoEliminatoriasV3() {
             <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
               <div className="bg-slate-50 border-b border-slate-100 px-3 py-2 grid grid-cols-12 text-xs font-medium text-slate-400">
                 <div className="col-span-1 text-center">#</div>
-                <div className="col-span-5">Participante</div>
+                <div className="col-span-4">Participante</div>
                 <div className="col-span-2 text-center">Pts</div>
                 <div className="col-span-2 text-center" title="Clasificados correctos (2 pts c/u)">🏆 Clas.</div>
-                <div className="col-span-2 text-center" title="Marcadores exactos (+2 pts c/u)">🎯 Exac.</div>
+                <div className="col-span-1 text-center" title="Marcadores exactos (+2 pts c/u)">🎯</div>
+                <div className="col-span-2 text-center" title="Penales correctos (+1 pt c/u)">🥅 Pen.</div>
               </div>
 
               {ranking.map(entry => {
@@ -2749,21 +3047,21 @@ export default function PrototipoEliminatoriasV3() {
                       isMe ? 'bg-yellow-50 border-l-4 border-l-yellow-400' : entry.position <= 3 ? 'bg-yellow-50/50' : 'hover:bg-slate-50'
                     }`}
                   >
-                    <div className="col-span-1 text-center">
+                    <div className="col-span-1 text-center flex flex-col items-center">
                       <span className="font-bold text-slate-700 text-sm">
                         {entry.position <= 3 ? ['🥇','🥈','🥉'][entry.position - 1] : entry.position}
                       </span>
+                      {entry.movement > 0
+                        ? <span className="text-green-600 text-[10px] font-bold leading-none mt-0.5">↑{entry.movement}</span>
+                        : entry.movement < 0
+                        ? <span className="text-red-500 text-[10px] font-bold leading-none mt-0.5">↓{Math.abs(entry.movement)}</span>
+                        : <span className="text-slate-300 text-[10px] leading-none mt-0.5">—</span>}
                     </div>
-                    <div className="col-span-5">
+                    <div className="col-span-4">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <p className="font-semibold text-slate-800 text-sm leading-tight">{formatPublicName(entry.displayName)}</p>
                         {isMe && <span className="text-[10px] bg-yellow-400 text-slate-900 font-extrabold px-1.5 py-0.5 rounded-full leading-none">Tú</span>}
                       </div>
-                      {entry.movement > 0
-                        ? <span className="text-green-600 text-[10px] font-medium">↑{entry.movement}</span>
-                        : entry.movement < 0
-                        ? <span className="text-red-500 text-[10px] font-medium">↓{Math.abs(entry.movement)}</span>
-                        : null}
                     </div>
                     <div className="col-span-2 text-center">
                       <span className="font-bold text-green-600 text-base">{entry.totalPoints}</span>
@@ -2771,8 +3069,11 @@ export default function PrototipoEliminatoriasV3() {
                     <div className="col-span-2 text-center">
                       <span className="text-sm font-semibold text-slate-700">{entry.correctResults}</span>
                     </div>
-                    <div className="col-span-2 text-center">
+                    <div className="col-span-1 text-center">
                       <span className="text-sm text-slate-600">{entry.exactScores}</span>
+                    </div>
+                    <div className="col-span-2 text-center">
+                      <span className="text-sm text-amber-600 font-semibold">{entry.penaltyCorrects ?? 0}</span>
                     </div>
                   </div>
                 )
@@ -2786,6 +3087,7 @@ export default function PrototipoEliminatoriasV3() {
                 <li>Más puntos totales.</li>
                 <li>Más clasificados correctos.</li>
                 <li>Más marcadores exactos.</li>
+                <li>Más penales correctos.</li>
                 <li>Registro más temprano.</li>
               </ol>
             </div>
@@ -2815,17 +3117,24 @@ export default function PrototipoEliminatoriasV3() {
             )}
           </section>
 
-          {/* Link to group stage ranking */}
-          <div className="bg-slate-800 rounded-xl p-4 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-white font-bold text-sm">Ranking Fase de Grupos</p>
-              <p className="text-slate-400 text-xs">Ver posiciones de la ronda anterior</p>
-            </div>
-            <a href="/ranking" target="_blank" rel="noreferrer"
-              className="shrink-0 bg-white text-slate-900 font-bold text-xs px-4 py-2 rounded-lg hover:bg-slate-100 transition-colors">
-              Ver ranking →
-            </a>
+          {/* Navegación entre quinielas */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setRankingView('grupos')}
+              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-4 py-3 rounded-xl transition-colors text-left"
+            >
+              <span className="block text-slate-500 text-[10px]">← Anterior</span>
+              Fase de Grupos
+            </button>
+            <button
+              onClick={() => setRankingView('octavos')}
+              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-4 py-3 rounded-xl transition-colors text-right"
+            >
+              <span className="block text-slate-500 text-[10px]">Siguiente →</span>
+              Octavos a Final
+            </button>
           </div>
+          </>) /* cierra {rankingView === 'eliminatorias' && (<>} */}
         </div>
       </div>
     )
@@ -2992,7 +3301,7 @@ export default function PrototipoEliminatoriasV3() {
                     }`}>{t.rank}</span>
 
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="text-sm leading-none shrink-0">{t.flag}</span>
+                      <FlagImg flag={t.flag} size={20} className="shrink-0" />
                       <span className="text-white text-xs font-semibold truncate">{t.name}</span>
                     </div>
 
@@ -3017,7 +3326,7 @@ export default function PrototipoEliminatoriasV3() {
           {/* Footer */}
           <div className="px-5 py-3 bg-slate-800/40 border-t border-slate-800 flex items-center justify-between">
             <p className="text-[10px] text-slate-500">⚠️ Datos demo · no son estadísticas oficiales</p>
-            <button onClick={() => setView('admin')} className="text-[10px] text-slate-400 hover:text-white underline">Admin →</button>
+            <button onClick={() => router.push('/admin?phase=knockout_round_32')} className="text-[10px] text-slate-400 hover:text-white underline">Admin →</button>
           </div>
         </div>
 
@@ -3062,10 +3371,11 @@ export default function PrototipoEliminatoriasV3() {
                 onChange={e => { setAdminInputCode(e.target.value); setAdminCodeError(false) }}
                 onKeyDown={e => {
                   if (e.key === 'Enter') {
-                    if (adminInputCode === ADMIN_CODE) {
+                    if (adminInputCode.trim() === ADMIN_CODE) {
                       localStorage.setItem(ADMIN_SESSION_KEY, 'ok')
                       setAdminUnlocked(true)
                       setAdminInputCode('')
+                      trackEvent('ADMIN_LOGIN')
                     } else {
                       setAdminCodeError(true)
                     }
@@ -3080,10 +3390,11 @@ export default function PrototipoEliminatoriasV3() {
               )}
               <button
                 onClick={() => {
-                  if (adminInputCode === ADMIN_CODE) {
+                  if (adminInputCode.trim() === ADMIN_CODE) {
                     localStorage.setItem(ADMIN_SESSION_KEY, 'ok')
                     setAdminUnlocked(true)
                     setAdminInputCode('')
+                    trackEvent('ADMIN_LOGIN')
                   } else {
                     setAdminCodeError(true)
                   }
@@ -3501,76 +3812,227 @@ export default function PrototipoEliminatoriasV3() {
 
       // ── ANALÍTICAS ────────────────────────────────────────────────────────
       if (adminModule === 'analiticas') {
-        const totalPicks     = Object.keys(picks).length
-        const r32Total       = KNOCKOUT_MATCHES.filter(m => m.stage === 'R32').length
-        const pickPct        = r32Total > 0 ? Math.round((totalPicks / r32Total) * 100) : 0
-        const ciudades       = koEnrolled.reduce<Record<string, number>>((acc, p) => { if (p.ciudad) acc[p.ciudad] = (acc[p.ciudad] ?? 0) + 1; return acc }, {})
-        const ciudadTop      = Object.entries(ciudades).sort((a, b) => b[1] - a[1]).slice(0, 5)
+        const allEvents  = analyticsEvents
+        const totalEvts  = allEvents.length
+        const identified = allEvents.filter(e => e.participantCedula && !e.isAdmin)
+        const anonymous  = allEvents.filter(e => !e.participantCedula && !e.isAdmin)
+        const adminEvts  = allEvents.filter(e => e.isAdmin)
+        const uniqueVisitors = [...new Set(allEvents.map(e => e.visitorId))].length
+        const uniqueParticipants = [...new Set(identified.map(e => e.participantCedula))].length
+
+        // Filter pipeline
+        const sq = analyticsSearch.toLowerCase().trim()
+        const filtered = allEvents
+          .filter(e =>
+            analyticsFilter === 'all'         ? true :
+            analyticsFilter === 'identified'  ? (!!e.participantCedula && !e.isAdmin) :
+            /* anonymous */                     (!e.participantCedula && !e.isAdmin)
+          )
+          .filter(e =>
+            !sq ? true : (
+              e.participantName?.toLowerCase().includes(sq) ||
+              e.cedulaMasked?.toLowerCase().includes(sq) ||
+              e.whatsappMasked?.includes(sq) ||
+              e.visitorId.includes(sq) ||
+              e.event.toLowerCase().includes(sq)
+            )
+          )
+          .slice()
+          .reverse()   // más recientes primero
+
+        // Per-participant profiles (for profile expandable view)
+        const participantProfiles = [...new Set(identified.map(e => e.participantCedula!))]
+          .map(ced => {
+            const evts = allEvents.filter(e => e.participantCedula === ced)
+            const last = evts[evts.length - 1]
+            return { cedula: ced, name: last?.participantName ?? '?', masked: last?.cedulaMasked ?? '?', events: evts }
+          })
+
+        // CSV export
+        function exportCSV() {
+          const header = 'timestamp,event,route,participantName,cedulaMasked,whatsappMasked,phase,isAdmin,visitorId,device,browser'
+          const rows = allEvents.map(e =>
+            [e.timestamp, e.event, e.route, e.participantName ?? '', e.cedulaMasked ?? '', e.whatsappMasked ?? '',
+             e.phase ?? '', e.isAdmin ? 'true' : 'false', e.visitorId, e.device, e.browser].join(',')
+          )
+          const blob = new Blob([[header, ...rows].join('\n')], { type: 'text/csv' })
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a'); a.href = url
+          a.download = `ko-analytics-${new Date().toISOString().slice(0,10)}.csv`
+          a.click(); URL.revokeObjectURL(url)
+          setToast('📊 CSV exportado')
+        }
+
+        function fmtTs(iso: string) {
+          try {
+            return new Date(iso).toLocaleString('es-VE', { timeZone: 'America/Caracas', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+          } catch { return iso }
+        }
+
+        const EVENT_LABELS: Record<string, string> = {
+          HOME_VIEW: 'Home visto', RANKING_VIEW: 'Ranking visto', RESULTS_VIEW: 'Resultados vistos',
+          BRACKET_VIEW: 'Cuadro visto', STATS_VIEW: 'Estadísticas', MY_QUINIELA_VIEW: 'Mi quiniela',
+          PREDICTIONS_OPENED: 'Pronósticos abiertos', ENTRY_STARTED: 'Registro iniciado',
+          ENTRY_CONFIRMED: 'Inscripción confirmada', PARTICIPANT_LOOKUP: 'Búsqueda de participante',
+          PAYMENT_INFO_VIEWED: 'Info de pago vista', ADMIN_LOGIN: 'Login admin',
+          PARTICIPANT_SESSION_RESTORED: 'Sesión restaurada',
+        }
+
+        const profileEv = analyticsProfile
+          ? allEvents.filter(e => e.participantCedula === analyticsProfile).slice().reverse()
+          : []
+
         return (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+
+            {/* Stat cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {[
-                { label: 'Picks demo llenados', val: `${totalPicks}/${r32Total}`, icon: '📝' },
-                { label: 'Completitud picks',   val: `${pickPct}%`,               icon: '📊' },
-                { label: 'Inscritos totales',   val: `${koEnrolled.length}`,      icon: '👥' },
-                { label: 'Tasa verificación',   val: koEnrolled.length > 0 ? `${Math.round((verifiedList.length / koEnrolled.length) * 100)}%` : '—', icon: '✅' },
+                { label: 'Total eventos',         val: totalEvts,           icon: '📊', color: 'text-slate-700' },
+                { label: 'Visitantes únicos',      val: uniqueVisitors,      icon: '👁️', color: 'text-blue-600'  },
+                { label: 'Participantes ident.',   val: uniqueParticipants,  icon: '👤', color: 'text-green-600' },
+                { label: 'Anónimos',               val: anonymous.length,    icon: '🕵️', color: 'text-slate-500' },
+                { label: 'Inscripciones confirm.', val: allEvents.filter(e => e.event === 'ENTRY_CONFIRMED').length, icon: '✅', color: 'text-green-700' },
+                { label: 'Eventos admin',          val: adminEvts.length,    icon: '⚙️', color: 'text-violet-600' },
               ].map(s => (
-                <div key={s.label} className="bg-white border border-slate-200 rounded-2xl p-4 text-center shadow-sm">
-                  <div className="text-xl mb-1">{s.icon}</div>
-                  <div className="text-xl font-extrabold text-slate-800">{s.val}</div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">{s.label}</div>
+                <div key={s.label} className="bg-white border border-slate-200 rounded-xl p-3 text-center shadow-sm">
+                  <div className="text-lg mb-0.5">{s.icon}</div>
+                  <div className={`text-xl font-extrabold ${s.color}`}>{s.val}</div>
+                  <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">{s.label}</div>
                 </div>
               ))}
             </div>
 
-            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-              <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
-                <p className="text-sm font-extrabold text-slate-700">Top ciudades</p>
-              </div>
-              {ciudadTop.length === 0 ? (
-                <p className="px-4 py-4 text-xs text-slate-400 italic">Sin datos suficientes</p>
-              ) : (
-                ciudadTop.map(([ciudad, count]) => (
-                  <div key={ciudad} className="px-4 py-3 border-b border-slate-100 last:border-b-0 flex items-center justify-between">
-                    <span className="text-xs text-slate-700">{ciudad}</span>
-                    <span className="text-xs font-extrabold text-slate-800">{count}</span>
-                  </div>
-                ))
-              )}
+            {/* Tu visitorId */}
+            <div className="bg-slate-800 rounded-xl px-4 py-2.5 flex items-center justify-between gap-2">
+              <span className="text-slate-400 text-[10px]">Tu visitorId en este dispositivo:</span>
+              <span className="font-mono text-green-400 text-xs font-bold">{visitorId || '—'}</span>
             </div>
 
-            {/* Pending events */}
-            <details className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-              <summary className="px-4 py-3 flex items-center justify-between cursor-pointer list-none hover:bg-slate-50">
-                <span className="text-sm font-extrabold text-slate-700">🔧 Eventos técnicos pendientes</span>
-                <span className="text-xs text-slate-400">{pendingEvents.filter(e => e.status === 'pending').length} ▾</span>
-              </summary>
-              <div className="border-t border-slate-100 divide-y divide-slate-100">
-                {pendingEvents.map(ev => (
-                  <div key={ev.id} className={`px-4 py-3 ${ev.status !== 'pending' ? 'opacity-40' : ''}`}>
-                    <div className="flex items-start justify-between gap-2 mb-2">
+            {/* Participantes identificados — perfiles */}
+            {participantProfiles.length > 0 && (
+              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                  <p className="text-sm font-extrabold text-slate-700">👤 Participantes identificados</p>
+                  <span className="text-xs text-slate-400">{participantProfiles.length}</span>
+                </div>
+                {participantProfiles.map(p => (
+                  <div key={p.cedula}>
+                    <button
+                      onClick={() => setAnalyticsProfile(analyticsProfile === p.cedula ? null : p.cedula)}
+                      className="w-full px-4 py-3 flex items-center justify-between border-b border-slate-100 hover:bg-slate-50 transition-colors text-left"
+                    >
                       <div>
-                        <p className="text-[10px] text-slate-400">{ev.matchLabel}</p>
-                        <p className="text-xs font-semibold text-slate-800">{ev.playerName} · {ev.eventType} min.{ev.minute}</p>
+                        <p className="text-xs font-semibold text-slate-800">{p.name}</p>
+                        <p className="text-[10px] text-slate-400">{p.masked} · {p.events.length} evento{p.events.length !== 1 ? 's' : ''} · {fmtTs(p.events[p.events.length - 1]?.timestamp ?? '')}</p>
                       </div>
-                      {ev.status !== 'pending' && (
-                        <span className={`text-[10px] font-extrabold px-2 py-1 rounded-lg shrink-0 ${ev.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
-                          {ev.status === 'approved' ? '✓ OK' : '✗ Rech.'}
-                        </span>
-                      )}
-                    </div>
-                    {ev.status === 'pending' && (
-                      <div className="flex gap-2">
-                        <button onClick={() => { setPendingEvents(prev => prev.map(e => e.id === ev.id ? { ...e, status: 'approved' } : e)); setToast(`✅ ${ev.playerName}`) }}
-                          className="flex-1 bg-green-600 text-white text-xs font-bold py-1.5 rounded-lg touch-manipulation">✓ Aprobar</button>
-                        <button onClick={() => { setPendingEvents(prev => prev.map(e => e.id === ev.id ? { ...e, status: 'rejected' } : e)); setToast(`🗑 ${ev.playerName}`) }}
-                          className="flex-1 bg-red-50 border border-red-200 text-red-600 text-xs font-bold py-1.5 rounded-lg touch-manipulation">✗ Rechazar</button>
+                      <span className="text-slate-400 text-xs">{analyticsProfile === p.cedula ? '▴' : '▾'}</span>
+                    </button>
+                    {analyticsProfile === p.cedula && (
+                      <div className="bg-slate-50 border-b border-slate-200 px-4 py-3 space-y-2">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Actividad de {p.name}</p>
+                        {profileEv.map(e => (
+                          <div key={e.id} className="flex items-start gap-2 text-[10px]">
+                            <span className="text-slate-400 w-28 shrink-0">{fmtTs(e.timestamp)}</span>
+                            <span className={`font-semibold ${e.isAdmin ? 'text-violet-600' : 'text-slate-700'}`}>
+                              {EVENT_LABELS[e.event] ?? e.event}
+                            </span>
+                            <span className="text-slate-400">{e.device} · {e.browser}</span>
+                          </div>
+                        ))}
+                        {profileEv.length === 0 && <p className="text-[10px] text-slate-400 italic">Sin eventos registrados</p>}
                       </div>
                     )}
                   </div>
                 ))}
               </div>
-            </details>
+            )}
+
+            {/* Filtros y búsqueda */}
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+              <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex flex-wrap gap-2 items-center justify-between">
+                <p className="text-sm font-extrabold text-slate-700">📋 Actividad reciente</p>
+                <div className="flex gap-1.5 flex-wrap">
+                  {(['all', 'identified', 'anonymous'] as const).map(f => (
+                    <button key={f} onClick={() => setAnalyticsFilter(f)}
+                      className={`text-[10px] font-bold px-2 py-1 rounded-lg transition-all ${analyticsFilter === f ? 'bg-green-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                      {f === 'all' ? 'Todos' : f === 'identified' ? '👤 Identificados' : '🕵️ Anónimos'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="px-4 py-2 border-b border-slate-100">
+                <input
+                  type="text" value={analyticsSearch}
+                  onChange={e => setAnalyticsSearch(e.target.value)}
+                  placeholder="Buscar por nombre, cédula, visitorId o evento…"
+                  className="w-full text-xs border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-green-500"
+                />
+              </div>
+
+              {filtered.length === 0 ? (
+                <p className="px-4 py-6 text-xs text-slate-400 text-center italic">Sin eventos registrados aún. Navega el prototipo para generar datos.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[10px]">
+                    <thead>
+                      <tr className="border-b border-slate-100 bg-slate-50">
+                        <th className="px-3 py-2 text-left font-bold text-slate-500 whitespace-nowrap">Hora</th>
+                        <th className="px-3 py-2 text-left font-bold text-slate-500 whitespace-nowrap">Evento</th>
+                        <th className="px-3 py-2 text-left font-bold text-slate-500 whitespace-nowrap">Participante</th>
+                        <th className="px-3 py-2 text-left font-bold text-slate-500 whitespace-nowrap">VisitorId</th>
+                        <th className="px-3 py-2 text-left font-bold text-slate-500 whitespace-nowrap">Disp/Nav</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filtered.slice(0, 50).map(e => (
+                        <tr key={e.id} className={`border-b border-slate-50 ${e.isAdmin ? 'bg-violet-50' : e.participantCedula ? 'bg-green-50/40' : ''}`}>
+                          <td className="px-3 py-2 text-slate-400 whitespace-nowrap">{fmtTs(e.timestamp)}</td>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            <span className={`font-semibold ${e.isAdmin ? 'text-violet-600' : 'text-slate-700'}`}>
+                              {EVENT_LABELS[e.event] ?? e.event}
+                            </span>
+                            {e.isAdmin && <span className="ml-1 text-[9px] bg-violet-100 text-violet-600 px-1 py-0.5 rounded font-bold">ADMIN</span>}
+                          </td>
+                          <td className="px-3 py-2">
+                            {e.participantName ? (
+                              <div>
+                                <p className="font-semibold text-slate-800 whitespace-nowrap">{e.participantName}</p>
+                                <p className="text-slate-400">{e.cedulaMasked}</p>
+                              </div>
+                            ) : (
+                              <span className="text-slate-400 italic">Anónimo</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 font-mono text-slate-500 whitespace-nowrap">{e.visitorId}</td>
+                          <td className="px-3 py-2 text-slate-400 whitespace-nowrap">{e.device} · {e.browser}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {filtered.length > 50 && (
+                    <p className="text-center text-[10px] text-slate-400 py-2">Mostrando 50 de {filtered.length} eventos</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Acciones */}
+            <div className="flex gap-2 flex-wrap">
+              <button onClick={exportCSV}
+                className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs transition-all touch-manipulation">
+                ⬇ Exportar CSV
+              </button>
+              <button onClick={() => { localStorage.removeItem(ANALYTICS_KEY); setAnalyticsEvents([]); setToast('🗑 Analíticas borradas') }}
+                className="flex-none bg-red-50 border border-red-200 text-red-600 font-bold py-2.5 px-4 rounded-xl text-xs hover:bg-red-100 transition-all touch-manipulation">
+                🗑 Limpiar
+              </button>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+              <p className="text-amber-800 text-[10px] font-extrabold mb-1">⚠️ Analíticas del prototipo</p>
+              <p className="text-amber-700 text-[10px]">Datos almacenados en localStorage de este navegador. Sin IP ni geolocalización. Solo este dispositivo.</p>
+            </div>
           </div>
         )
       }
@@ -3675,6 +4137,7 @@ export default function PrototipoEliminatoriasV3() {
         const found: KOParticipant = data.participant
         const alreadyIn = findEnrolled(found.cedula, koEnrolled)
         setLookupLoading(false)
+        trackEvent('PARTICIPANT_LOOKUP', { cedula: found.cedula, displayName: found.displayName, whatsapp: found.whatsapp })
         if (alreadyIn) { setLookupResult(found); setRegStep('already-enrolled'); return }
         setLookupResult(found)
         setRegStep('found')
@@ -3692,6 +4155,7 @@ export default function PrototipoEliminatoriasV3() {
       setRegistered(true)
       setRegForm({ nombre: entry.nombre, cedula: entry.cedula, whatsapp: entry.whatsapp, ciudad: entry.ciudad ?? '', email: entry.email ?? '' })
       activateSession({ cedula: entry.cedula, displayName: entry.displayName })
+      trackEvent('ENTRY_CONFIRMED', { cedula: entry.cedula, displayName: entry.displayName, whatsapp: entry.whatsapp })
       setToast('✅ ¡Inscripción confirmada! Ahora llena tu quiniela.')
       setRegStep('choose'); setLookupQuery(''); setLookupResult(null)
       setView('llenado')
@@ -3725,6 +4189,7 @@ export default function PrototipoEliminatoriasV3() {
       setKoEnrolled(next); saveKOEnrolled(next)
       setRegistered(true)
       activateSession({ cedula: entry.cedula, displayName: entry.displayName })
+      trackEvent('ENTRY_CONFIRMED', { cedula: entry.cedula, displayName: entry.displayName, whatsapp: entry.whatsapp })
       setToast('✅ ¡Inscripción exitosa! Ahora llena tu quiniela.')
       setRegStep('choose'); setRegErrors({})
       setView('llenado')
@@ -4074,10 +4539,11 @@ export default function PrototipoEliminatoriasV3() {
 
           {/* Legend */}
           <div className="bg-white rounded-xl border border-slate-100 px-3 py-2 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-slate-500">
-            <span>🎯 <strong>+3</strong> marcador exacto</span>
-            <span>✅ <strong>+1</strong> resultado correcto</span>
-            <span>❌ <strong>0</strong> incorrecto</span>
-            <span className="text-slate-400">· Puntos pendientes hasta que se cargue el resultado final</span>
+            <span>🏆 <strong>+2</strong> clasificado correcto</span>
+            <span>🎯 <strong>+2</strong> marcador exacto</span>
+            <span>🥅 <strong>+1</strong> penales correctos</span>
+            <span>❌ <strong>0</strong> fallo</span>
+            <span className="text-slate-400">· Máx. 5 pts por partido</span>
           </div>
 
           {/* Match cards */}
@@ -4144,9 +4610,12 @@ export default function PrototipoEliminatoriasV3() {
 
                       {/* My prediction */}
                       {myPick && (
-                        <div className="mt-2 bg-blue-50 rounded-lg px-3 py-1.5 text-xs text-blue-700 flex items-center gap-2">
+                        <div className="mt-2 bg-blue-50 rounded-lg px-3 py-1.5 text-xs text-blue-700 flex items-center gap-2 flex-wrap">
                           <span>📋 Mi pronóstico:</span>
                           <span className="font-bold tabular-nums">{myPick.home} – {myPick.away}</span>
+                          {myPick.penaltyWinner && (
+                            <span className="text-amber-600 font-semibold">· 🥅 Penales: {myPick.penaltyWinner === 'home' ? (m.home.name ?? m.home.placeholder) : (m.away.name ?? m.away.placeholder)}</span>
+                          )}
                         </div>
                       )}
 

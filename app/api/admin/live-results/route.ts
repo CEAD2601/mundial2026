@@ -13,34 +13,63 @@ function parseBoolean(value: string | undefined): boolean {
   return ['true', '1', 'yes', 'on'].includes(String(value ?? '').toLowerCase().trim())
 }
 
+// Explicit select to avoid querying columns that may not exist yet in DB
+const TEAM_SELECT = {
+  displayName: true,
+  flagEmoji: true,
+  shortName: true,
+} as const
+
+const MATCH_SAFE_SELECT = {
+  id: true,
+  matchNumber: true,
+  group: true,
+  kickoffUtc: true,
+  status: true,
+  team1Goals: true,
+  team2Goals: true,
+  result: true,
+  autoDetectedTeam1Goals: true,
+  autoDetectedTeam2Goals: true,
+  autoDetectedResult: true,
+  autoDetectedSource: true,
+  autoDetectionConfidence: true,
+  autoDetectedAt: true,
+  autoResultStatus: true,
+} as const
+
 export async function GET() {
   const now = new Date()
   const next48h = new Date(now.getTime() + 48 * 60 * 60 * 1000)
-  const reviewWindowStart = new Date(now.getTime() - 105 * 60 * 1000)
   const reviewWindowEnd = new Date(now.getTime() - 6 * 60 * 60 * 1000)
 
   const [pendingMatches, recentLogs, upcomingAndActiveMatches] = await Promise.all([
     prisma.match.findMany({
       where: { autoResultStatus: 'PENDING_REVIEW' },
-      include: { team1: true, team2: true },
+      select: {
+        ...MATCH_SAFE_SELECT,
+        team1: { select: TEAM_SELECT },
+        team2: { select: TEAM_SELECT },
+      },
       orderBy: { kickoffUtc: 'asc' },
     }),
     prisma.liveResultsLog.findMany({
       orderBy: { createdAt: 'desc' },
       take: 50,
     }),
-    // Matches to show in "upcoming checks" panel:
-    // 1. Scheduled in next 48h (not started yet)
-    // 2. Currently in review window (105min - 6h past kickoff, not finished)
+    // All unfinished matches: from 6h ago through next 48h
+    // status SCHEDULED/IN_PROGRESS already excludes FINISHED matches — no need to filter autoResultStatus
+    // (NULL != 'CONFIRMED' is false in SQL, which would wrongly exclude unprocessed matches)
     prisma.match.findMany({
       where: {
         status: { in: ['SCHEDULED', 'IN_PROGRESS'] },
-        OR: [
-          { kickoffUtc: { gte: now, lte: next48h } },
-          { kickoffUtc: { gte: reviewWindowEnd, lte: reviewWindowStart } },
-        ],
+        kickoffUtc: { gte: reviewWindowEnd, lte: next48h },
       },
-      include: { team1: true, team2: true },
+      select: {
+        ...MATCH_SAFE_SELECT,
+        team1: { select: TEAM_SELECT },
+        team2: { select: TEAM_SELECT },
+      },
       orderBy: { kickoffUtc: 'asc' },
       take: 20,
     }),
@@ -48,23 +77,35 @@ export async function GET() {
 
   const isEnabled = parseBoolean(process.env.LIVE_RESULTS_ENABLED)
   const source = process.env.LIVE_RESULTS_SOURCE?.trim() || 'public_web'
-  // HIGH confidence results always auto-apply regardless of env var
-  const autoApply = true
 
   const lastCronRun = recentLogs.find((l) => l.type === 'CRON_RUN')
+  const lastExternalCronRun = recentLogs.find((l) => l.type === 'EXTERNAL_CRON_RUN_COMPLETED')
+  const lastCronUnauthorized = recentLogs.find((l) => l.type === 'CRON_UNAUTHORIZED')
   const recentErrors = recentLogs.filter((l) => l.type === 'ERROR').slice(0, 5)
+
+  const lastRunAt = lastCronRun?.createdAt ?? null
+  const lastExternalCronAt = lastExternalCronRun?.createdAt ?? null
+  // nextCronAt based on last external run (the real 10-min motor)
+  const nextCronAt = lastExternalCronAt
+    ? new Date(lastExternalCronAt.getTime() + 10 * 60 * 1000)
+    : lastRunAt
+    ? new Date(lastRunAt.getTime() + 10 * 60 * 1000)
+    : null
 
   return NextResponse.json({
     status: {
       enabled: isEnabled,
       source,
-      autoApply,
-      lastRunAt: lastCronRun?.createdAt ?? null,
+      autoApply: true,
+      lastRunAt,
+      lastExternalCronAt,
+      lastCronUnauthorizedAt: lastCronUnauthorized?.createdAt ?? null,
+      nextCronAt,
       lastRunMessage: lastCronRun?.message ?? (
-      isEnabled
-        ? 'Automatización activada. Usa "Actualizar ahora" para ejecutar manualmente o configura Vercel Cron.'
-        : 'Automatización desactivada. Para activar, configura LIVE_RESULTS_ENABLED=true en Vercel.'
-    ),
+        isEnabled
+          ? 'Automatización activada. Usa "Actualizar ahora" para ejecutar manualmente o configura Vercel Cron.'
+          : 'Automatización desactivada. Para activar, configura LIVE_RESULTS_ENABLED=true en Vercel.'
+      ),
     },
     pendingMatches: pendingMatches.map((m) => ({
       id: m.id,
@@ -99,14 +140,18 @@ export async function GET() {
       createdAt: l.createdAt,
     })),
     upcomingChecks: upcomingAndActiveMatches.map((m) => {
+      const nowMs = now.getTime()
       const kickoff = m.kickoffUtc.getTime()
-      const firstCheckAt = new Date(kickoff + 105 * 60 * 1000)
-      const inWindow = now.getTime() >= kickoff + 105 * 60 * 1000
-      const exhausted = (m.autoCheckAttempts ?? 0) >= 20
-      const status = exhausted
+      const firstCheckAt = new Date(kickoff + 120 * 60 * 1000)
+      const inPlay = nowMs >= kickoff && nowMs < kickoff + 120 * 60 * 1000
+      const inWindow = nowMs >= kickoff + 120 * 60 * 1000
+      const pastDeadline = nowMs >= kickoff + 6 * 60 * 60 * 1000
+      const status: 'WAITING' | 'LIVE_WAITING' | 'CHECKING' | 'REQUIRES_MANUAL' = pastDeadline
         ? 'REQUIRES_MANUAL'
         : inWindow
         ? 'CHECKING'
+        : inPlay
+        ? 'LIVE_WAITING'
         : 'WAITING'
       return {
         id: m.id,
@@ -115,8 +160,6 @@ export async function GET() {
         team2: { displayName: m.team2.displayName, flagEmoji: m.team2.flagEmoji },
         kickoffUtc: m.kickoffUtc,
         firstCheckAt,
-        lastAutoCheckAt: m.lastAutoCheckAt ?? null,
-        autoCheckAttempts: m.autoCheckAttempts ?? 0,
         status,
       }
     }),

@@ -80,7 +80,7 @@ export const DEMO_TEAM_STATS: TeamStat[] = [
   { rank:  4, name: 'Alemania',          code: 'GER', flag: '🇩🇪', played: 3, wins: 2, draws: 0, losses: 1, goalsFor: 7,  goalsAgainst: 4,  goalDiff:  3, pts: 6 },
   { rank:  5, name: 'España',            code: 'ESP', flag: '🇪🇸', played: 3, wins: 2, draws: 0, losses: 1, goalsFor: 6,  goalsAgainst: 3,  goalDiff:  3, pts: 6 },
   { rank:  6, name: 'Portugal',          code: 'POR', flag: '🇵🇹', played: 3, wins: 2, draws: 0, losses: 1, goalsFor: 7,  goalsAgainst: 5,  goalDiff:  2, pts: 6 },
-  { rank:  7, name: 'Inglaterra',        code: 'ENG', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', played: 3, wins: 2, draws: 0, losses: 1, goalsFor: 5,  goalsAgainst: 3,  goalDiff:  2, pts: 6 },
+  { rank:  7, name: 'Inglaterra',        code: 'ENG', flag: '🇬🇧', played: 3, wins: 2, draws: 0, losses: 1, goalsFor: 5,  goalsAgainst: 3,  goalDiff:  2, pts: 6 },
   { rank:  8, name: 'Países Bajos',      code: 'NED', flag: '🇳🇱', played: 3, wins: 2, draws: 0, losses: 1, goalsFor: 5,  goalsAgainst: 4,  goalDiff:  1, pts: 6 },
   { rank:  9, name: 'USA',               code: 'USA', flag: '🇺🇸', played: 3, wins: 1, draws: 2, losses: 0, goalsFor: 4,  goalsAgainst: 3,  goalDiff:  1, pts: 5 },
   { rank: 10, name: 'México',            code: 'MEX', flag: '🇲🇽', played: 3, wins: 1, draws: 2, losses: 0, goalsFor: 4,  goalsAgainst: 4,  goalDiff:  0, pts: 5 },

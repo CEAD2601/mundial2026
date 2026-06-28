@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { track } from '@/lib/analytics'
 import { FlagIcon } from '@/components/TeamFlag'
@@ -90,7 +90,7 @@ function toVetDateStr(date: Date): string {
 
 function vetTime(utc: string): string {
   return new Date(utc).toLocaleTimeString('es-VE', {
-    timeZone: 'America/Caracas', hour: '2-digit', minute: '2-digit',
+    timeZone: 'America/Caracas', hour: 'numeric', minute: '2-digit', hour12: true,
   })
 }
 
@@ -333,6 +333,9 @@ export default function RankingPage() {
   const [now, setNow] = useState(() => new Date())
   const [gridView, setGridView] = useState(false)
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const activeDateRef = useRef<HTMLButtonElement>(null)
+
   const today = toVetDateStr(now)
 
   const fetchDaily = useCallback(async (date: string) => {
@@ -371,6 +374,12 @@ export default function RankingPage() {
   }
 
   const availableDates = dailyData?.availableDates ?? []
+
+  useEffect(() => {
+    const btn = activeDateRef.current
+    if (!btn) return
+    btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+  }, [selectedDate, availableDates])
   const top3 = ranking.slice(0, 3)
   const podiumOrder = [top3[1] ?? null, top3[0] ?? null, top3[2] ?? null]
   const podiumMedals = ['🥈', '🥇', '🥉']
@@ -400,10 +409,11 @@ export default function RankingPage() {
 
           {/* Date selector */}
           {availableDates.length > 0 && (
-            <div className="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-hide">
+            <div ref={scrollContainerRef} className="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-hide">
               {availableDates.map(d => (
                 <button
                   key={d}
+                  ref={d === selectedDate ? activeDateRef : null}
                   onClick={() => handleDateChange(d)}
                   className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
                     d === selectedDate

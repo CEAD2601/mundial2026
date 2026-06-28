@@ -23,7 +23,15 @@ export async function GET(req: NextRequest) {
   const requestedDate = searchParams.get('date') ?? toVetDateStr(new Date())
 
   const [allMatches, settings] = await Promise.all([
-    prisma.match.findMany({ include: { team1: true, team2: true }, orderBy: { kickoffUtc: 'asc' } }),
+    prisma.match.findMany({
+      select: {
+        id: true, matchNumber: true, group: true, kickoffUtc: true,
+        status: true, result: true, team1Goals: true, team2Goals: true,
+        team1: { select: { displayName: true, flagEmoji: true, shortName: true, isoCode: true } },
+        team2: { select: { displayName: true, flagEmoji: true, shortName: true, isoCode: true } },
+      },
+      orderBy: { kickoffUtc: 'asc' },
+    }),
     prisma.setting.findFirst({ select: { poolStatus: true } }),
   ])
 
