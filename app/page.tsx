@@ -344,19 +344,20 @@ export default function Home() {
                 </Link>
               </div>
 
-              {/* Próxima quiniela card */}
-              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-4 text-center">
-                <p className="text-yellow-300 text-xs font-bold uppercase tracking-widest mb-1">{'🔜'} Próxima quiniela</p>
-                <p className="text-white font-bold text-base mb-1">
-                  {poolInfo.nextPhaseLabel}
+              {/* Eliminatorias — ABIERTA */}
+              <div className="bg-gradient-to-r from-yellow-400/20 to-green-400/20 backdrop-blur-sm border border-yellow-400/40 rounded-2xl px-5 py-4 text-center">
+                <p className="text-yellow-300 text-xs font-bold uppercase tracking-widest mb-1">⚡ ¡Nueva quiniela disponible!</p>
+                <p className="text-white font-extrabold text-lg mb-1">Quiniela Eliminatorias 2026</p>
+                <p className="text-white/80 text-sm mb-3">
+                  Dieciseisavos · Octavos · Cuartos · Semis · Final<br/>
+                  Sistema de puntos nuevo · Máx. 5 pts por partido
                 </p>
-                <p className="text-white/60 text-xs">
-                  Cuando est{'é'}n definidos los clasificados, abriremos una nueva quiniela para las fases eliminatorias del Mundial.
-                </p>
-                <div className="mt-3 inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-white/70 text-xs">
-                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                  En espera — Pr{'ó'}ximamente
-                </div>
+                <Link
+                  href="/eliminatorias"
+                  className="inline-block bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-extrabold px-6 py-2.5 rounded-xl text-sm transition-all shadow-lg"
+                >
+                  Ver quiniela eliminatorias →
+                </Link>
               </div>
             </div>
           )}

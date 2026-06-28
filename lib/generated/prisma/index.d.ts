@@ -63,6 +63,31 @@ export type AuditLog = $Result.DefaultSelection<Prisma.$AuditLogPayload>
  * 
  */
 export type AnalyticsEvent = $Result.DefaultSelection<Prisma.$AnalyticsEventPayload>
+/**
+ * Model KOParticipant
+ * 
+ */
+export type KOParticipant = $Result.DefaultSelection<Prisma.$KOParticipantPayload>
+/**
+ * Model KOPayment
+ * 
+ */
+export type KOPayment = $Result.DefaultSelection<Prisma.$KOPaymentPayload>
+/**
+ * Model KOPick
+ * 
+ */
+export type KOPick = $Result.DefaultSelection<Prisma.$KOPickPayload>
+/**
+ * Model KOMatchResult
+ * 
+ */
+export type KOMatchResult = $Result.DefaultSelection<Prisma.$KOMatchResultPayload>
+/**
+ * Model KORankingSnapshot
+ * 
+ */
+export type KORankingSnapshot = $Result.DefaultSelection<Prisma.$KORankingSnapshotPayload>
 
 /**
  * Enums
@@ -342,6 +367,56 @@ export class PrismaClient<
     * ```
     */
   get analyticsEvent(): Prisma.AnalyticsEventDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.kOParticipant`: Exposes CRUD operations for the **KOParticipant** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more KOParticipants
+    * const kOParticipants = await prisma.kOParticipant.findMany()
+    * ```
+    */
+  get kOParticipant(): Prisma.KOParticipantDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.kOPayment`: Exposes CRUD operations for the **KOPayment** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more KOPayments
+    * const kOPayments = await prisma.kOPayment.findMany()
+    * ```
+    */
+  get kOPayment(): Prisma.KOPaymentDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.kOPick`: Exposes CRUD operations for the **KOPick** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more KOPicks
+    * const kOPicks = await prisma.kOPick.findMany()
+    * ```
+    */
+  get kOPick(): Prisma.KOPickDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.kOMatchResult`: Exposes CRUD operations for the **KOMatchResult** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more KOMatchResults
+    * const kOMatchResults = await prisma.kOMatchResult.findMany()
+    * ```
+    */
+  get kOMatchResult(): Prisma.KOMatchResultDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.kORankingSnapshot`: Exposes CRUD operations for the **KORankingSnapshot** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more KORankingSnapshots
+    * const kORankingSnapshots = await prisma.kORankingSnapshot.findMany()
+    * ```
+    */
+  get kORankingSnapshot(): Prisma.KORankingSnapshotDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -785,7 +860,12 @@ export namespace Prisma {
     RankingSnapshot: 'RankingSnapshot',
     LiveResultsLog: 'LiveResultsLog',
     AuditLog: 'AuditLog',
-    AnalyticsEvent: 'AnalyticsEvent'
+    AnalyticsEvent: 'AnalyticsEvent',
+    KOParticipant: 'KOParticipant',
+    KOPayment: 'KOPayment',
+    KOPick: 'KOPick',
+    KOMatchResult: 'KOMatchResult',
+    KORankingSnapshot: 'KORankingSnapshot'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -801,7 +881,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "setting" | "team" | "match" | "participant" | "prediction" | "payment" | "rankingSnapshot" | "liveResultsLog" | "auditLog" | "analyticsEvent"
+      modelProps: "setting" | "team" | "match" | "participant" | "prediction" | "payment" | "rankingSnapshot" | "liveResultsLog" | "auditLog" | "analyticsEvent" | "kOParticipant" | "kOPayment" | "kOPick" | "kOMatchResult" | "kORankingSnapshot"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1545,6 +1625,376 @@ export namespace Prisma {
           }
         }
       }
+      KOParticipant: {
+        payload: Prisma.$KOParticipantPayload<ExtArgs>
+        fields: Prisma.KOParticipantFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.KOParticipantFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOParticipantPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.KOParticipantFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOParticipantPayload>
+          }
+          findFirst: {
+            args: Prisma.KOParticipantFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOParticipantPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.KOParticipantFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOParticipantPayload>
+          }
+          findMany: {
+            args: Prisma.KOParticipantFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOParticipantPayload>[]
+          }
+          create: {
+            args: Prisma.KOParticipantCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOParticipantPayload>
+          }
+          createMany: {
+            args: Prisma.KOParticipantCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.KOParticipantCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOParticipantPayload>[]
+          }
+          delete: {
+            args: Prisma.KOParticipantDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOParticipantPayload>
+          }
+          update: {
+            args: Prisma.KOParticipantUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOParticipantPayload>
+          }
+          deleteMany: {
+            args: Prisma.KOParticipantDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.KOParticipantUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.KOParticipantUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOParticipantPayload>[]
+          }
+          upsert: {
+            args: Prisma.KOParticipantUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOParticipantPayload>
+          }
+          aggregate: {
+            args: Prisma.KOParticipantAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateKOParticipant>
+          }
+          groupBy: {
+            args: Prisma.KOParticipantGroupByArgs<ExtArgs>
+            result: $Utils.Optional<KOParticipantGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.KOParticipantCountArgs<ExtArgs>
+            result: $Utils.Optional<KOParticipantCountAggregateOutputType> | number
+          }
+        }
+      }
+      KOPayment: {
+        payload: Prisma.$KOPaymentPayload<ExtArgs>
+        fields: Prisma.KOPaymentFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.KOPaymentFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOPaymentPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.KOPaymentFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOPaymentPayload>
+          }
+          findFirst: {
+            args: Prisma.KOPaymentFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOPaymentPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.KOPaymentFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOPaymentPayload>
+          }
+          findMany: {
+            args: Prisma.KOPaymentFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOPaymentPayload>[]
+          }
+          create: {
+            args: Prisma.KOPaymentCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOPaymentPayload>
+          }
+          createMany: {
+            args: Prisma.KOPaymentCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.KOPaymentCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOPaymentPayload>[]
+          }
+          delete: {
+            args: Prisma.KOPaymentDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOPaymentPayload>
+          }
+          update: {
+            args: Prisma.KOPaymentUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOPaymentPayload>
+          }
+          deleteMany: {
+            args: Prisma.KOPaymentDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.KOPaymentUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.KOPaymentUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOPaymentPayload>[]
+          }
+          upsert: {
+            args: Prisma.KOPaymentUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOPaymentPayload>
+          }
+          aggregate: {
+            args: Prisma.KOPaymentAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateKOPayment>
+          }
+          groupBy: {
+            args: Prisma.KOPaymentGroupByArgs<ExtArgs>
+            result: $Utils.Optional<KOPaymentGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.KOPaymentCountArgs<ExtArgs>
+            result: $Utils.Optional<KOPaymentCountAggregateOutputType> | number
+          }
+        }
+      }
+      KOPick: {
+        payload: Prisma.$KOPickPayload<ExtArgs>
+        fields: Prisma.KOPickFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.KOPickFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOPickPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.KOPickFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOPickPayload>
+          }
+          findFirst: {
+            args: Prisma.KOPickFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOPickPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.KOPickFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOPickPayload>
+          }
+          findMany: {
+            args: Prisma.KOPickFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOPickPayload>[]
+          }
+          create: {
+            args: Prisma.KOPickCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOPickPayload>
+          }
+          createMany: {
+            args: Prisma.KOPickCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.KOPickCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOPickPayload>[]
+          }
+          delete: {
+            args: Prisma.KOPickDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOPickPayload>
+          }
+          update: {
+            args: Prisma.KOPickUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOPickPayload>
+          }
+          deleteMany: {
+            args: Prisma.KOPickDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.KOPickUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.KOPickUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOPickPayload>[]
+          }
+          upsert: {
+            args: Prisma.KOPickUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOPickPayload>
+          }
+          aggregate: {
+            args: Prisma.KOPickAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateKOPick>
+          }
+          groupBy: {
+            args: Prisma.KOPickGroupByArgs<ExtArgs>
+            result: $Utils.Optional<KOPickGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.KOPickCountArgs<ExtArgs>
+            result: $Utils.Optional<KOPickCountAggregateOutputType> | number
+          }
+        }
+      }
+      KOMatchResult: {
+        payload: Prisma.$KOMatchResultPayload<ExtArgs>
+        fields: Prisma.KOMatchResultFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.KOMatchResultFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOMatchResultPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.KOMatchResultFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOMatchResultPayload>
+          }
+          findFirst: {
+            args: Prisma.KOMatchResultFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOMatchResultPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.KOMatchResultFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOMatchResultPayload>
+          }
+          findMany: {
+            args: Prisma.KOMatchResultFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOMatchResultPayload>[]
+          }
+          create: {
+            args: Prisma.KOMatchResultCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOMatchResultPayload>
+          }
+          createMany: {
+            args: Prisma.KOMatchResultCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.KOMatchResultCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOMatchResultPayload>[]
+          }
+          delete: {
+            args: Prisma.KOMatchResultDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOMatchResultPayload>
+          }
+          update: {
+            args: Prisma.KOMatchResultUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOMatchResultPayload>
+          }
+          deleteMany: {
+            args: Prisma.KOMatchResultDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.KOMatchResultUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.KOMatchResultUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOMatchResultPayload>[]
+          }
+          upsert: {
+            args: Prisma.KOMatchResultUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KOMatchResultPayload>
+          }
+          aggregate: {
+            args: Prisma.KOMatchResultAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateKOMatchResult>
+          }
+          groupBy: {
+            args: Prisma.KOMatchResultGroupByArgs<ExtArgs>
+            result: $Utils.Optional<KOMatchResultGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.KOMatchResultCountArgs<ExtArgs>
+            result: $Utils.Optional<KOMatchResultCountAggregateOutputType> | number
+          }
+        }
+      }
+      KORankingSnapshot: {
+        payload: Prisma.$KORankingSnapshotPayload<ExtArgs>
+        fields: Prisma.KORankingSnapshotFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.KORankingSnapshotFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KORankingSnapshotPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.KORankingSnapshotFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KORankingSnapshotPayload>
+          }
+          findFirst: {
+            args: Prisma.KORankingSnapshotFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KORankingSnapshotPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.KORankingSnapshotFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KORankingSnapshotPayload>
+          }
+          findMany: {
+            args: Prisma.KORankingSnapshotFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KORankingSnapshotPayload>[]
+          }
+          create: {
+            args: Prisma.KORankingSnapshotCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KORankingSnapshotPayload>
+          }
+          createMany: {
+            args: Prisma.KORankingSnapshotCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.KORankingSnapshotCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KORankingSnapshotPayload>[]
+          }
+          delete: {
+            args: Prisma.KORankingSnapshotDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KORankingSnapshotPayload>
+          }
+          update: {
+            args: Prisma.KORankingSnapshotUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KORankingSnapshotPayload>
+          }
+          deleteMany: {
+            args: Prisma.KORankingSnapshotDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.KORankingSnapshotUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.KORankingSnapshotUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KORankingSnapshotPayload>[]
+          }
+          upsert: {
+            args: Prisma.KORankingSnapshotUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KORankingSnapshotPayload>
+          }
+          aggregate: {
+            args: Prisma.KORankingSnapshotAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateKORankingSnapshot>
+          }
+          groupBy: {
+            args: Prisma.KORankingSnapshotGroupByArgs<ExtArgs>
+            result: $Utils.Optional<KORankingSnapshotGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.KORankingSnapshotCountArgs<ExtArgs>
+            result: $Utils.Optional<KORankingSnapshotCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1663,6 +2113,11 @@ export namespace Prisma {
     liveResultsLog?: LiveResultsLogOmit
     auditLog?: AuditLogOmit
     analyticsEvent?: AnalyticsEventOmit
+    kOParticipant?: KOParticipantOmit
+    kOPayment?: KOPaymentOmit
+    kOPick?: KOPickOmit
+    kOMatchResult?: KOMatchResultOmit
+    kORankingSnapshot?: KORankingSnapshotOmit
   }
 
   /* Types for Logging */
@@ -1837,6 +2292,37 @@ export namespace Prisma {
    */
   export type ParticipantCountOutputTypeCountPredictionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: PredictionWhereInput
+  }
+
+
+  /**
+   * Count Type KOParticipantCountOutputType
+   */
+
+  export type KOParticipantCountOutputType = {
+    picks: number
+  }
+
+  export type KOParticipantCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    picks?: boolean | KOParticipantCountOutputTypeCountPicksArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * KOParticipantCountOutputType without action
+   */
+  export type KOParticipantCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOParticipantCountOutputType
+     */
+    select?: KOParticipantCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * KOParticipantCountOutputType without action
+   */
+  export type KOParticipantCountOutputTypeCountPicksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: KOPickWhereInput
   }
 
 
@@ -13971,6 +14457,5886 @@ export namespace Prisma {
 
 
   /**
+   * Model KOParticipant
+   */
+
+  export type AggregateKOParticipant = {
+    _count: KOParticipantCountAggregateOutputType | null
+    _min: KOParticipantMinAggregateOutputType | null
+    _max: KOParticipantMaxAggregateOutputType | null
+  }
+
+  export type KOParticipantMinAggregateOutputType = {
+    id: string | null
+    fullName: string | null
+    nationalId: string | null
+    phone: string | null
+    email: string | null
+    city: string | null
+    participationCode: string | null
+    phase: string | null
+    submittedAt: Date | null
+    isComplete: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type KOParticipantMaxAggregateOutputType = {
+    id: string | null
+    fullName: string | null
+    nationalId: string | null
+    phone: string | null
+    email: string | null
+    city: string | null
+    participationCode: string | null
+    phase: string | null
+    submittedAt: Date | null
+    isComplete: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type KOParticipantCountAggregateOutputType = {
+    id: number
+    fullName: number
+    nationalId: number
+    phone: number
+    email: number
+    city: number
+    participationCode: number
+    phase: number
+    submittedAt: number
+    isComplete: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type KOParticipantMinAggregateInputType = {
+    id?: true
+    fullName?: true
+    nationalId?: true
+    phone?: true
+    email?: true
+    city?: true
+    participationCode?: true
+    phase?: true
+    submittedAt?: true
+    isComplete?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type KOParticipantMaxAggregateInputType = {
+    id?: true
+    fullName?: true
+    nationalId?: true
+    phone?: true
+    email?: true
+    city?: true
+    participationCode?: true
+    phase?: true
+    submittedAt?: true
+    isComplete?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type KOParticipantCountAggregateInputType = {
+    id?: true
+    fullName?: true
+    nationalId?: true
+    phone?: true
+    email?: true
+    city?: true
+    participationCode?: true
+    phase?: true
+    submittedAt?: true
+    isComplete?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type KOParticipantAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which KOParticipant to aggregate.
+     */
+    where?: KOParticipantWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KOParticipants to fetch.
+     */
+    orderBy?: KOParticipantOrderByWithRelationInput | KOParticipantOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: KOParticipantWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KOParticipants from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KOParticipants.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned KOParticipants
+    **/
+    _count?: true | KOParticipantCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: KOParticipantMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: KOParticipantMaxAggregateInputType
+  }
+
+  export type GetKOParticipantAggregateType<T extends KOParticipantAggregateArgs> = {
+        [P in keyof T & keyof AggregateKOParticipant]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateKOParticipant[P]>
+      : GetScalarType<T[P], AggregateKOParticipant[P]>
+  }
+
+
+
+
+  export type KOParticipantGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: KOParticipantWhereInput
+    orderBy?: KOParticipantOrderByWithAggregationInput | KOParticipantOrderByWithAggregationInput[]
+    by: KOParticipantScalarFieldEnum[] | KOParticipantScalarFieldEnum
+    having?: KOParticipantScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: KOParticipantCountAggregateInputType | true
+    _min?: KOParticipantMinAggregateInputType
+    _max?: KOParticipantMaxAggregateInputType
+  }
+
+  export type KOParticipantGroupByOutputType = {
+    id: string
+    fullName: string
+    nationalId: string
+    phone: string
+    email: string | null
+    city: string | null
+    participationCode: string
+    phase: string
+    submittedAt: Date | null
+    isComplete: boolean
+    createdAt: Date
+    updatedAt: Date
+    _count: KOParticipantCountAggregateOutputType | null
+    _min: KOParticipantMinAggregateOutputType | null
+    _max: KOParticipantMaxAggregateOutputType | null
+  }
+
+  type GetKOParticipantGroupByPayload<T extends KOParticipantGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<KOParticipantGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof KOParticipantGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], KOParticipantGroupByOutputType[P]>
+            : GetScalarType<T[P], KOParticipantGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type KOParticipantSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    fullName?: boolean
+    nationalId?: boolean
+    phone?: boolean
+    email?: boolean
+    city?: boolean
+    participationCode?: boolean
+    phase?: boolean
+    submittedAt?: boolean
+    isComplete?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    picks?: boolean | KOParticipant$picksArgs<ExtArgs>
+    payment?: boolean | KOParticipant$paymentArgs<ExtArgs>
+    ranking?: boolean | KOParticipant$rankingArgs<ExtArgs>
+    _count?: boolean | KOParticipantCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["kOParticipant"]>
+
+  export type KOParticipantSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    fullName?: boolean
+    nationalId?: boolean
+    phone?: boolean
+    email?: boolean
+    city?: boolean
+    participationCode?: boolean
+    phase?: boolean
+    submittedAt?: boolean
+    isComplete?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["kOParticipant"]>
+
+  export type KOParticipantSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    fullName?: boolean
+    nationalId?: boolean
+    phone?: boolean
+    email?: boolean
+    city?: boolean
+    participationCode?: boolean
+    phase?: boolean
+    submittedAt?: boolean
+    isComplete?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["kOParticipant"]>
+
+  export type KOParticipantSelectScalar = {
+    id?: boolean
+    fullName?: boolean
+    nationalId?: boolean
+    phone?: boolean
+    email?: boolean
+    city?: boolean
+    participationCode?: boolean
+    phase?: boolean
+    submittedAt?: boolean
+    isComplete?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type KOParticipantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "fullName" | "nationalId" | "phone" | "email" | "city" | "participationCode" | "phase" | "submittedAt" | "isComplete" | "createdAt" | "updatedAt", ExtArgs["result"]["kOParticipant"]>
+  export type KOParticipantInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    picks?: boolean | KOParticipant$picksArgs<ExtArgs>
+    payment?: boolean | KOParticipant$paymentArgs<ExtArgs>
+    ranking?: boolean | KOParticipant$rankingArgs<ExtArgs>
+    _count?: boolean | KOParticipantCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type KOParticipantIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type KOParticipantIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+
+  export type $KOParticipantPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "KOParticipant"
+    objects: {
+      picks: Prisma.$KOPickPayload<ExtArgs>[]
+      payment: Prisma.$KOPaymentPayload<ExtArgs> | null
+      ranking: Prisma.$KORankingSnapshotPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      fullName: string
+      nationalId: string
+      phone: string
+      email: string | null
+      city: string | null
+      participationCode: string
+      phase: string
+      submittedAt: Date | null
+      isComplete: boolean
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["kOParticipant"]>
+    composites: {}
+  }
+
+  type KOParticipantGetPayload<S extends boolean | null | undefined | KOParticipantDefaultArgs> = $Result.GetResult<Prisma.$KOParticipantPayload, S>
+
+  type KOParticipantCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<KOParticipantFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: KOParticipantCountAggregateInputType | true
+    }
+
+  export interface KOParticipantDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['KOParticipant'], meta: { name: 'KOParticipant' } }
+    /**
+     * Find zero or one KOParticipant that matches the filter.
+     * @param {KOParticipantFindUniqueArgs} args - Arguments to find a KOParticipant
+     * @example
+     * // Get one KOParticipant
+     * const kOParticipant = await prisma.kOParticipant.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends KOParticipantFindUniqueArgs>(args: SelectSubset<T, KOParticipantFindUniqueArgs<ExtArgs>>): Prisma__KOParticipantClient<$Result.GetResult<Prisma.$KOParticipantPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one KOParticipant that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {KOParticipantFindUniqueOrThrowArgs} args - Arguments to find a KOParticipant
+     * @example
+     * // Get one KOParticipant
+     * const kOParticipant = await prisma.kOParticipant.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends KOParticipantFindUniqueOrThrowArgs>(args: SelectSubset<T, KOParticipantFindUniqueOrThrowArgs<ExtArgs>>): Prisma__KOParticipantClient<$Result.GetResult<Prisma.$KOParticipantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first KOParticipant that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOParticipantFindFirstArgs} args - Arguments to find a KOParticipant
+     * @example
+     * // Get one KOParticipant
+     * const kOParticipant = await prisma.kOParticipant.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends KOParticipantFindFirstArgs>(args?: SelectSubset<T, KOParticipantFindFirstArgs<ExtArgs>>): Prisma__KOParticipantClient<$Result.GetResult<Prisma.$KOParticipantPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first KOParticipant that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOParticipantFindFirstOrThrowArgs} args - Arguments to find a KOParticipant
+     * @example
+     * // Get one KOParticipant
+     * const kOParticipant = await prisma.kOParticipant.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends KOParticipantFindFirstOrThrowArgs>(args?: SelectSubset<T, KOParticipantFindFirstOrThrowArgs<ExtArgs>>): Prisma__KOParticipantClient<$Result.GetResult<Prisma.$KOParticipantPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more KOParticipants that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOParticipantFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all KOParticipants
+     * const kOParticipants = await prisma.kOParticipant.findMany()
+     * 
+     * // Get first 10 KOParticipants
+     * const kOParticipants = await prisma.kOParticipant.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const kOParticipantWithIdOnly = await prisma.kOParticipant.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends KOParticipantFindManyArgs>(args?: SelectSubset<T, KOParticipantFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KOParticipantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a KOParticipant.
+     * @param {KOParticipantCreateArgs} args - Arguments to create a KOParticipant.
+     * @example
+     * // Create one KOParticipant
+     * const KOParticipant = await prisma.kOParticipant.create({
+     *   data: {
+     *     // ... data to create a KOParticipant
+     *   }
+     * })
+     * 
+     */
+    create<T extends KOParticipantCreateArgs>(args: SelectSubset<T, KOParticipantCreateArgs<ExtArgs>>): Prisma__KOParticipantClient<$Result.GetResult<Prisma.$KOParticipantPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many KOParticipants.
+     * @param {KOParticipantCreateManyArgs} args - Arguments to create many KOParticipants.
+     * @example
+     * // Create many KOParticipants
+     * const kOParticipant = await prisma.kOParticipant.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends KOParticipantCreateManyArgs>(args?: SelectSubset<T, KOParticipantCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many KOParticipants and returns the data saved in the database.
+     * @param {KOParticipantCreateManyAndReturnArgs} args - Arguments to create many KOParticipants.
+     * @example
+     * // Create many KOParticipants
+     * const kOParticipant = await prisma.kOParticipant.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many KOParticipants and only return the `id`
+     * const kOParticipantWithIdOnly = await prisma.kOParticipant.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends KOParticipantCreateManyAndReturnArgs>(args?: SelectSubset<T, KOParticipantCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KOParticipantPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a KOParticipant.
+     * @param {KOParticipantDeleteArgs} args - Arguments to delete one KOParticipant.
+     * @example
+     * // Delete one KOParticipant
+     * const KOParticipant = await prisma.kOParticipant.delete({
+     *   where: {
+     *     // ... filter to delete one KOParticipant
+     *   }
+     * })
+     * 
+     */
+    delete<T extends KOParticipantDeleteArgs>(args: SelectSubset<T, KOParticipantDeleteArgs<ExtArgs>>): Prisma__KOParticipantClient<$Result.GetResult<Prisma.$KOParticipantPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one KOParticipant.
+     * @param {KOParticipantUpdateArgs} args - Arguments to update one KOParticipant.
+     * @example
+     * // Update one KOParticipant
+     * const kOParticipant = await prisma.kOParticipant.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends KOParticipantUpdateArgs>(args: SelectSubset<T, KOParticipantUpdateArgs<ExtArgs>>): Prisma__KOParticipantClient<$Result.GetResult<Prisma.$KOParticipantPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more KOParticipants.
+     * @param {KOParticipantDeleteManyArgs} args - Arguments to filter KOParticipants to delete.
+     * @example
+     * // Delete a few KOParticipants
+     * const { count } = await prisma.kOParticipant.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends KOParticipantDeleteManyArgs>(args?: SelectSubset<T, KOParticipantDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more KOParticipants.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOParticipantUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many KOParticipants
+     * const kOParticipant = await prisma.kOParticipant.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends KOParticipantUpdateManyArgs>(args: SelectSubset<T, KOParticipantUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more KOParticipants and returns the data updated in the database.
+     * @param {KOParticipantUpdateManyAndReturnArgs} args - Arguments to update many KOParticipants.
+     * @example
+     * // Update many KOParticipants
+     * const kOParticipant = await prisma.kOParticipant.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more KOParticipants and only return the `id`
+     * const kOParticipantWithIdOnly = await prisma.kOParticipant.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends KOParticipantUpdateManyAndReturnArgs>(args: SelectSubset<T, KOParticipantUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KOParticipantPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one KOParticipant.
+     * @param {KOParticipantUpsertArgs} args - Arguments to update or create a KOParticipant.
+     * @example
+     * // Update or create a KOParticipant
+     * const kOParticipant = await prisma.kOParticipant.upsert({
+     *   create: {
+     *     // ... data to create a KOParticipant
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the KOParticipant we want to update
+     *   }
+     * })
+     */
+    upsert<T extends KOParticipantUpsertArgs>(args: SelectSubset<T, KOParticipantUpsertArgs<ExtArgs>>): Prisma__KOParticipantClient<$Result.GetResult<Prisma.$KOParticipantPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of KOParticipants.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOParticipantCountArgs} args - Arguments to filter KOParticipants to count.
+     * @example
+     * // Count the number of KOParticipants
+     * const count = await prisma.kOParticipant.count({
+     *   where: {
+     *     // ... the filter for the KOParticipants we want to count
+     *   }
+     * })
+    **/
+    count<T extends KOParticipantCountArgs>(
+      args?: Subset<T, KOParticipantCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], KOParticipantCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a KOParticipant.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOParticipantAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends KOParticipantAggregateArgs>(args: Subset<T, KOParticipantAggregateArgs>): Prisma.PrismaPromise<GetKOParticipantAggregateType<T>>
+
+    /**
+     * Group by KOParticipant.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOParticipantGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends KOParticipantGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: KOParticipantGroupByArgs['orderBy'] }
+        : { orderBy?: KOParticipantGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, KOParticipantGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetKOParticipantGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the KOParticipant model
+   */
+  readonly fields: KOParticipantFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for KOParticipant.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__KOParticipantClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    picks<T extends KOParticipant$picksArgs<ExtArgs> = {}>(args?: Subset<T, KOParticipant$picksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KOPickPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    payment<T extends KOParticipant$paymentArgs<ExtArgs> = {}>(args?: Subset<T, KOParticipant$paymentArgs<ExtArgs>>): Prisma__KOPaymentClient<$Result.GetResult<Prisma.$KOPaymentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    ranking<T extends KOParticipant$rankingArgs<ExtArgs> = {}>(args?: Subset<T, KOParticipant$rankingArgs<ExtArgs>>): Prisma__KORankingSnapshotClient<$Result.GetResult<Prisma.$KORankingSnapshotPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the KOParticipant model
+   */
+  interface KOParticipantFieldRefs {
+    readonly id: FieldRef<"KOParticipant", 'String'>
+    readonly fullName: FieldRef<"KOParticipant", 'String'>
+    readonly nationalId: FieldRef<"KOParticipant", 'String'>
+    readonly phone: FieldRef<"KOParticipant", 'String'>
+    readonly email: FieldRef<"KOParticipant", 'String'>
+    readonly city: FieldRef<"KOParticipant", 'String'>
+    readonly participationCode: FieldRef<"KOParticipant", 'String'>
+    readonly phase: FieldRef<"KOParticipant", 'String'>
+    readonly submittedAt: FieldRef<"KOParticipant", 'DateTime'>
+    readonly isComplete: FieldRef<"KOParticipant", 'Boolean'>
+    readonly createdAt: FieldRef<"KOParticipant", 'DateTime'>
+    readonly updatedAt: FieldRef<"KOParticipant", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * KOParticipant findUnique
+   */
+  export type KOParticipantFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOParticipant
+     */
+    select?: KOParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOParticipant
+     */
+    omit?: KOParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOParticipantInclude<ExtArgs> | null
+    /**
+     * Filter, which KOParticipant to fetch.
+     */
+    where: KOParticipantWhereUniqueInput
+  }
+
+  /**
+   * KOParticipant findUniqueOrThrow
+   */
+  export type KOParticipantFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOParticipant
+     */
+    select?: KOParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOParticipant
+     */
+    omit?: KOParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOParticipantInclude<ExtArgs> | null
+    /**
+     * Filter, which KOParticipant to fetch.
+     */
+    where: KOParticipantWhereUniqueInput
+  }
+
+  /**
+   * KOParticipant findFirst
+   */
+  export type KOParticipantFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOParticipant
+     */
+    select?: KOParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOParticipant
+     */
+    omit?: KOParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOParticipantInclude<ExtArgs> | null
+    /**
+     * Filter, which KOParticipant to fetch.
+     */
+    where?: KOParticipantWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KOParticipants to fetch.
+     */
+    orderBy?: KOParticipantOrderByWithRelationInput | KOParticipantOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for KOParticipants.
+     */
+    cursor?: KOParticipantWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KOParticipants from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KOParticipants.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of KOParticipants.
+     */
+    distinct?: KOParticipantScalarFieldEnum | KOParticipantScalarFieldEnum[]
+  }
+
+  /**
+   * KOParticipant findFirstOrThrow
+   */
+  export type KOParticipantFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOParticipant
+     */
+    select?: KOParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOParticipant
+     */
+    omit?: KOParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOParticipantInclude<ExtArgs> | null
+    /**
+     * Filter, which KOParticipant to fetch.
+     */
+    where?: KOParticipantWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KOParticipants to fetch.
+     */
+    orderBy?: KOParticipantOrderByWithRelationInput | KOParticipantOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for KOParticipants.
+     */
+    cursor?: KOParticipantWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KOParticipants from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KOParticipants.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of KOParticipants.
+     */
+    distinct?: KOParticipantScalarFieldEnum | KOParticipantScalarFieldEnum[]
+  }
+
+  /**
+   * KOParticipant findMany
+   */
+  export type KOParticipantFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOParticipant
+     */
+    select?: KOParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOParticipant
+     */
+    omit?: KOParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOParticipantInclude<ExtArgs> | null
+    /**
+     * Filter, which KOParticipants to fetch.
+     */
+    where?: KOParticipantWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KOParticipants to fetch.
+     */
+    orderBy?: KOParticipantOrderByWithRelationInput | KOParticipantOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing KOParticipants.
+     */
+    cursor?: KOParticipantWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KOParticipants from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KOParticipants.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of KOParticipants.
+     */
+    distinct?: KOParticipantScalarFieldEnum | KOParticipantScalarFieldEnum[]
+  }
+
+  /**
+   * KOParticipant create
+   */
+  export type KOParticipantCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOParticipant
+     */
+    select?: KOParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOParticipant
+     */
+    omit?: KOParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOParticipantInclude<ExtArgs> | null
+    /**
+     * The data needed to create a KOParticipant.
+     */
+    data: XOR<KOParticipantCreateInput, KOParticipantUncheckedCreateInput>
+  }
+
+  /**
+   * KOParticipant createMany
+   */
+  export type KOParticipantCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many KOParticipants.
+     */
+    data: KOParticipantCreateManyInput | KOParticipantCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * KOParticipant createManyAndReturn
+   */
+  export type KOParticipantCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOParticipant
+     */
+    select?: KOParticipantSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOParticipant
+     */
+    omit?: KOParticipantOmit<ExtArgs> | null
+    /**
+     * The data used to create many KOParticipants.
+     */
+    data: KOParticipantCreateManyInput | KOParticipantCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * KOParticipant update
+   */
+  export type KOParticipantUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOParticipant
+     */
+    select?: KOParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOParticipant
+     */
+    omit?: KOParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOParticipantInclude<ExtArgs> | null
+    /**
+     * The data needed to update a KOParticipant.
+     */
+    data: XOR<KOParticipantUpdateInput, KOParticipantUncheckedUpdateInput>
+    /**
+     * Choose, which KOParticipant to update.
+     */
+    where: KOParticipantWhereUniqueInput
+  }
+
+  /**
+   * KOParticipant updateMany
+   */
+  export type KOParticipantUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update KOParticipants.
+     */
+    data: XOR<KOParticipantUpdateManyMutationInput, KOParticipantUncheckedUpdateManyInput>
+    /**
+     * Filter which KOParticipants to update
+     */
+    where?: KOParticipantWhereInput
+    /**
+     * Limit how many KOParticipants to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * KOParticipant updateManyAndReturn
+   */
+  export type KOParticipantUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOParticipant
+     */
+    select?: KOParticipantSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOParticipant
+     */
+    omit?: KOParticipantOmit<ExtArgs> | null
+    /**
+     * The data used to update KOParticipants.
+     */
+    data: XOR<KOParticipantUpdateManyMutationInput, KOParticipantUncheckedUpdateManyInput>
+    /**
+     * Filter which KOParticipants to update
+     */
+    where?: KOParticipantWhereInput
+    /**
+     * Limit how many KOParticipants to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * KOParticipant upsert
+   */
+  export type KOParticipantUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOParticipant
+     */
+    select?: KOParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOParticipant
+     */
+    omit?: KOParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOParticipantInclude<ExtArgs> | null
+    /**
+     * The filter to search for the KOParticipant to update in case it exists.
+     */
+    where: KOParticipantWhereUniqueInput
+    /**
+     * In case the KOParticipant found by the `where` argument doesn't exist, create a new KOParticipant with this data.
+     */
+    create: XOR<KOParticipantCreateInput, KOParticipantUncheckedCreateInput>
+    /**
+     * In case the KOParticipant was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<KOParticipantUpdateInput, KOParticipantUncheckedUpdateInput>
+  }
+
+  /**
+   * KOParticipant delete
+   */
+  export type KOParticipantDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOParticipant
+     */
+    select?: KOParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOParticipant
+     */
+    omit?: KOParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOParticipantInclude<ExtArgs> | null
+    /**
+     * Filter which KOParticipant to delete.
+     */
+    where: KOParticipantWhereUniqueInput
+  }
+
+  /**
+   * KOParticipant deleteMany
+   */
+  export type KOParticipantDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which KOParticipants to delete
+     */
+    where?: KOParticipantWhereInput
+    /**
+     * Limit how many KOParticipants to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * KOParticipant.picks
+   */
+  export type KOParticipant$picksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPick
+     */
+    select?: KOPickSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPick
+     */
+    omit?: KOPickOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPickInclude<ExtArgs> | null
+    where?: KOPickWhereInput
+    orderBy?: KOPickOrderByWithRelationInput | KOPickOrderByWithRelationInput[]
+    cursor?: KOPickWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: KOPickScalarFieldEnum | KOPickScalarFieldEnum[]
+  }
+
+  /**
+   * KOParticipant.payment
+   */
+  export type KOParticipant$paymentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPayment
+     */
+    select?: KOPaymentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPayment
+     */
+    omit?: KOPaymentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPaymentInclude<ExtArgs> | null
+    where?: KOPaymentWhereInput
+  }
+
+  /**
+   * KOParticipant.ranking
+   */
+  export type KOParticipant$rankingArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KORankingSnapshot
+     */
+    select?: KORankingSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KORankingSnapshot
+     */
+    omit?: KORankingSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KORankingSnapshotInclude<ExtArgs> | null
+    where?: KORankingSnapshotWhereInput
+  }
+
+  /**
+   * KOParticipant without action
+   */
+  export type KOParticipantDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOParticipant
+     */
+    select?: KOParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOParticipant
+     */
+    omit?: KOParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOParticipantInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model KOPayment
+   */
+
+  export type AggregateKOPayment = {
+    _count: KOPaymentCountAggregateOutputType | null
+    _avg: KOPaymentAvgAggregateOutputType | null
+    _sum: KOPaymentSumAggregateOutputType | null
+    _min: KOPaymentMinAggregateOutputType | null
+    _max: KOPaymentMaxAggregateOutputType | null
+  }
+
+  export type KOPaymentAvgAggregateOutputType = {
+    amountUsd: number | null
+    exchangeRate: number | null
+    amountVes: number | null
+  }
+
+  export type KOPaymentSumAggregateOutputType = {
+    amountUsd: number | null
+    exchangeRate: number | null
+    amountVes: number | null
+  }
+
+  export type KOPaymentMinAggregateOutputType = {
+    id: string | null
+    participantId: string | null
+    paymentMethod: $Enums.PaymentMethod | null
+    amountUsd: number | null
+    exchangeRate: number | null
+    amountVes: number | null
+    senderBank: string | null
+    senderName: string | null
+    senderEmail: string | null
+    paymentReference: string | null
+    paymentDate: Date | null
+    paymentStatus: $Enums.PaymentStatus | null
+    adminNotes: string | null
+    verifiedAt: Date | null
+    rejectedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type KOPaymentMaxAggregateOutputType = {
+    id: string | null
+    participantId: string | null
+    paymentMethod: $Enums.PaymentMethod | null
+    amountUsd: number | null
+    exchangeRate: number | null
+    amountVes: number | null
+    senderBank: string | null
+    senderName: string | null
+    senderEmail: string | null
+    paymentReference: string | null
+    paymentDate: Date | null
+    paymentStatus: $Enums.PaymentStatus | null
+    adminNotes: string | null
+    verifiedAt: Date | null
+    rejectedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type KOPaymentCountAggregateOutputType = {
+    id: number
+    participantId: number
+    paymentMethod: number
+    amountUsd: number
+    exchangeRate: number
+    amountVes: number
+    senderBank: number
+    senderName: number
+    senderEmail: number
+    paymentReference: number
+    paymentDate: number
+    paymentStatus: number
+    adminNotes: number
+    verifiedAt: number
+    rejectedAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type KOPaymentAvgAggregateInputType = {
+    amountUsd?: true
+    exchangeRate?: true
+    amountVes?: true
+  }
+
+  export type KOPaymentSumAggregateInputType = {
+    amountUsd?: true
+    exchangeRate?: true
+    amountVes?: true
+  }
+
+  export type KOPaymentMinAggregateInputType = {
+    id?: true
+    participantId?: true
+    paymentMethod?: true
+    amountUsd?: true
+    exchangeRate?: true
+    amountVes?: true
+    senderBank?: true
+    senderName?: true
+    senderEmail?: true
+    paymentReference?: true
+    paymentDate?: true
+    paymentStatus?: true
+    adminNotes?: true
+    verifiedAt?: true
+    rejectedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type KOPaymentMaxAggregateInputType = {
+    id?: true
+    participantId?: true
+    paymentMethod?: true
+    amountUsd?: true
+    exchangeRate?: true
+    amountVes?: true
+    senderBank?: true
+    senderName?: true
+    senderEmail?: true
+    paymentReference?: true
+    paymentDate?: true
+    paymentStatus?: true
+    adminNotes?: true
+    verifiedAt?: true
+    rejectedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type KOPaymentCountAggregateInputType = {
+    id?: true
+    participantId?: true
+    paymentMethod?: true
+    amountUsd?: true
+    exchangeRate?: true
+    amountVes?: true
+    senderBank?: true
+    senderName?: true
+    senderEmail?: true
+    paymentReference?: true
+    paymentDate?: true
+    paymentStatus?: true
+    adminNotes?: true
+    verifiedAt?: true
+    rejectedAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type KOPaymentAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which KOPayment to aggregate.
+     */
+    where?: KOPaymentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KOPayments to fetch.
+     */
+    orderBy?: KOPaymentOrderByWithRelationInput | KOPaymentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: KOPaymentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KOPayments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KOPayments.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned KOPayments
+    **/
+    _count?: true | KOPaymentCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: KOPaymentAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: KOPaymentSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: KOPaymentMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: KOPaymentMaxAggregateInputType
+  }
+
+  export type GetKOPaymentAggregateType<T extends KOPaymentAggregateArgs> = {
+        [P in keyof T & keyof AggregateKOPayment]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateKOPayment[P]>
+      : GetScalarType<T[P], AggregateKOPayment[P]>
+  }
+
+
+
+
+  export type KOPaymentGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: KOPaymentWhereInput
+    orderBy?: KOPaymentOrderByWithAggregationInput | KOPaymentOrderByWithAggregationInput[]
+    by: KOPaymentScalarFieldEnum[] | KOPaymentScalarFieldEnum
+    having?: KOPaymentScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: KOPaymentCountAggregateInputType | true
+    _avg?: KOPaymentAvgAggregateInputType
+    _sum?: KOPaymentSumAggregateInputType
+    _min?: KOPaymentMinAggregateInputType
+    _max?: KOPaymentMaxAggregateInputType
+  }
+
+  export type KOPaymentGroupByOutputType = {
+    id: string
+    participantId: string
+    paymentMethod: $Enums.PaymentMethod
+    amountUsd: number
+    exchangeRate: number | null
+    amountVes: number | null
+    senderBank: string | null
+    senderName: string | null
+    senderEmail: string | null
+    paymentReference: string | null
+    paymentDate: Date | null
+    paymentStatus: $Enums.PaymentStatus
+    adminNotes: string | null
+    verifiedAt: Date | null
+    rejectedAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: KOPaymentCountAggregateOutputType | null
+    _avg: KOPaymentAvgAggregateOutputType | null
+    _sum: KOPaymentSumAggregateOutputType | null
+    _min: KOPaymentMinAggregateOutputType | null
+    _max: KOPaymentMaxAggregateOutputType | null
+  }
+
+  type GetKOPaymentGroupByPayload<T extends KOPaymentGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<KOPaymentGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof KOPaymentGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], KOPaymentGroupByOutputType[P]>
+            : GetScalarType<T[P], KOPaymentGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type KOPaymentSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    participantId?: boolean
+    paymentMethod?: boolean
+    amountUsd?: boolean
+    exchangeRate?: boolean
+    amountVes?: boolean
+    senderBank?: boolean
+    senderName?: boolean
+    senderEmail?: boolean
+    paymentReference?: boolean
+    paymentDate?: boolean
+    paymentStatus?: boolean
+    adminNotes?: boolean
+    verifiedAt?: boolean
+    rejectedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    participant?: boolean | KOParticipantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["kOPayment"]>
+
+  export type KOPaymentSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    participantId?: boolean
+    paymentMethod?: boolean
+    amountUsd?: boolean
+    exchangeRate?: boolean
+    amountVes?: boolean
+    senderBank?: boolean
+    senderName?: boolean
+    senderEmail?: boolean
+    paymentReference?: boolean
+    paymentDate?: boolean
+    paymentStatus?: boolean
+    adminNotes?: boolean
+    verifiedAt?: boolean
+    rejectedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    participant?: boolean | KOParticipantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["kOPayment"]>
+
+  export type KOPaymentSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    participantId?: boolean
+    paymentMethod?: boolean
+    amountUsd?: boolean
+    exchangeRate?: boolean
+    amountVes?: boolean
+    senderBank?: boolean
+    senderName?: boolean
+    senderEmail?: boolean
+    paymentReference?: boolean
+    paymentDate?: boolean
+    paymentStatus?: boolean
+    adminNotes?: boolean
+    verifiedAt?: boolean
+    rejectedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    participant?: boolean | KOParticipantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["kOPayment"]>
+
+  export type KOPaymentSelectScalar = {
+    id?: boolean
+    participantId?: boolean
+    paymentMethod?: boolean
+    amountUsd?: boolean
+    exchangeRate?: boolean
+    amountVes?: boolean
+    senderBank?: boolean
+    senderName?: boolean
+    senderEmail?: boolean
+    paymentReference?: boolean
+    paymentDate?: boolean
+    paymentStatus?: boolean
+    adminNotes?: boolean
+    verifiedAt?: boolean
+    rejectedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type KOPaymentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "participantId" | "paymentMethod" | "amountUsd" | "exchangeRate" | "amountVes" | "senderBank" | "senderName" | "senderEmail" | "paymentReference" | "paymentDate" | "paymentStatus" | "adminNotes" | "verifiedAt" | "rejectedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["kOPayment"]>
+  export type KOPaymentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    participant?: boolean | KOParticipantDefaultArgs<ExtArgs>
+  }
+  export type KOPaymentIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    participant?: boolean | KOParticipantDefaultArgs<ExtArgs>
+  }
+  export type KOPaymentIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    participant?: boolean | KOParticipantDefaultArgs<ExtArgs>
+  }
+
+  export type $KOPaymentPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "KOPayment"
+    objects: {
+      participant: Prisma.$KOParticipantPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      participantId: string
+      paymentMethod: $Enums.PaymentMethod
+      amountUsd: number
+      exchangeRate: number | null
+      amountVes: number | null
+      senderBank: string | null
+      senderName: string | null
+      senderEmail: string | null
+      paymentReference: string | null
+      paymentDate: Date | null
+      paymentStatus: $Enums.PaymentStatus
+      adminNotes: string | null
+      verifiedAt: Date | null
+      rejectedAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["kOPayment"]>
+    composites: {}
+  }
+
+  type KOPaymentGetPayload<S extends boolean | null | undefined | KOPaymentDefaultArgs> = $Result.GetResult<Prisma.$KOPaymentPayload, S>
+
+  type KOPaymentCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<KOPaymentFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: KOPaymentCountAggregateInputType | true
+    }
+
+  export interface KOPaymentDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['KOPayment'], meta: { name: 'KOPayment' } }
+    /**
+     * Find zero or one KOPayment that matches the filter.
+     * @param {KOPaymentFindUniqueArgs} args - Arguments to find a KOPayment
+     * @example
+     * // Get one KOPayment
+     * const kOPayment = await prisma.kOPayment.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends KOPaymentFindUniqueArgs>(args: SelectSubset<T, KOPaymentFindUniqueArgs<ExtArgs>>): Prisma__KOPaymentClient<$Result.GetResult<Prisma.$KOPaymentPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one KOPayment that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {KOPaymentFindUniqueOrThrowArgs} args - Arguments to find a KOPayment
+     * @example
+     * // Get one KOPayment
+     * const kOPayment = await prisma.kOPayment.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends KOPaymentFindUniqueOrThrowArgs>(args: SelectSubset<T, KOPaymentFindUniqueOrThrowArgs<ExtArgs>>): Prisma__KOPaymentClient<$Result.GetResult<Prisma.$KOPaymentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first KOPayment that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOPaymentFindFirstArgs} args - Arguments to find a KOPayment
+     * @example
+     * // Get one KOPayment
+     * const kOPayment = await prisma.kOPayment.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends KOPaymentFindFirstArgs>(args?: SelectSubset<T, KOPaymentFindFirstArgs<ExtArgs>>): Prisma__KOPaymentClient<$Result.GetResult<Prisma.$KOPaymentPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first KOPayment that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOPaymentFindFirstOrThrowArgs} args - Arguments to find a KOPayment
+     * @example
+     * // Get one KOPayment
+     * const kOPayment = await prisma.kOPayment.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends KOPaymentFindFirstOrThrowArgs>(args?: SelectSubset<T, KOPaymentFindFirstOrThrowArgs<ExtArgs>>): Prisma__KOPaymentClient<$Result.GetResult<Prisma.$KOPaymentPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more KOPayments that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOPaymentFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all KOPayments
+     * const kOPayments = await prisma.kOPayment.findMany()
+     * 
+     * // Get first 10 KOPayments
+     * const kOPayments = await prisma.kOPayment.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const kOPaymentWithIdOnly = await prisma.kOPayment.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends KOPaymentFindManyArgs>(args?: SelectSubset<T, KOPaymentFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KOPaymentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a KOPayment.
+     * @param {KOPaymentCreateArgs} args - Arguments to create a KOPayment.
+     * @example
+     * // Create one KOPayment
+     * const KOPayment = await prisma.kOPayment.create({
+     *   data: {
+     *     // ... data to create a KOPayment
+     *   }
+     * })
+     * 
+     */
+    create<T extends KOPaymentCreateArgs>(args: SelectSubset<T, KOPaymentCreateArgs<ExtArgs>>): Prisma__KOPaymentClient<$Result.GetResult<Prisma.$KOPaymentPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many KOPayments.
+     * @param {KOPaymentCreateManyArgs} args - Arguments to create many KOPayments.
+     * @example
+     * // Create many KOPayments
+     * const kOPayment = await prisma.kOPayment.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends KOPaymentCreateManyArgs>(args?: SelectSubset<T, KOPaymentCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many KOPayments and returns the data saved in the database.
+     * @param {KOPaymentCreateManyAndReturnArgs} args - Arguments to create many KOPayments.
+     * @example
+     * // Create many KOPayments
+     * const kOPayment = await prisma.kOPayment.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many KOPayments and only return the `id`
+     * const kOPaymentWithIdOnly = await prisma.kOPayment.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends KOPaymentCreateManyAndReturnArgs>(args?: SelectSubset<T, KOPaymentCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KOPaymentPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a KOPayment.
+     * @param {KOPaymentDeleteArgs} args - Arguments to delete one KOPayment.
+     * @example
+     * // Delete one KOPayment
+     * const KOPayment = await prisma.kOPayment.delete({
+     *   where: {
+     *     // ... filter to delete one KOPayment
+     *   }
+     * })
+     * 
+     */
+    delete<T extends KOPaymentDeleteArgs>(args: SelectSubset<T, KOPaymentDeleteArgs<ExtArgs>>): Prisma__KOPaymentClient<$Result.GetResult<Prisma.$KOPaymentPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one KOPayment.
+     * @param {KOPaymentUpdateArgs} args - Arguments to update one KOPayment.
+     * @example
+     * // Update one KOPayment
+     * const kOPayment = await prisma.kOPayment.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends KOPaymentUpdateArgs>(args: SelectSubset<T, KOPaymentUpdateArgs<ExtArgs>>): Prisma__KOPaymentClient<$Result.GetResult<Prisma.$KOPaymentPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more KOPayments.
+     * @param {KOPaymentDeleteManyArgs} args - Arguments to filter KOPayments to delete.
+     * @example
+     * // Delete a few KOPayments
+     * const { count } = await prisma.kOPayment.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends KOPaymentDeleteManyArgs>(args?: SelectSubset<T, KOPaymentDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more KOPayments.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOPaymentUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many KOPayments
+     * const kOPayment = await prisma.kOPayment.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends KOPaymentUpdateManyArgs>(args: SelectSubset<T, KOPaymentUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more KOPayments and returns the data updated in the database.
+     * @param {KOPaymentUpdateManyAndReturnArgs} args - Arguments to update many KOPayments.
+     * @example
+     * // Update many KOPayments
+     * const kOPayment = await prisma.kOPayment.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more KOPayments and only return the `id`
+     * const kOPaymentWithIdOnly = await prisma.kOPayment.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends KOPaymentUpdateManyAndReturnArgs>(args: SelectSubset<T, KOPaymentUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KOPaymentPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one KOPayment.
+     * @param {KOPaymentUpsertArgs} args - Arguments to update or create a KOPayment.
+     * @example
+     * // Update or create a KOPayment
+     * const kOPayment = await prisma.kOPayment.upsert({
+     *   create: {
+     *     // ... data to create a KOPayment
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the KOPayment we want to update
+     *   }
+     * })
+     */
+    upsert<T extends KOPaymentUpsertArgs>(args: SelectSubset<T, KOPaymentUpsertArgs<ExtArgs>>): Prisma__KOPaymentClient<$Result.GetResult<Prisma.$KOPaymentPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of KOPayments.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOPaymentCountArgs} args - Arguments to filter KOPayments to count.
+     * @example
+     * // Count the number of KOPayments
+     * const count = await prisma.kOPayment.count({
+     *   where: {
+     *     // ... the filter for the KOPayments we want to count
+     *   }
+     * })
+    **/
+    count<T extends KOPaymentCountArgs>(
+      args?: Subset<T, KOPaymentCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], KOPaymentCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a KOPayment.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOPaymentAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends KOPaymentAggregateArgs>(args: Subset<T, KOPaymentAggregateArgs>): Prisma.PrismaPromise<GetKOPaymentAggregateType<T>>
+
+    /**
+     * Group by KOPayment.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOPaymentGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends KOPaymentGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: KOPaymentGroupByArgs['orderBy'] }
+        : { orderBy?: KOPaymentGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, KOPaymentGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetKOPaymentGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the KOPayment model
+   */
+  readonly fields: KOPaymentFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for KOPayment.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__KOPaymentClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    participant<T extends KOParticipantDefaultArgs<ExtArgs> = {}>(args?: Subset<T, KOParticipantDefaultArgs<ExtArgs>>): Prisma__KOParticipantClient<$Result.GetResult<Prisma.$KOParticipantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the KOPayment model
+   */
+  interface KOPaymentFieldRefs {
+    readonly id: FieldRef<"KOPayment", 'String'>
+    readonly participantId: FieldRef<"KOPayment", 'String'>
+    readonly paymentMethod: FieldRef<"KOPayment", 'PaymentMethod'>
+    readonly amountUsd: FieldRef<"KOPayment", 'Float'>
+    readonly exchangeRate: FieldRef<"KOPayment", 'Float'>
+    readonly amountVes: FieldRef<"KOPayment", 'Float'>
+    readonly senderBank: FieldRef<"KOPayment", 'String'>
+    readonly senderName: FieldRef<"KOPayment", 'String'>
+    readonly senderEmail: FieldRef<"KOPayment", 'String'>
+    readonly paymentReference: FieldRef<"KOPayment", 'String'>
+    readonly paymentDate: FieldRef<"KOPayment", 'DateTime'>
+    readonly paymentStatus: FieldRef<"KOPayment", 'PaymentStatus'>
+    readonly adminNotes: FieldRef<"KOPayment", 'String'>
+    readonly verifiedAt: FieldRef<"KOPayment", 'DateTime'>
+    readonly rejectedAt: FieldRef<"KOPayment", 'DateTime'>
+    readonly createdAt: FieldRef<"KOPayment", 'DateTime'>
+    readonly updatedAt: FieldRef<"KOPayment", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * KOPayment findUnique
+   */
+  export type KOPaymentFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPayment
+     */
+    select?: KOPaymentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPayment
+     */
+    omit?: KOPaymentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPaymentInclude<ExtArgs> | null
+    /**
+     * Filter, which KOPayment to fetch.
+     */
+    where: KOPaymentWhereUniqueInput
+  }
+
+  /**
+   * KOPayment findUniqueOrThrow
+   */
+  export type KOPaymentFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPayment
+     */
+    select?: KOPaymentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPayment
+     */
+    omit?: KOPaymentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPaymentInclude<ExtArgs> | null
+    /**
+     * Filter, which KOPayment to fetch.
+     */
+    where: KOPaymentWhereUniqueInput
+  }
+
+  /**
+   * KOPayment findFirst
+   */
+  export type KOPaymentFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPayment
+     */
+    select?: KOPaymentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPayment
+     */
+    omit?: KOPaymentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPaymentInclude<ExtArgs> | null
+    /**
+     * Filter, which KOPayment to fetch.
+     */
+    where?: KOPaymentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KOPayments to fetch.
+     */
+    orderBy?: KOPaymentOrderByWithRelationInput | KOPaymentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for KOPayments.
+     */
+    cursor?: KOPaymentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KOPayments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KOPayments.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of KOPayments.
+     */
+    distinct?: KOPaymentScalarFieldEnum | KOPaymentScalarFieldEnum[]
+  }
+
+  /**
+   * KOPayment findFirstOrThrow
+   */
+  export type KOPaymentFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPayment
+     */
+    select?: KOPaymentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPayment
+     */
+    omit?: KOPaymentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPaymentInclude<ExtArgs> | null
+    /**
+     * Filter, which KOPayment to fetch.
+     */
+    where?: KOPaymentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KOPayments to fetch.
+     */
+    orderBy?: KOPaymentOrderByWithRelationInput | KOPaymentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for KOPayments.
+     */
+    cursor?: KOPaymentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KOPayments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KOPayments.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of KOPayments.
+     */
+    distinct?: KOPaymentScalarFieldEnum | KOPaymentScalarFieldEnum[]
+  }
+
+  /**
+   * KOPayment findMany
+   */
+  export type KOPaymentFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPayment
+     */
+    select?: KOPaymentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPayment
+     */
+    omit?: KOPaymentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPaymentInclude<ExtArgs> | null
+    /**
+     * Filter, which KOPayments to fetch.
+     */
+    where?: KOPaymentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KOPayments to fetch.
+     */
+    orderBy?: KOPaymentOrderByWithRelationInput | KOPaymentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing KOPayments.
+     */
+    cursor?: KOPaymentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KOPayments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KOPayments.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of KOPayments.
+     */
+    distinct?: KOPaymentScalarFieldEnum | KOPaymentScalarFieldEnum[]
+  }
+
+  /**
+   * KOPayment create
+   */
+  export type KOPaymentCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPayment
+     */
+    select?: KOPaymentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPayment
+     */
+    omit?: KOPaymentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPaymentInclude<ExtArgs> | null
+    /**
+     * The data needed to create a KOPayment.
+     */
+    data: XOR<KOPaymentCreateInput, KOPaymentUncheckedCreateInput>
+  }
+
+  /**
+   * KOPayment createMany
+   */
+  export type KOPaymentCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many KOPayments.
+     */
+    data: KOPaymentCreateManyInput | KOPaymentCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * KOPayment createManyAndReturn
+   */
+  export type KOPaymentCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPayment
+     */
+    select?: KOPaymentSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPayment
+     */
+    omit?: KOPaymentOmit<ExtArgs> | null
+    /**
+     * The data used to create many KOPayments.
+     */
+    data: KOPaymentCreateManyInput | KOPaymentCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPaymentIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * KOPayment update
+   */
+  export type KOPaymentUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPayment
+     */
+    select?: KOPaymentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPayment
+     */
+    omit?: KOPaymentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPaymentInclude<ExtArgs> | null
+    /**
+     * The data needed to update a KOPayment.
+     */
+    data: XOR<KOPaymentUpdateInput, KOPaymentUncheckedUpdateInput>
+    /**
+     * Choose, which KOPayment to update.
+     */
+    where: KOPaymentWhereUniqueInput
+  }
+
+  /**
+   * KOPayment updateMany
+   */
+  export type KOPaymentUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update KOPayments.
+     */
+    data: XOR<KOPaymentUpdateManyMutationInput, KOPaymentUncheckedUpdateManyInput>
+    /**
+     * Filter which KOPayments to update
+     */
+    where?: KOPaymentWhereInput
+    /**
+     * Limit how many KOPayments to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * KOPayment updateManyAndReturn
+   */
+  export type KOPaymentUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPayment
+     */
+    select?: KOPaymentSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPayment
+     */
+    omit?: KOPaymentOmit<ExtArgs> | null
+    /**
+     * The data used to update KOPayments.
+     */
+    data: XOR<KOPaymentUpdateManyMutationInput, KOPaymentUncheckedUpdateManyInput>
+    /**
+     * Filter which KOPayments to update
+     */
+    where?: KOPaymentWhereInput
+    /**
+     * Limit how many KOPayments to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPaymentIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * KOPayment upsert
+   */
+  export type KOPaymentUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPayment
+     */
+    select?: KOPaymentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPayment
+     */
+    omit?: KOPaymentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPaymentInclude<ExtArgs> | null
+    /**
+     * The filter to search for the KOPayment to update in case it exists.
+     */
+    where: KOPaymentWhereUniqueInput
+    /**
+     * In case the KOPayment found by the `where` argument doesn't exist, create a new KOPayment with this data.
+     */
+    create: XOR<KOPaymentCreateInput, KOPaymentUncheckedCreateInput>
+    /**
+     * In case the KOPayment was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<KOPaymentUpdateInput, KOPaymentUncheckedUpdateInput>
+  }
+
+  /**
+   * KOPayment delete
+   */
+  export type KOPaymentDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPayment
+     */
+    select?: KOPaymentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPayment
+     */
+    omit?: KOPaymentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPaymentInclude<ExtArgs> | null
+    /**
+     * Filter which KOPayment to delete.
+     */
+    where: KOPaymentWhereUniqueInput
+  }
+
+  /**
+   * KOPayment deleteMany
+   */
+  export type KOPaymentDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which KOPayments to delete
+     */
+    where?: KOPaymentWhereInput
+    /**
+     * Limit how many KOPayments to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * KOPayment without action
+   */
+  export type KOPaymentDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPayment
+     */
+    select?: KOPaymentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPayment
+     */
+    omit?: KOPaymentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPaymentInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model KOPick
+   */
+
+  export type AggregateKOPick = {
+    _count: KOPickCountAggregateOutputType | null
+    _avg: KOPickAvgAggregateOutputType | null
+    _sum: KOPickSumAggregateOutputType | null
+    _min: KOPickMinAggregateOutputType | null
+    _max: KOPickMaxAggregateOutputType | null
+  }
+
+  export type KOPickAvgAggregateOutputType = {
+    homeGoals: number | null
+    awayGoals: number | null
+    points: number | null
+  }
+
+  export type KOPickSumAggregateOutputType = {
+    homeGoals: number | null
+    awayGoals: number | null
+    points: number | null
+  }
+
+  export type KOPickMinAggregateOutputType = {
+    id: string | null
+    participantId: string | null
+    matchId: string | null
+    homeGoals: number | null
+    awayGoals: number | null
+    penaltyWinner: string | null
+    points: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type KOPickMaxAggregateOutputType = {
+    id: string | null
+    participantId: string | null
+    matchId: string | null
+    homeGoals: number | null
+    awayGoals: number | null
+    penaltyWinner: string | null
+    points: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type KOPickCountAggregateOutputType = {
+    id: number
+    participantId: number
+    matchId: number
+    homeGoals: number
+    awayGoals: number
+    penaltyWinner: number
+    points: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type KOPickAvgAggregateInputType = {
+    homeGoals?: true
+    awayGoals?: true
+    points?: true
+  }
+
+  export type KOPickSumAggregateInputType = {
+    homeGoals?: true
+    awayGoals?: true
+    points?: true
+  }
+
+  export type KOPickMinAggregateInputType = {
+    id?: true
+    participantId?: true
+    matchId?: true
+    homeGoals?: true
+    awayGoals?: true
+    penaltyWinner?: true
+    points?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type KOPickMaxAggregateInputType = {
+    id?: true
+    participantId?: true
+    matchId?: true
+    homeGoals?: true
+    awayGoals?: true
+    penaltyWinner?: true
+    points?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type KOPickCountAggregateInputType = {
+    id?: true
+    participantId?: true
+    matchId?: true
+    homeGoals?: true
+    awayGoals?: true
+    penaltyWinner?: true
+    points?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type KOPickAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which KOPick to aggregate.
+     */
+    where?: KOPickWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KOPicks to fetch.
+     */
+    orderBy?: KOPickOrderByWithRelationInput | KOPickOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: KOPickWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KOPicks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KOPicks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned KOPicks
+    **/
+    _count?: true | KOPickCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: KOPickAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: KOPickSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: KOPickMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: KOPickMaxAggregateInputType
+  }
+
+  export type GetKOPickAggregateType<T extends KOPickAggregateArgs> = {
+        [P in keyof T & keyof AggregateKOPick]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateKOPick[P]>
+      : GetScalarType<T[P], AggregateKOPick[P]>
+  }
+
+
+
+
+  export type KOPickGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: KOPickWhereInput
+    orderBy?: KOPickOrderByWithAggregationInput | KOPickOrderByWithAggregationInput[]
+    by: KOPickScalarFieldEnum[] | KOPickScalarFieldEnum
+    having?: KOPickScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: KOPickCountAggregateInputType | true
+    _avg?: KOPickAvgAggregateInputType
+    _sum?: KOPickSumAggregateInputType
+    _min?: KOPickMinAggregateInputType
+    _max?: KOPickMaxAggregateInputType
+  }
+
+  export type KOPickGroupByOutputType = {
+    id: string
+    participantId: string
+    matchId: string
+    homeGoals: number
+    awayGoals: number
+    penaltyWinner: string | null
+    points: number | null
+    createdAt: Date
+    updatedAt: Date
+    _count: KOPickCountAggregateOutputType | null
+    _avg: KOPickAvgAggregateOutputType | null
+    _sum: KOPickSumAggregateOutputType | null
+    _min: KOPickMinAggregateOutputType | null
+    _max: KOPickMaxAggregateOutputType | null
+  }
+
+  type GetKOPickGroupByPayload<T extends KOPickGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<KOPickGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof KOPickGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], KOPickGroupByOutputType[P]>
+            : GetScalarType<T[P], KOPickGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type KOPickSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    participantId?: boolean
+    matchId?: boolean
+    homeGoals?: boolean
+    awayGoals?: boolean
+    penaltyWinner?: boolean
+    points?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    participant?: boolean | KOParticipantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["kOPick"]>
+
+  export type KOPickSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    participantId?: boolean
+    matchId?: boolean
+    homeGoals?: boolean
+    awayGoals?: boolean
+    penaltyWinner?: boolean
+    points?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    participant?: boolean | KOParticipantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["kOPick"]>
+
+  export type KOPickSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    participantId?: boolean
+    matchId?: boolean
+    homeGoals?: boolean
+    awayGoals?: boolean
+    penaltyWinner?: boolean
+    points?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    participant?: boolean | KOParticipantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["kOPick"]>
+
+  export type KOPickSelectScalar = {
+    id?: boolean
+    participantId?: boolean
+    matchId?: boolean
+    homeGoals?: boolean
+    awayGoals?: boolean
+    penaltyWinner?: boolean
+    points?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type KOPickOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "participantId" | "matchId" | "homeGoals" | "awayGoals" | "penaltyWinner" | "points" | "createdAt" | "updatedAt", ExtArgs["result"]["kOPick"]>
+  export type KOPickInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    participant?: boolean | KOParticipantDefaultArgs<ExtArgs>
+  }
+  export type KOPickIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    participant?: boolean | KOParticipantDefaultArgs<ExtArgs>
+  }
+  export type KOPickIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    participant?: boolean | KOParticipantDefaultArgs<ExtArgs>
+  }
+
+  export type $KOPickPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "KOPick"
+    objects: {
+      participant: Prisma.$KOParticipantPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      participantId: string
+      matchId: string
+      homeGoals: number
+      awayGoals: number
+      penaltyWinner: string | null
+      points: number | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["kOPick"]>
+    composites: {}
+  }
+
+  type KOPickGetPayload<S extends boolean | null | undefined | KOPickDefaultArgs> = $Result.GetResult<Prisma.$KOPickPayload, S>
+
+  type KOPickCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<KOPickFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: KOPickCountAggregateInputType | true
+    }
+
+  export interface KOPickDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['KOPick'], meta: { name: 'KOPick' } }
+    /**
+     * Find zero or one KOPick that matches the filter.
+     * @param {KOPickFindUniqueArgs} args - Arguments to find a KOPick
+     * @example
+     * // Get one KOPick
+     * const kOPick = await prisma.kOPick.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends KOPickFindUniqueArgs>(args: SelectSubset<T, KOPickFindUniqueArgs<ExtArgs>>): Prisma__KOPickClient<$Result.GetResult<Prisma.$KOPickPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one KOPick that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {KOPickFindUniqueOrThrowArgs} args - Arguments to find a KOPick
+     * @example
+     * // Get one KOPick
+     * const kOPick = await prisma.kOPick.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends KOPickFindUniqueOrThrowArgs>(args: SelectSubset<T, KOPickFindUniqueOrThrowArgs<ExtArgs>>): Prisma__KOPickClient<$Result.GetResult<Prisma.$KOPickPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first KOPick that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOPickFindFirstArgs} args - Arguments to find a KOPick
+     * @example
+     * // Get one KOPick
+     * const kOPick = await prisma.kOPick.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends KOPickFindFirstArgs>(args?: SelectSubset<T, KOPickFindFirstArgs<ExtArgs>>): Prisma__KOPickClient<$Result.GetResult<Prisma.$KOPickPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first KOPick that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOPickFindFirstOrThrowArgs} args - Arguments to find a KOPick
+     * @example
+     * // Get one KOPick
+     * const kOPick = await prisma.kOPick.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends KOPickFindFirstOrThrowArgs>(args?: SelectSubset<T, KOPickFindFirstOrThrowArgs<ExtArgs>>): Prisma__KOPickClient<$Result.GetResult<Prisma.$KOPickPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more KOPicks that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOPickFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all KOPicks
+     * const kOPicks = await prisma.kOPick.findMany()
+     * 
+     * // Get first 10 KOPicks
+     * const kOPicks = await prisma.kOPick.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const kOPickWithIdOnly = await prisma.kOPick.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends KOPickFindManyArgs>(args?: SelectSubset<T, KOPickFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KOPickPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a KOPick.
+     * @param {KOPickCreateArgs} args - Arguments to create a KOPick.
+     * @example
+     * // Create one KOPick
+     * const KOPick = await prisma.kOPick.create({
+     *   data: {
+     *     // ... data to create a KOPick
+     *   }
+     * })
+     * 
+     */
+    create<T extends KOPickCreateArgs>(args: SelectSubset<T, KOPickCreateArgs<ExtArgs>>): Prisma__KOPickClient<$Result.GetResult<Prisma.$KOPickPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many KOPicks.
+     * @param {KOPickCreateManyArgs} args - Arguments to create many KOPicks.
+     * @example
+     * // Create many KOPicks
+     * const kOPick = await prisma.kOPick.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends KOPickCreateManyArgs>(args?: SelectSubset<T, KOPickCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many KOPicks and returns the data saved in the database.
+     * @param {KOPickCreateManyAndReturnArgs} args - Arguments to create many KOPicks.
+     * @example
+     * // Create many KOPicks
+     * const kOPick = await prisma.kOPick.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many KOPicks and only return the `id`
+     * const kOPickWithIdOnly = await prisma.kOPick.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends KOPickCreateManyAndReturnArgs>(args?: SelectSubset<T, KOPickCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KOPickPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a KOPick.
+     * @param {KOPickDeleteArgs} args - Arguments to delete one KOPick.
+     * @example
+     * // Delete one KOPick
+     * const KOPick = await prisma.kOPick.delete({
+     *   where: {
+     *     // ... filter to delete one KOPick
+     *   }
+     * })
+     * 
+     */
+    delete<T extends KOPickDeleteArgs>(args: SelectSubset<T, KOPickDeleteArgs<ExtArgs>>): Prisma__KOPickClient<$Result.GetResult<Prisma.$KOPickPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one KOPick.
+     * @param {KOPickUpdateArgs} args - Arguments to update one KOPick.
+     * @example
+     * // Update one KOPick
+     * const kOPick = await prisma.kOPick.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends KOPickUpdateArgs>(args: SelectSubset<T, KOPickUpdateArgs<ExtArgs>>): Prisma__KOPickClient<$Result.GetResult<Prisma.$KOPickPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more KOPicks.
+     * @param {KOPickDeleteManyArgs} args - Arguments to filter KOPicks to delete.
+     * @example
+     * // Delete a few KOPicks
+     * const { count } = await prisma.kOPick.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends KOPickDeleteManyArgs>(args?: SelectSubset<T, KOPickDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more KOPicks.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOPickUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many KOPicks
+     * const kOPick = await prisma.kOPick.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends KOPickUpdateManyArgs>(args: SelectSubset<T, KOPickUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more KOPicks and returns the data updated in the database.
+     * @param {KOPickUpdateManyAndReturnArgs} args - Arguments to update many KOPicks.
+     * @example
+     * // Update many KOPicks
+     * const kOPick = await prisma.kOPick.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more KOPicks and only return the `id`
+     * const kOPickWithIdOnly = await prisma.kOPick.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends KOPickUpdateManyAndReturnArgs>(args: SelectSubset<T, KOPickUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KOPickPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one KOPick.
+     * @param {KOPickUpsertArgs} args - Arguments to update or create a KOPick.
+     * @example
+     * // Update or create a KOPick
+     * const kOPick = await prisma.kOPick.upsert({
+     *   create: {
+     *     // ... data to create a KOPick
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the KOPick we want to update
+     *   }
+     * })
+     */
+    upsert<T extends KOPickUpsertArgs>(args: SelectSubset<T, KOPickUpsertArgs<ExtArgs>>): Prisma__KOPickClient<$Result.GetResult<Prisma.$KOPickPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of KOPicks.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOPickCountArgs} args - Arguments to filter KOPicks to count.
+     * @example
+     * // Count the number of KOPicks
+     * const count = await prisma.kOPick.count({
+     *   where: {
+     *     // ... the filter for the KOPicks we want to count
+     *   }
+     * })
+    **/
+    count<T extends KOPickCountArgs>(
+      args?: Subset<T, KOPickCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], KOPickCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a KOPick.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOPickAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends KOPickAggregateArgs>(args: Subset<T, KOPickAggregateArgs>): Prisma.PrismaPromise<GetKOPickAggregateType<T>>
+
+    /**
+     * Group by KOPick.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOPickGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends KOPickGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: KOPickGroupByArgs['orderBy'] }
+        : { orderBy?: KOPickGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, KOPickGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetKOPickGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the KOPick model
+   */
+  readonly fields: KOPickFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for KOPick.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__KOPickClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    participant<T extends KOParticipantDefaultArgs<ExtArgs> = {}>(args?: Subset<T, KOParticipantDefaultArgs<ExtArgs>>): Prisma__KOParticipantClient<$Result.GetResult<Prisma.$KOParticipantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the KOPick model
+   */
+  interface KOPickFieldRefs {
+    readonly id: FieldRef<"KOPick", 'String'>
+    readonly participantId: FieldRef<"KOPick", 'String'>
+    readonly matchId: FieldRef<"KOPick", 'String'>
+    readonly homeGoals: FieldRef<"KOPick", 'Int'>
+    readonly awayGoals: FieldRef<"KOPick", 'Int'>
+    readonly penaltyWinner: FieldRef<"KOPick", 'String'>
+    readonly points: FieldRef<"KOPick", 'Int'>
+    readonly createdAt: FieldRef<"KOPick", 'DateTime'>
+    readonly updatedAt: FieldRef<"KOPick", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * KOPick findUnique
+   */
+  export type KOPickFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPick
+     */
+    select?: KOPickSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPick
+     */
+    omit?: KOPickOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPickInclude<ExtArgs> | null
+    /**
+     * Filter, which KOPick to fetch.
+     */
+    where: KOPickWhereUniqueInput
+  }
+
+  /**
+   * KOPick findUniqueOrThrow
+   */
+  export type KOPickFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPick
+     */
+    select?: KOPickSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPick
+     */
+    omit?: KOPickOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPickInclude<ExtArgs> | null
+    /**
+     * Filter, which KOPick to fetch.
+     */
+    where: KOPickWhereUniqueInput
+  }
+
+  /**
+   * KOPick findFirst
+   */
+  export type KOPickFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPick
+     */
+    select?: KOPickSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPick
+     */
+    omit?: KOPickOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPickInclude<ExtArgs> | null
+    /**
+     * Filter, which KOPick to fetch.
+     */
+    where?: KOPickWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KOPicks to fetch.
+     */
+    orderBy?: KOPickOrderByWithRelationInput | KOPickOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for KOPicks.
+     */
+    cursor?: KOPickWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KOPicks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KOPicks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of KOPicks.
+     */
+    distinct?: KOPickScalarFieldEnum | KOPickScalarFieldEnum[]
+  }
+
+  /**
+   * KOPick findFirstOrThrow
+   */
+  export type KOPickFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPick
+     */
+    select?: KOPickSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPick
+     */
+    omit?: KOPickOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPickInclude<ExtArgs> | null
+    /**
+     * Filter, which KOPick to fetch.
+     */
+    where?: KOPickWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KOPicks to fetch.
+     */
+    orderBy?: KOPickOrderByWithRelationInput | KOPickOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for KOPicks.
+     */
+    cursor?: KOPickWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KOPicks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KOPicks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of KOPicks.
+     */
+    distinct?: KOPickScalarFieldEnum | KOPickScalarFieldEnum[]
+  }
+
+  /**
+   * KOPick findMany
+   */
+  export type KOPickFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPick
+     */
+    select?: KOPickSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPick
+     */
+    omit?: KOPickOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPickInclude<ExtArgs> | null
+    /**
+     * Filter, which KOPicks to fetch.
+     */
+    where?: KOPickWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KOPicks to fetch.
+     */
+    orderBy?: KOPickOrderByWithRelationInput | KOPickOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing KOPicks.
+     */
+    cursor?: KOPickWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KOPicks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KOPicks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of KOPicks.
+     */
+    distinct?: KOPickScalarFieldEnum | KOPickScalarFieldEnum[]
+  }
+
+  /**
+   * KOPick create
+   */
+  export type KOPickCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPick
+     */
+    select?: KOPickSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPick
+     */
+    omit?: KOPickOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPickInclude<ExtArgs> | null
+    /**
+     * The data needed to create a KOPick.
+     */
+    data: XOR<KOPickCreateInput, KOPickUncheckedCreateInput>
+  }
+
+  /**
+   * KOPick createMany
+   */
+  export type KOPickCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many KOPicks.
+     */
+    data: KOPickCreateManyInput | KOPickCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * KOPick createManyAndReturn
+   */
+  export type KOPickCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPick
+     */
+    select?: KOPickSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPick
+     */
+    omit?: KOPickOmit<ExtArgs> | null
+    /**
+     * The data used to create many KOPicks.
+     */
+    data: KOPickCreateManyInput | KOPickCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPickIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * KOPick update
+   */
+  export type KOPickUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPick
+     */
+    select?: KOPickSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPick
+     */
+    omit?: KOPickOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPickInclude<ExtArgs> | null
+    /**
+     * The data needed to update a KOPick.
+     */
+    data: XOR<KOPickUpdateInput, KOPickUncheckedUpdateInput>
+    /**
+     * Choose, which KOPick to update.
+     */
+    where: KOPickWhereUniqueInput
+  }
+
+  /**
+   * KOPick updateMany
+   */
+  export type KOPickUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update KOPicks.
+     */
+    data: XOR<KOPickUpdateManyMutationInput, KOPickUncheckedUpdateManyInput>
+    /**
+     * Filter which KOPicks to update
+     */
+    where?: KOPickWhereInput
+    /**
+     * Limit how many KOPicks to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * KOPick updateManyAndReturn
+   */
+  export type KOPickUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPick
+     */
+    select?: KOPickSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPick
+     */
+    omit?: KOPickOmit<ExtArgs> | null
+    /**
+     * The data used to update KOPicks.
+     */
+    data: XOR<KOPickUpdateManyMutationInput, KOPickUncheckedUpdateManyInput>
+    /**
+     * Filter which KOPicks to update
+     */
+    where?: KOPickWhereInput
+    /**
+     * Limit how many KOPicks to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPickIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * KOPick upsert
+   */
+  export type KOPickUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPick
+     */
+    select?: KOPickSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPick
+     */
+    omit?: KOPickOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPickInclude<ExtArgs> | null
+    /**
+     * The filter to search for the KOPick to update in case it exists.
+     */
+    where: KOPickWhereUniqueInput
+    /**
+     * In case the KOPick found by the `where` argument doesn't exist, create a new KOPick with this data.
+     */
+    create: XOR<KOPickCreateInput, KOPickUncheckedCreateInput>
+    /**
+     * In case the KOPick was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<KOPickUpdateInput, KOPickUncheckedUpdateInput>
+  }
+
+  /**
+   * KOPick delete
+   */
+  export type KOPickDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPick
+     */
+    select?: KOPickSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPick
+     */
+    omit?: KOPickOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPickInclude<ExtArgs> | null
+    /**
+     * Filter which KOPick to delete.
+     */
+    where: KOPickWhereUniqueInput
+  }
+
+  /**
+   * KOPick deleteMany
+   */
+  export type KOPickDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which KOPicks to delete
+     */
+    where?: KOPickWhereInput
+    /**
+     * Limit how many KOPicks to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * KOPick without action
+   */
+  export type KOPickDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOPick
+     */
+    select?: KOPickSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOPick
+     */
+    omit?: KOPickOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KOPickInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model KOMatchResult
+   */
+
+  export type AggregateKOMatchResult = {
+    _count: KOMatchResultCountAggregateOutputType | null
+    _avg: KOMatchResultAvgAggregateOutputType | null
+    _sum: KOMatchResultSumAggregateOutputType | null
+    _min: KOMatchResultMinAggregateOutputType | null
+    _max: KOMatchResultMaxAggregateOutputType | null
+  }
+
+  export type KOMatchResultAvgAggregateOutputType = {
+    homeGoals: number | null
+    awayGoals: number | null
+  }
+
+  export type KOMatchResultSumAggregateOutputType = {
+    homeGoals: number | null
+    awayGoals: number | null
+  }
+
+  export type KOMatchResultMinAggregateOutputType = {
+    id: string | null
+    homeGoals: number | null
+    awayGoals: number | null
+    penaltyWinner: string | null
+    status: string | null
+    updatedAt: Date | null
+  }
+
+  export type KOMatchResultMaxAggregateOutputType = {
+    id: string | null
+    homeGoals: number | null
+    awayGoals: number | null
+    penaltyWinner: string | null
+    status: string | null
+    updatedAt: Date | null
+  }
+
+  export type KOMatchResultCountAggregateOutputType = {
+    id: number
+    homeGoals: number
+    awayGoals: number
+    penaltyWinner: number
+    status: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type KOMatchResultAvgAggregateInputType = {
+    homeGoals?: true
+    awayGoals?: true
+  }
+
+  export type KOMatchResultSumAggregateInputType = {
+    homeGoals?: true
+    awayGoals?: true
+  }
+
+  export type KOMatchResultMinAggregateInputType = {
+    id?: true
+    homeGoals?: true
+    awayGoals?: true
+    penaltyWinner?: true
+    status?: true
+    updatedAt?: true
+  }
+
+  export type KOMatchResultMaxAggregateInputType = {
+    id?: true
+    homeGoals?: true
+    awayGoals?: true
+    penaltyWinner?: true
+    status?: true
+    updatedAt?: true
+  }
+
+  export type KOMatchResultCountAggregateInputType = {
+    id?: true
+    homeGoals?: true
+    awayGoals?: true
+    penaltyWinner?: true
+    status?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type KOMatchResultAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which KOMatchResult to aggregate.
+     */
+    where?: KOMatchResultWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KOMatchResults to fetch.
+     */
+    orderBy?: KOMatchResultOrderByWithRelationInput | KOMatchResultOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: KOMatchResultWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KOMatchResults from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KOMatchResults.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned KOMatchResults
+    **/
+    _count?: true | KOMatchResultCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: KOMatchResultAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: KOMatchResultSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: KOMatchResultMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: KOMatchResultMaxAggregateInputType
+  }
+
+  export type GetKOMatchResultAggregateType<T extends KOMatchResultAggregateArgs> = {
+        [P in keyof T & keyof AggregateKOMatchResult]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateKOMatchResult[P]>
+      : GetScalarType<T[P], AggregateKOMatchResult[P]>
+  }
+
+
+
+
+  export type KOMatchResultGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: KOMatchResultWhereInput
+    orderBy?: KOMatchResultOrderByWithAggregationInput | KOMatchResultOrderByWithAggregationInput[]
+    by: KOMatchResultScalarFieldEnum[] | KOMatchResultScalarFieldEnum
+    having?: KOMatchResultScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: KOMatchResultCountAggregateInputType | true
+    _avg?: KOMatchResultAvgAggregateInputType
+    _sum?: KOMatchResultSumAggregateInputType
+    _min?: KOMatchResultMinAggregateInputType
+    _max?: KOMatchResultMaxAggregateInputType
+  }
+
+  export type KOMatchResultGroupByOutputType = {
+    id: string
+    homeGoals: number | null
+    awayGoals: number | null
+    penaltyWinner: string | null
+    status: string
+    updatedAt: Date
+    _count: KOMatchResultCountAggregateOutputType | null
+    _avg: KOMatchResultAvgAggregateOutputType | null
+    _sum: KOMatchResultSumAggregateOutputType | null
+    _min: KOMatchResultMinAggregateOutputType | null
+    _max: KOMatchResultMaxAggregateOutputType | null
+  }
+
+  type GetKOMatchResultGroupByPayload<T extends KOMatchResultGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<KOMatchResultGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof KOMatchResultGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], KOMatchResultGroupByOutputType[P]>
+            : GetScalarType<T[P], KOMatchResultGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type KOMatchResultSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    homeGoals?: boolean
+    awayGoals?: boolean
+    penaltyWinner?: boolean
+    status?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["kOMatchResult"]>
+
+  export type KOMatchResultSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    homeGoals?: boolean
+    awayGoals?: boolean
+    penaltyWinner?: boolean
+    status?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["kOMatchResult"]>
+
+  export type KOMatchResultSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    homeGoals?: boolean
+    awayGoals?: boolean
+    penaltyWinner?: boolean
+    status?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["kOMatchResult"]>
+
+  export type KOMatchResultSelectScalar = {
+    id?: boolean
+    homeGoals?: boolean
+    awayGoals?: boolean
+    penaltyWinner?: boolean
+    status?: boolean
+    updatedAt?: boolean
+  }
+
+  export type KOMatchResultOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "homeGoals" | "awayGoals" | "penaltyWinner" | "status" | "updatedAt", ExtArgs["result"]["kOMatchResult"]>
+
+  export type $KOMatchResultPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "KOMatchResult"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      homeGoals: number | null
+      awayGoals: number | null
+      penaltyWinner: string | null
+      status: string
+      updatedAt: Date
+    }, ExtArgs["result"]["kOMatchResult"]>
+    composites: {}
+  }
+
+  type KOMatchResultGetPayload<S extends boolean | null | undefined | KOMatchResultDefaultArgs> = $Result.GetResult<Prisma.$KOMatchResultPayload, S>
+
+  type KOMatchResultCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<KOMatchResultFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: KOMatchResultCountAggregateInputType | true
+    }
+
+  export interface KOMatchResultDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['KOMatchResult'], meta: { name: 'KOMatchResult' } }
+    /**
+     * Find zero or one KOMatchResult that matches the filter.
+     * @param {KOMatchResultFindUniqueArgs} args - Arguments to find a KOMatchResult
+     * @example
+     * // Get one KOMatchResult
+     * const kOMatchResult = await prisma.kOMatchResult.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends KOMatchResultFindUniqueArgs>(args: SelectSubset<T, KOMatchResultFindUniqueArgs<ExtArgs>>): Prisma__KOMatchResultClient<$Result.GetResult<Prisma.$KOMatchResultPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one KOMatchResult that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {KOMatchResultFindUniqueOrThrowArgs} args - Arguments to find a KOMatchResult
+     * @example
+     * // Get one KOMatchResult
+     * const kOMatchResult = await prisma.kOMatchResult.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends KOMatchResultFindUniqueOrThrowArgs>(args: SelectSubset<T, KOMatchResultFindUniqueOrThrowArgs<ExtArgs>>): Prisma__KOMatchResultClient<$Result.GetResult<Prisma.$KOMatchResultPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first KOMatchResult that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOMatchResultFindFirstArgs} args - Arguments to find a KOMatchResult
+     * @example
+     * // Get one KOMatchResult
+     * const kOMatchResult = await prisma.kOMatchResult.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends KOMatchResultFindFirstArgs>(args?: SelectSubset<T, KOMatchResultFindFirstArgs<ExtArgs>>): Prisma__KOMatchResultClient<$Result.GetResult<Prisma.$KOMatchResultPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first KOMatchResult that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOMatchResultFindFirstOrThrowArgs} args - Arguments to find a KOMatchResult
+     * @example
+     * // Get one KOMatchResult
+     * const kOMatchResult = await prisma.kOMatchResult.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends KOMatchResultFindFirstOrThrowArgs>(args?: SelectSubset<T, KOMatchResultFindFirstOrThrowArgs<ExtArgs>>): Prisma__KOMatchResultClient<$Result.GetResult<Prisma.$KOMatchResultPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more KOMatchResults that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOMatchResultFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all KOMatchResults
+     * const kOMatchResults = await prisma.kOMatchResult.findMany()
+     * 
+     * // Get first 10 KOMatchResults
+     * const kOMatchResults = await prisma.kOMatchResult.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const kOMatchResultWithIdOnly = await prisma.kOMatchResult.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends KOMatchResultFindManyArgs>(args?: SelectSubset<T, KOMatchResultFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KOMatchResultPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a KOMatchResult.
+     * @param {KOMatchResultCreateArgs} args - Arguments to create a KOMatchResult.
+     * @example
+     * // Create one KOMatchResult
+     * const KOMatchResult = await prisma.kOMatchResult.create({
+     *   data: {
+     *     // ... data to create a KOMatchResult
+     *   }
+     * })
+     * 
+     */
+    create<T extends KOMatchResultCreateArgs>(args: SelectSubset<T, KOMatchResultCreateArgs<ExtArgs>>): Prisma__KOMatchResultClient<$Result.GetResult<Prisma.$KOMatchResultPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many KOMatchResults.
+     * @param {KOMatchResultCreateManyArgs} args - Arguments to create many KOMatchResults.
+     * @example
+     * // Create many KOMatchResults
+     * const kOMatchResult = await prisma.kOMatchResult.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends KOMatchResultCreateManyArgs>(args?: SelectSubset<T, KOMatchResultCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many KOMatchResults and returns the data saved in the database.
+     * @param {KOMatchResultCreateManyAndReturnArgs} args - Arguments to create many KOMatchResults.
+     * @example
+     * // Create many KOMatchResults
+     * const kOMatchResult = await prisma.kOMatchResult.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many KOMatchResults and only return the `id`
+     * const kOMatchResultWithIdOnly = await prisma.kOMatchResult.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends KOMatchResultCreateManyAndReturnArgs>(args?: SelectSubset<T, KOMatchResultCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KOMatchResultPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a KOMatchResult.
+     * @param {KOMatchResultDeleteArgs} args - Arguments to delete one KOMatchResult.
+     * @example
+     * // Delete one KOMatchResult
+     * const KOMatchResult = await prisma.kOMatchResult.delete({
+     *   where: {
+     *     // ... filter to delete one KOMatchResult
+     *   }
+     * })
+     * 
+     */
+    delete<T extends KOMatchResultDeleteArgs>(args: SelectSubset<T, KOMatchResultDeleteArgs<ExtArgs>>): Prisma__KOMatchResultClient<$Result.GetResult<Prisma.$KOMatchResultPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one KOMatchResult.
+     * @param {KOMatchResultUpdateArgs} args - Arguments to update one KOMatchResult.
+     * @example
+     * // Update one KOMatchResult
+     * const kOMatchResult = await prisma.kOMatchResult.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends KOMatchResultUpdateArgs>(args: SelectSubset<T, KOMatchResultUpdateArgs<ExtArgs>>): Prisma__KOMatchResultClient<$Result.GetResult<Prisma.$KOMatchResultPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more KOMatchResults.
+     * @param {KOMatchResultDeleteManyArgs} args - Arguments to filter KOMatchResults to delete.
+     * @example
+     * // Delete a few KOMatchResults
+     * const { count } = await prisma.kOMatchResult.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends KOMatchResultDeleteManyArgs>(args?: SelectSubset<T, KOMatchResultDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more KOMatchResults.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOMatchResultUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many KOMatchResults
+     * const kOMatchResult = await prisma.kOMatchResult.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends KOMatchResultUpdateManyArgs>(args: SelectSubset<T, KOMatchResultUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more KOMatchResults and returns the data updated in the database.
+     * @param {KOMatchResultUpdateManyAndReturnArgs} args - Arguments to update many KOMatchResults.
+     * @example
+     * // Update many KOMatchResults
+     * const kOMatchResult = await prisma.kOMatchResult.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more KOMatchResults and only return the `id`
+     * const kOMatchResultWithIdOnly = await prisma.kOMatchResult.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends KOMatchResultUpdateManyAndReturnArgs>(args: SelectSubset<T, KOMatchResultUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KOMatchResultPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one KOMatchResult.
+     * @param {KOMatchResultUpsertArgs} args - Arguments to update or create a KOMatchResult.
+     * @example
+     * // Update or create a KOMatchResult
+     * const kOMatchResult = await prisma.kOMatchResult.upsert({
+     *   create: {
+     *     // ... data to create a KOMatchResult
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the KOMatchResult we want to update
+     *   }
+     * })
+     */
+    upsert<T extends KOMatchResultUpsertArgs>(args: SelectSubset<T, KOMatchResultUpsertArgs<ExtArgs>>): Prisma__KOMatchResultClient<$Result.GetResult<Prisma.$KOMatchResultPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of KOMatchResults.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOMatchResultCountArgs} args - Arguments to filter KOMatchResults to count.
+     * @example
+     * // Count the number of KOMatchResults
+     * const count = await prisma.kOMatchResult.count({
+     *   where: {
+     *     // ... the filter for the KOMatchResults we want to count
+     *   }
+     * })
+    **/
+    count<T extends KOMatchResultCountArgs>(
+      args?: Subset<T, KOMatchResultCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], KOMatchResultCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a KOMatchResult.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOMatchResultAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends KOMatchResultAggregateArgs>(args: Subset<T, KOMatchResultAggregateArgs>): Prisma.PrismaPromise<GetKOMatchResultAggregateType<T>>
+
+    /**
+     * Group by KOMatchResult.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KOMatchResultGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends KOMatchResultGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: KOMatchResultGroupByArgs['orderBy'] }
+        : { orderBy?: KOMatchResultGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, KOMatchResultGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetKOMatchResultGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the KOMatchResult model
+   */
+  readonly fields: KOMatchResultFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for KOMatchResult.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__KOMatchResultClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the KOMatchResult model
+   */
+  interface KOMatchResultFieldRefs {
+    readonly id: FieldRef<"KOMatchResult", 'String'>
+    readonly homeGoals: FieldRef<"KOMatchResult", 'Int'>
+    readonly awayGoals: FieldRef<"KOMatchResult", 'Int'>
+    readonly penaltyWinner: FieldRef<"KOMatchResult", 'String'>
+    readonly status: FieldRef<"KOMatchResult", 'String'>
+    readonly updatedAt: FieldRef<"KOMatchResult", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * KOMatchResult findUnique
+   */
+  export type KOMatchResultFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOMatchResult
+     */
+    select?: KOMatchResultSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOMatchResult
+     */
+    omit?: KOMatchResultOmit<ExtArgs> | null
+    /**
+     * Filter, which KOMatchResult to fetch.
+     */
+    where: KOMatchResultWhereUniqueInput
+  }
+
+  /**
+   * KOMatchResult findUniqueOrThrow
+   */
+  export type KOMatchResultFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOMatchResult
+     */
+    select?: KOMatchResultSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOMatchResult
+     */
+    omit?: KOMatchResultOmit<ExtArgs> | null
+    /**
+     * Filter, which KOMatchResult to fetch.
+     */
+    where: KOMatchResultWhereUniqueInput
+  }
+
+  /**
+   * KOMatchResult findFirst
+   */
+  export type KOMatchResultFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOMatchResult
+     */
+    select?: KOMatchResultSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOMatchResult
+     */
+    omit?: KOMatchResultOmit<ExtArgs> | null
+    /**
+     * Filter, which KOMatchResult to fetch.
+     */
+    where?: KOMatchResultWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KOMatchResults to fetch.
+     */
+    orderBy?: KOMatchResultOrderByWithRelationInput | KOMatchResultOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for KOMatchResults.
+     */
+    cursor?: KOMatchResultWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KOMatchResults from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KOMatchResults.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of KOMatchResults.
+     */
+    distinct?: KOMatchResultScalarFieldEnum | KOMatchResultScalarFieldEnum[]
+  }
+
+  /**
+   * KOMatchResult findFirstOrThrow
+   */
+  export type KOMatchResultFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOMatchResult
+     */
+    select?: KOMatchResultSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOMatchResult
+     */
+    omit?: KOMatchResultOmit<ExtArgs> | null
+    /**
+     * Filter, which KOMatchResult to fetch.
+     */
+    where?: KOMatchResultWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KOMatchResults to fetch.
+     */
+    orderBy?: KOMatchResultOrderByWithRelationInput | KOMatchResultOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for KOMatchResults.
+     */
+    cursor?: KOMatchResultWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KOMatchResults from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KOMatchResults.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of KOMatchResults.
+     */
+    distinct?: KOMatchResultScalarFieldEnum | KOMatchResultScalarFieldEnum[]
+  }
+
+  /**
+   * KOMatchResult findMany
+   */
+  export type KOMatchResultFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOMatchResult
+     */
+    select?: KOMatchResultSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOMatchResult
+     */
+    omit?: KOMatchResultOmit<ExtArgs> | null
+    /**
+     * Filter, which KOMatchResults to fetch.
+     */
+    where?: KOMatchResultWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KOMatchResults to fetch.
+     */
+    orderBy?: KOMatchResultOrderByWithRelationInput | KOMatchResultOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing KOMatchResults.
+     */
+    cursor?: KOMatchResultWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KOMatchResults from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KOMatchResults.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of KOMatchResults.
+     */
+    distinct?: KOMatchResultScalarFieldEnum | KOMatchResultScalarFieldEnum[]
+  }
+
+  /**
+   * KOMatchResult create
+   */
+  export type KOMatchResultCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOMatchResult
+     */
+    select?: KOMatchResultSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOMatchResult
+     */
+    omit?: KOMatchResultOmit<ExtArgs> | null
+    /**
+     * The data needed to create a KOMatchResult.
+     */
+    data: XOR<KOMatchResultCreateInput, KOMatchResultUncheckedCreateInput>
+  }
+
+  /**
+   * KOMatchResult createMany
+   */
+  export type KOMatchResultCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many KOMatchResults.
+     */
+    data: KOMatchResultCreateManyInput | KOMatchResultCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * KOMatchResult createManyAndReturn
+   */
+  export type KOMatchResultCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOMatchResult
+     */
+    select?: KOMatchResultSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOMatchResult
+     */
+    omit?: KOMatchResultOmit<ExtArgs> | null
+    /**
+     * The data used to create many KOMatchResults.
+     */
+    data: KOMatchResultCreateManyInput | KOMatchResultCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * KOMatchResult update
+   */
+  export type KOMatchResultUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOMatchResult
+     */
+    select?: KOMatchResultSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOMatchResult
+     */
+    omit?: KOMatchResultOmit<ExtArgs> | null
+    /**
+     * The data needed to update a KOMatchResult.
+     */
+    data: XOR<KOMatchResultUpdateInput, KOMatchResultUncheckedUpdateInput>
+    /**
+     * Choose, which KOMatchResult to update.
+     */
+    where: KOMatchResultWhereUniqueInput
+  }
+
+  /**
+   * KOMatchResult updateMany
+   */
+  export type KOMatchResultUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update KOMatchResults.
+     */
+    data: XOR<KOMatchResultUpdateManyMutationInput, KOMatchResultUncheckedUpdateManyInput>
+    /**
+     * Filter which KOMatchResults to update
+     */
+    where?: KOMatchResultWhereInput
+    /**
+     * Limit how many KOMatchResults to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * KOMatchResult updateManyAndReturn
+   */
+  export type KOMatchResultUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOMatchResult
+     */
+    select?: KOMatchResultSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOMatchResult
+     */
+    omit?: KOMatchResultOmit<ExtArgs> | null
+    /**
+     * The data used to update KOMatchResults.
+     */
+    data: XOR<KOMatchResultUpdateManyMutationInput, KOMatchResultUncheckedUpdateManyInput>
+    /**
+     * Filter which KOMatchResults to update
+     */
+    where?: KOMatchResultWhereInput
+    /**
+     * Limit how many KOMatchResults to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * KOMatchResult upsert
+   */
+  export type KOMatchResultUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOMatchResult
+     */
+    select?: KOMatchResultSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOMatchResult
+     */
+    omit?: KOMatchResultOmit<ExtArgs> | null
+    /**
+     * The filter to search for the KOMatchResult to update in case it exists.
+     */
+    where: KOMatchResultWhereUniqueInput
+    /**
+     * In case the KOMatchResult found by the `where` argument doesn't exist, create a new KOMatchResult with this data.
+     */
+    create: XOR<KOMatchResultCreateInput, KOMatchResultUncheckedCreateInput>
+    /**
+     * In case the KOMatchResult was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<KOMatchResultUpdateInput, KOMatchResultUncheckedUpdateInput>
+  }
+
+  /**
+   * KOMatchResult delete
+   */
+  export type KOMatchResultDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOMatchResult
+     */
+    select?: KOMatchResultSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOMatchResult
+     */
+    omit?: KOMatchResultOmit<ExtArgs> | null
+    /**
+     * Filter which KOMatchResult to delete.
+     */
+    where: KOMatchResultWhereUniqueInput
+  }
+
+  /**
+   * KOMatchResult deleteMany
+   */
+  export type KOMatchResultDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which KOMatchResults to delete
+     */
+    where?: KOMatchResultWhereInput
+    /**
+     * Limit how many KOMatchResults to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * KOMatchResult without action
+   */
+  export type KOMatchResultDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KOMatchResult
+     */
+    select?: KOMatchResultSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KOMatchResult
+     */
+    omit?: KOMatchResultOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model KORankingSnapshot
+   */
+
+  export type AggregateKORankingSnapshot = {
+    _count: KORankingSnapshotCountAggregateOutputType | null
+    _avg: KORankingSnapshotAvgAggregateOutputType | null
+    _sum: KORankingSnapshotSumAggregateOutputType | null
+    _min: KORankingSnapshotMinAggregateOutputType | null
+    _max: KORankingSnapshotMaxAggregateOutputType | null
+  }
+
+  export type KORankingSnapshotAvgAggregateOutputType = {
+    totalPoints: number | null
+    classifiedCorrect: number | null
+    exactScores: number | null
+    penaltyBonus: number | null
+    playedMatches: number | null
+    currentPosition: number | null
+    previousPosition: number | null
+  }
+
+  export type KORankingSnapshotSumAggregateOutputType = {
+    totalPoints: number | null
+    classifiedCorrect: number | null
+    exactScores: number | null
+    penaltyBonus: number | null
+    playedMatches: number | null
+    currentPosition: number | null
+    previousPosition: number | null
+  }
+
+  export type KORankingSnapshotMinAggregateOutputType = {
+    id: string | null
+    participantId: string | null
+    phase: string | null
+    totalPoints: number | null
+    classifiedCorrect: number | null
+    exactScores: number | null
+    penaltyBonus: number | null
+    playedMatches: number | null
+    currentPosition: number | null
+    previousPosition: number | null
+    updatedAt: Date | null
+  }
+
+  export type KORankingSnapshotMaxAggregateOutputType = {
+    id: string | null
+    participantId: string | null
+    phase: string | null
+    totalPoints: number | null
+    classifiedCorrect: number | null
+    exactScores: number | null
+    penaltyBonus: number | null
+    playedMatches: number | null
+    currentPosition: number | null
+    previousPosition: number | null
+    updatedAt: Date | null
+  }
+
+  export type KORankingSnapshotCountAggregateOutputType = {
+    id: number
+    participantId: number
+    phase: number
+    totalPoints: number
+    classifiedCorrect: number
+    exactScores: number
+    penaltyBonus: number
+    playedMatches: number
+    currentPosition: number
+    previousPosition: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type KORankingSnapshotAvgAggregateInputType = {
+    totalPoints?: true
+    classifiedCorrect?: true
+    exactScores?: true
+    penaltyBonus?: true
+    playedMatches?: true
+    currentPosition?: true
+    previousPosition?: true
+  }
+
+  export type KORankingSnapshotSumAggregateInputType = {
+    totalPoints?: true
+    classifiedCorrect?: true
+    exactScores?: true
+    penaltyBonus?: true
+    playedMatches?: true
+    currentPosition?: true
+    previousPosition?: true
+  }
+
+  export type KORankingSnapshotMinAggregateInputType = {
+    id?: true
+    participantId?: true
+    phase?: true
+    totalPoints?: true
+    classifiedCorrect?: true
+    exactScores?: true
+    penaltyBonus?: true
+    playedMatches?: true
+    currentPosition?: true
+    previousPosition?: true
+    updatedAt?: true
+  }
+
+  export type KORankingSnapshotMaxAggregateInputType = {
+    id?: true
+    participantId?: true
+    phase?: true
+    totalPoints?: true
+    classifiedCorrect?: true
+    exactScores?: true
+    penaltyBonus?: true
+    playedMatches?: true
+    currentPosition?: true
+    previousPosition?: true
+    updatedAt?: true
+  }
+
+  export type KORankingSnapshotCountAggregateInputType = {
+    id?: true
+    participantId?: true
+    phase?: true
+    totalPoints?: true
+    classifiedCorrect?: true
+    exactScores?: true
+    penaltyBonus?: true
+    playedMatches?: true
+    currentPosition?: true
+    previousPosition?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type KORankingSnapshotAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which KORankingSnapshot to aggregate.
+     */
+    where?: KORankingSnapshotWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KORankingSnapshots to fetch.
+     */
+    orderBy?: KORankingSnapshotOrderByWithRelationInput | KORankingSnapshotOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: KORankingSnapshotWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KORankingSnapshots from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KORankingSnapshots.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned KORankingSnapshots
+    **/
+    _count?: true | KORankingSnapshotCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: KORankingSnapshotAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: KORankingSnapshotSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: KORankingSnapshotMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: KORankingSnapshotMaxAggregateInputType
+  }
+
+  export type GetKORankingSnapshotAggregateType<T extends KORankingSnapshotAggregateArgs> = {
+        [P in keyof T & keyof AggregateKORankingSnapshot]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateKORankingSnapshot[P]>
+      : GetScalarType<T[P], AggregateKORankingSnapshot[P]>
+  }
+
+
+
+
+  export type KORankingSnapshotGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: KORankingSnapshotWhereInput
+    orderBy?: KORankingSnapshotOrderByWithAggregationInput | KORankingSnapshotOrderByWithAggregationInput[]
+    by: KORankingSnapshotScalarFieldEnum[] | KORankingSnapshotScalarFieldEnum
+    having?: KORankingSnapshotScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: KORankingSnapshotCountAggregateInputType | true
+    _avg?: KORankingSnapshotAvgAggregateInputType
+    _sum?: KORankingSnapshotSumAggregateInputType
+    _min?: KORankingSnapshotMinAggregateInputType
+    _max?: KORankingSnapshotMaxAggregateInputType
+  }
+
+  export type KORankingSnapshotGroupByOutputType = {
+    id: string
+    participantId: string
+    phase: string
+    totalPoints: number
+    classifiedCorrect: number
+    exactScores: number
+    penaltyBonus: number
+    playedMatches: number
+    currentPosition: number
+    previousPosition: number | null
+    updatedAt: Date
+    _count: KORankingSnapshotCountAggregateOutputType | null
+    _avg: KORankingSnapshotAvgAggregateOutputType | null
+    _sum: KORankingSnapshotSumAggregateOutputType | null
+    _min: KORankingSnapshotMinAggregateOutputType | null
+    _max: KORankingSnapshotMaxAggregateOutputType | null
+  }
+
+  type GetKORankingSnapshotGroupByPayload<T extends KORankingSnapshotGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<KORankingSnapshotGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof KORankingSnapshotGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], KORankingSnapshotGroupByOutputType[P]>
+            : GetScalarType<T[P], KORankingSnapshotGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type KORankingSnapshotSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    participantId?: boolean
+    phase?: boolean
+    totalPoints?: boolean
+    classifiedCorrect?: boolean
+    exactScores?: boolean
+    penaltyBonus?: boolean
+    playedMatches?: boolean
+    currentPosition?: boolean
+    previousPosition?: boolean
+    updatedAt?: boolean
+    participant?: boolean | KOParticipantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["kORankingSnapshot"]>
+
+  export type KORankingSnapshotSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    participantId?: boolean
+    phase?: boolean
+    totalPoints?: boolean
+    classifiedCorrect?: boolean
+    exactScores?: boolean
+    penaltyBonus?: boolean
+    playedMatches?: boolean
+    currentPosition?: boolean
+    previousPosition?: boolean
+    updatedAt?: boolean
+    participant?: boolean | KOParticipantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["kORankingSnapshot"]>
+
+  export type KORankingSnapshotSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    participantId?: boolean
+    phase?: boolean
+    totalPoints?: boolean
+    classifiedCorrect?: boolean
+    exactScores?: boolean
+    penaltyBonus?: boolean
+    playedMatches?: boolean
+    currentPosition?: boolean
+    previousPosition?: boolean
+    updatedAt?: boolean
+    participant?: boolean | KOParticipantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["kORankingSnapshot"]>
+
+  export type KORankingSnapshotSelectScalar = {
+    id?: boolean
+    participantId?: boolean
+    phase?: boolean
+    totalPoints?: boolean
+    classifiedCorrect?: boolean
+    exactScores?: boolean
+    penaltyBonus?: boolean
+    playedMatches?: boolean
+    currentPosition?: boolean
+    previousPosition?: boolean
+    updatedAt?: boolean
+  }
+
+  export type KORankingSnapshotOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "participantId" | "phase" | "totalPoints" | "classifiedCorrect" | "exactScores" | "penaltyBonus" | "playedMatches" | "currentPosition" | "previousPosition" | "updatedAt", ExtArgs["result"]["kORankingSnapshot"]>
+  export type KORankingSnapshotInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    participant?: boolean | KOParticipantDefaultArgs<ExtArgs>
+  }
+  export type KORankingSnapshotIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    participant?: boolean | KOParticipantDefaultArgs<ExtArgs>
+  }
+  export type KORankingSnapshotIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    participant?: boolean | KOParticipantDefaultArgs<ExtArgs>
+  }
+
+  export type $KORankingSnapshotPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "KORankingSnapshot"
+    objects: {
+      participant: Prisma.$KOParticipantPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      participantId: string
+      phase: string
+      totalPoints: number
+      classifiedCorrect: number
+      exactScores: number
+      penaltyBonus: number
+      playedMatches: number
+      currentPosition: number
+      previousPosition: number | null
+      updatedAt: Date
+    }, ExtArgs["result"]["kORankingSnapshot"]>
+    composites: {}
+  }
+
+  type KORankingSnapshotGetPayload<S extends boolean | null | undefined | KORankingSnapshotDefaultArgs> = $Result.GetResult<Prisma.$KORankingSnapshotPayload, S>
+
+  type KORankingSnapshotCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<KORankingSnapshotFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: KORankingSnapshotCountAggregateInputType | true
+    }
+
+  export interface KORankingSnapshotDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['KORankingSnapshot'], meta: { name: 'KORankingSnapshot' } }
+    /**
+     * Find zero or one KORankingSnapshot that matches the filter.
+     * @param {KORankingSnapshotFindUniqueArgs} args - Arguments to find a KORankingSnapshot
+     * @example
+     * // Get one KORankingSnapshot
+     * const kORankingSnapshot = await prisma.kORankingSnapshot.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends KORankingSnapshotFindUniqueArgs>(args: SelectSubset<T, KORankingSnapshotFindUniqueArgs<ExtArgs>>): Prisma__KORankingSnapshotClient<$Result.GetResult<Prisma.$KORankingSnapshotPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one KORankingSnapshot that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {KORankingSnapshotFindUniqueOrThrowArgs} args - Arguments to find a KORankingSnapshot
+     * @example
+     * // Get one KORankingSnapshot
+     * const kORankingSnapshot = await prisma.kORankingSnapshot.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends KORankingSnapshotFindUniqueOrThrowArgs>(args: SelectSubset<T, KORankingSnapshotFindUniqueOrThrowArgs<ExtArgs>>): Prisma__KORankingSnapshotClient<$Result.GetResult<Prisma.$KORankingSnapshotPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first KORankingSnapshot that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KORankingSnapshotFindFirstArgs} args - Arguments to find a KORankingSnapshot
+     * @example
+     * // Get one KORankingSnapshot
+     * const kORankingSnapshot = await prisma.kORankingSnapshot.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends KORankingSnapshotFindFirstArgs>(args?: SelectSubset<T, KORankingSnapshotFindFirstArgs<ExtArgs>>): Prisma__KORankingSnapshotClient<$Result.GetResult<Prisma.$KORankingSnapshotPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first KORankingSnapshot that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KORankingSnapshotFindFirstOrThrowArgs} args - Arguments to find a KORankingSnapshot
+     * @example
+     * // Get one KORankingSnapshot
+     * const kORankingSnapshot = await prisma.kORankingSnapshot.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends KORankingSnapshotFindFirstOrThrowArgs>(args?: SelectSubset<T, KORankingSnapshotFindFirstOrThrowArgs<ExtArgs>>): Prisma__KORankingSnapshotClient<$Result.GetResult<Prisma.$KORankingSnapshotPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more KORankingSnapshots that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KORankingSnapshotFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all KORankingSnapshots
+     * const kORankingSnapshots = await prisma.kORankingSnapshot.findMany()
+     * 
+     * // Get first 10 KORankingSnapshots
+     * const kORankingSnapshots = await prisma.kORankingSnapshot.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const kORankingSnapshotWithIdOnly = await prisma.kORankingSnapshot.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends KORankingSnapshotFindManyArgs>(args?: SelectSubset<T, KORankingSnapshotFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KORankingSnapshotPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a KORankingSnapshot.
+     * @param {KORankingSnapshotCreateArgs} args - Arguments to create a KORankingSnapshot.
+     * @example
+     * // Create one KORankingSnapshot
+     * const KORankingSnapshot = await prisma.kORankingSnapshot.create({
+     *   data: {
+     *     // ... data to create a KORankingSnapshot
+     *   }
+     * })
+     * 
+     */
+    create<T extends KORankingSnapshotCreateArgs>(args: SelectSubset<T, KORankingSnapshotCreateArgs<ExtArgs>>): Prisma__KORankingSnapshotClient<$Result.GetResult<Prisma.$KORankingSnapshotPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many KORankingSnapshots.
+     * @param {KORankingSnapshotCreateManyArgs} args - Arguments to create many KORankingSnapshots.
+     * @example
+     * // Create many KORankingSnapshots
+     * const kORankingSnapshot = await prisma.kORankingSnapshot.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends KORankingSnapshotCreateManyArgs>(args?: SelectSubset<T, KORankingSnapshotCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many KORankingSnapshots and returns the data saved in the database.
+     * @param {KORankingSnapshotCreateManyAndReturnArgs} args - Arguments to create many KORankingSnapshots.
+     * @example
+     * // Create many KORankingSnapshots
+     * const kORankingSnapshot = await prisma.kORankingSnapshot.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many KORankingSnapshots and only return the `id`
+     * const kORankingSnapshotWithIdOnly = await prisma.kORankingSnapshot.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends KORankingSnapshotCreateManyAndReturnArgs>(args?: SelectSubset<T, KORankingSnapshotCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KORankingSnapshotPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a KORankingSnapshot.
+     * @param {KORankingSnapshotDeleteArgs} args - Arguments to delete one KORankingSnapshot.
+     * @example
+     * // Delete one KORankingSnapshot
+     * const KORankingSnapshot = await prisma.kORankingSnapshot.delete({
+     *   where: {
+     *     // ... filter to delete one KORankingSnapshot
+     *   }
+     * })
+     * 
+     */
+    delete<T extends KORankingSnapshotDeleteArgs>(args: SelectSubset<T, KORankingSnapshotDeleteArgs<ExtArgs>>): Prisma__KORankingSnapshotClient<$Result.GetResult<Prisma.$KORankingSnapshotPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one KORankingSnapshot.
+     * @param {KORankingSnapshotUpdateArgs} args - Arguments to update one KORankingSnapshot.
+     * @example
+     * // Update one KORankingSnapshot
+     * const kORankingSnapshot = await prisma.kORankingSnapshot.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends KORankingSnapshotUpdateArgs>(args: SelectSubset<T, KORankingSnapshotUpdateArgs<ExtArgs>>): Prisma__KORankingSnapshotClient<$Result.GetResult<Prisma.$KORankingSnapshotPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more KORankingSnapshots.
+     * @param {KORankingSnapshotDeleteManyArgs} args - Arguments to filter KORankingSnapshots to delete.
+     * @example
+     * // Delete a few KORankingSnapshots
+     * const { count } = await prisma.kORankingSnapshot.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends KORankingSnapshotDeleteManyArgs>(args?: SelectSubset<T, KORankingSnapshotDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more KORankingSnapshots.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KORankingSnapshotUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many KORankingSnapshots
+     * const kORankingSnapshot = await prisma.kORankingSnapshot.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends KORankingSnapshotUpdateManyArgs>(args: SelectSubset<T, KORankingSnapshotUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more KORankingSnapshots and returns the data updated in the database.
+     * @param {KORankingSnapshotUpdateManyAndReturnArgs} args - Arguments to update many KORankingSnapshots.
+     * @example
+     * // Update many KORankingSnapshots
+     * const kORankingSnapshot = await prisma.kORankingSnapshot.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more KORankingSnapshots and only return the `id`
+     * const kORankingSnapshotWithIdOnly = await prisma.kORankingSnapshot.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends KORankingSnapshotUpdateManyAndReturnArgs>(args: SelectSubset<T, KORankingSnapshotUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KORankingSnapshotPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one KORankingSnapshot.
+     * @param {KORankingSnapshotUpsertArgs} args - Arguments to update or create a KORankingSnapshot.
+     * @example
+     * // Update or create a KORankingSnapshot
+     * const kORankingSnapshot = await prisma.kORankingSnapshot.upsert({
+     *   create: {
+     *     // ... data to create a KORankingSnapshot
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the KORankingSnapshot we want to update
+     *   }
+     * })
+     */
+    upsert<T extends KORankingSnapshotUpsertArgs>(args: SelectSubset<T, KORankingSnapshotUpsertArgs<ExtArgs>>): Prisma__KORankingSnapshotClient<$Result.GetResult<Prisma.$KORankingSnapshotPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of KORankingSnapshots.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KORankingSnapshotCountArgs} args - Arguments to filter KORankingSnapshots to count.
+     * @example
+     * // Count the number of KORankingSnapshots
+     * const count = await prisma.kORankingSnapshot.count({
+     *   where: {
+     *     // ... the filter for the KORankingSnapshots we want to count
+     *   }
+     * })
+    **/
+    count<T extends KORankingSnapshotCountArgs>(
+      args?: Subset<T, KORankingSnapshotCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], KORankingSnapshotCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a KORankingSnapshot.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KORankingSnapshotAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends KORankingSnapshotAggregateArgs>(args: Subset<T, KORankingSnapshotAggregateArgs>): Prisma.PrismaPromise<GetKORankingSnapshotAggregateType<T>>
+
+    /**
+     * Group by KORankingSnapshot.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KORankingSnapshotGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends KORankingSnapshotGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: KORankingSnapshotGroupByArgs['orderBy'] }
+        : { orderBy?: KORankingSnapshotGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, KORankingSnapshotGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetKORankingSnapshotGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the KORankingSnapshot model
+   */
+  readonly fields: KORankingSnapshotFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for KORankingSnapshot.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__KORankingSnapshotClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    participant<T extends KOParticipantDefaultArgs<ExtArgs> = {}>(args?: Subset<T, KOParticipantDefaultArgs<ExtArgs>>): Prisma__KOParticipantClient<$Result.GetResult<Prisma.$KOParticipantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the KORankingSnapshot model
+   */
+  interface KORankingSnapshotFieldRefs {
+    readonly id: FieldRef<"KORankingSnapshot", 'String'>
+    readonly participantId: FieldRef<"KORankingSnapshot", 'String'>
+    readonly phase: FieldRef<"KORankingSnapshot", 'String'>
+    readonly totalPoints: FieldRef<"KORankingSnapshot", 'Int'>
+    readonly classifiedCorrect: FieldRef<"KORankingSnapshot", 'Int'>
+    readonly exactScores: FieldRef<"KORankingSnapshot", 'Int'>
+    readonly penaltyBonus: FieldRef<"KORankingSnapshot", 'Int'>
+    readonly playedMatches: FieldRef<"KORankingSnapshot", 'Int'>
+    readonly currentPosition: FieldRef<"KORankingSnapshot", 'Int'>
+    readonly previousPosition: FieldRef<"KORankingSnapshot", 'Int'>
+    readonly updatedAt: FieldRef<"KORankingSnapshot", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * KORankingSnapshot findUnique
+   */
+  export type KORankingSnapshotFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KORankingSnapshot
+     */
+    select?: KORankingSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KORankingSnapshot
+     */
+    omit?: KORankingSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KORankingSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter, which KORankingSnapshot to fetch.
+     */
+    where: KORankingSnapshotWhereUniqueInput
+  }
+
+  /**
+   * KORankingSnapshot findUniqueOrThrow
+   */
+  export type KORankingSnapshotFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KORankingSnapshot
+     */
+    select?: KORankingSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KORankingSnapshot
+     */
+    omit?: KORankingSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KORankingSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter, which KORankingSnapshot to fetch.
+     */
+    where: KORankingSnapshotWhereUniqueInput
+  }
+
+  /**
+   * KORankingSnapshot findFirst
+   */
+  export type KORankingSnapshotFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KORankingSnapshot
+     */
+    select?: KORankingSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KORankingSnapshot
+     */
+    omit?: KORankingSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KORankingSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter, which KORankingSnapshot to fetch.
+     */
+    where?: KORankingSnapshotWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KORankingSnapshots to fetch.
+     */
+    orderBy?: KORankingSnapshotOrderByWithRelationInput | KORankingSnapshotOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for KORankingSnapshots.
+     */
+    cursor?: KORankingSnapshotWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KORankingSnapshots from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KORankingSnapshots.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of KORankingSnapshots.
+     */
+    distinct?: KORankingSnapshotScalarFieldEnum | KORankingSnapshotScalarFieldEnum[]
+  }
+
+  /**
+   * KORankingSnapshot findFirstOrThrow
+   */
+  export type KORankingSnapshotFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KORankingSnapshot
+     */
+    select?: KORankingSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KORankingSnapshot
+     */
+    omit?: KORankingSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KORankingSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter, which KORankingSnapshot to fetch.
+     */
+    where?: KORankingSnapshotWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KORankingSnapshots to fetch.
+     */
+    orderBy?: KORankingSnapshotOrderByWithRelationInput | KORankingSnapshotOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for KORankingSnapshots.
+     */
+    cursor?: KORankingSnapshotWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KORankingSnapshots from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KORankingSnapshots.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of KORankingSnapshots.
+     */
+    distinct?: KORankingSnapshotScalarFieldEnum | KORankingSnapshotScalarFieldEnum[]
+  }
+
+  /**
+   * KORankingSnapshot findMany
+   */
+  export type KORankingSnapshotFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KORankingSnapshot
+     */
+    select?: KORankingSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KORankingSnapshot
+     */
+    omit?: KORankingSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KORankingSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter, which KORankingSnapshots to fetch.
+     */
+    where?: KORankingSnapshotWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KORankingSnapshots to fetch.
+     */
+    orderBy?: KORankingSnapshotOrderByWithRelationInput | KORankingSnapshotOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing KORankingSnapshots.
+     */
+    cursor?: KORankingSnapshotWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KORankingSnapshots from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KORankingSnapshots.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of KORankingSnapshots.
+     */
+    distinct?: KORankingSnapshotScalarFieldEnum | KORankingSnapshotScalarFieldEnum[]
+  }
+
+  /**
+   * KORankingSnapshot create
+   */
+  export type KORankingSnapshotCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KORankingSnapshot
+     */
+    select?: KORankingSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KORankingSnapshot
+     */
+    omit?: KORankingSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KORankingSnapshotInclude<ExtArgs> | null
+    /**
+     * The data needed to create a KORankingSnapshot.
+     */
+    data: XOR<KORankingSnapshotCreateInput, KORankingSnapshotUncheckedCreateInput>
+  }
+
+  /**
+   * KORankingSnapshot createMany
+   */
+  export type KORankingSnapshotCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many KORankingSnapshots.
+     */
+    data: KORankingSnapshotCreateManyInput | KORankingSnapshotCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * KORankingSnapshot createManyAndReturn
+   */
+  export type KORankingSnapshotCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KORankingSnapshot
+     */
+    select?: KORankingSnapshotSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the KORankingSnapshot
+     */
+    omit?: KORankingSnapshotOmit<ExtArgs> | null
+    /**
+     * The data used to create many KORankingSnapshots.
+     */
+    data: KORankingSnapshotCreateManyInput | KORankingSnapshotCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KORankingSnapshotIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * KORankingSnapshot update
+   */
+  export type KORankingSnapshotUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KORankingSnapshot
+     */
+    select?: KORankingSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KORankingSnapshot
+     */
+    omit?: KORankingSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KORankingSnapshotInclude<ExtArgs> | null
+    /**
+     * The data needed to update a KORankingSnapshot.
+     */
+    data: XOR<KORankingSnapshotUpdateInput, KORankingSnapshotUncheckedUpdateInput>
+    /**
+     * Choose, which KORankingSnapshot to update.
+     */
+    where: KORankingSnapshotWhereUniqueInput
+  }
+
+  /**
+   * KORankingSnapshot updateMany
+   */
+  export type KORankingSnapshotUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update KORankingSnapshots.
+     */
+    data: XOR<KORankingSnapshotUpdateManyMutationInput, KORankingSnapshotUncheckedUpdateManyInput>
+    /**
+     * Filter which KORankingSnapshots to update
+     */
+    where?: KORankingSnapshotWhereInput
+    /**
+     * Limit how many KORankingSnapshots to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * KORankingSnapshot updateManyAndReturn
+   */
+  export type KORankingSnapshotUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KORankingSnapshot
+     */
+    select?: KORankingSnapshotSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the KORankingSnapshot
+     */
+    omit?: KORankingSnapshotOmit<ExtArgs> | null
+    /**
+     * The data used to update KORankingSnapshots.
+     */
+    data: XOR<KORankingSnapshotUpdateManyMutationInput, KORankingSnapshotUncheckedUpdateManyInput>
+    /**
+     * Filter which KORankingSnapshots to update
+     */
+    where?: KORankingSnapshotWhereInput
+    /**
+     * Limit how many KORankingSnapshots to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KORankingSnapshotIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * KORankingSnapshot upsert
+   */
+  export type KORankingSnapshotUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KORankingSnapshot
+     */
+    select?: KORankingSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KORankingSnapshot
+     */
+    omit?: KORankingSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KORankingSnapshotInclude<ExtArgs> | null
+    /**
+     * The filter to search for the KORankingSnapshot to update in case it exists.
+     */
+    where: KORankingSnapshotWhereUniqueInput
+    /**
+     * In case the KORankingSnapshot found by the `where` argument doesn't exist, create a new KORankingSnapshot with this data.
+     */
+    create: XOR<KORankingSnapshotCreateInput, KORankingSnapshotUncheckedCreateInput>
+    /**
+     * In case the KORankingSnapshot was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<KORankingSnapshotUpdateInput, KORankingSnapshotUncheckedUpdateInput>
+  }
+
+  /**
+   * KORankingSnapshot delete
+   */
+  export type KORankingSnapshotDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KORankingSnapshot
+     */
+    select?: KORankingSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KORankingSnapshot
+     */
+    omit?: KORankingSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KORankingSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter which KORankingSnapshot to delete.
+     */
+    where: KORankingSnapshotWhereUniqueInput
+  }
+
+  /**
+   * KORankingSnapshot deleteMany
+   */
+  export type KORankingSnapshotDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which KORankingSnapshots to delete
+     */
+    where?: KORankingSnapshotWhereInput
+    /**
+     * Limit how many KORankingSnapshots to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * KORankingSnapshot without action
+   */
+  export type KORankingSnapshotDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KORankingSnapshot
+     */
+    select?: KORankingSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KORankingSnapshot
+     */
+    omit?: KORankingSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KORankingSnapshotInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -14192,6 +20558,91 @@ export namespace Prisma {
   };
 
   export type AnalyticsEventScalarFieldEnum = (typeof AnalyticsEventScalarFieldEnum)[keyof typeof AnalyticsEventScalarFieldEnum]
+
+
+  export const KOParticipantScalarFieldEnum: {
+    id: 'id',
+    fullName: 'fullName',
+    nationalId: 'nationalId',
+    phone: 'phone',
+    email: 'email',
+    city: 'city',
+    participationCode: 'participationCode',
+    phase: 'phase',
+    submittedAt: 'submittedAt',
+    isComplete: 'isComplete',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type KOParticipantScalarFieldEnum = (typeof KOParticipantScalarFieldEnum)[keyof typeof KOParticipantScalarFieldEnum]
+
+
+  export const KOPaymentScalarFieldEnum: {
+    id: 'id',
+    participantId: 'participantId',
+    paymentMethod: 'paymentMethod',
+    amountUsd: 'amountUsd',
+    exchangeRate: 'exchangeRate',
+    amountVes: 'amountVes',
+    senderBank: 'senderBank',
+    senderName: 'senderName',
+    senderEmail: 'senderEmail',
+    paymentReference: 'paymentReference',
+    paymentDate: 'paymentDate',
+    paymentStatus: 'paymentStatus',
+    adminNotes: 'adminNotes',
+    verifiedAt: 'verifiedAt',
+    rejectedAt: 'rejectedAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type KOPaymentScalarFieldEnum = (typeof KOPaymentScalarFieldEnum)[keyof typeof KOPaymentScalarFieldEnum]
+
+
+  export const KOPickScalarFieldEnum: {
+    id: 'id',
+    participantId: 'participantId',
+    matchId: 'matchId',
+    homeGoals: 'homeGoals',
+    awayGoals: 'awayGoals',
+    penaltyWinner: 'penaltyWinner',
+    points: 'points',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type KOPickScalarFieldEnum = (typeof KOPickScalarFieldEnum)[keyof typeof KOPickScalarFieldEnum]
+
+
+  export const KOMatchResultScalarFieldEnum: {
+    id: 'id',
+    homeGoals: 'homeGoals',
+    awayGoals: 'awayGoals',
+    penaltyWinner: 'penaltyWinner',
+    status: 'status',
+    updatedAt: 'updatedAt'
+  };
+
+  export type KOMatchResultScalarFieldEnum = (typeof KOMatchResultScalarFieldEnum)[keyof typeof KOMatchResultScalarFieldEnum]
+
+
+  export const KORankingSnapshotScalarFieldEnum: {
+    id: 'id',
+    participantId: 'participantId',
+    phase: 'phase',
+    totalPoints: 'totalPoints',
+    classifiedCorrect: 'classifiedCorrect',
+    exactScores: 'exactScores',
+    penaltyBonus: 'penaltyBonus',
+    playedMatches: 'playedMatches',
+    currentPosition: 'currentPosition',
+    previousPosition: 'previousPosition',
+    updatedAt: 'updatedAt'
+  };
+
+  export type KORankingSnapshotScalarFieldEnum = (typeof KORankingSnapshotScalarFieldEnum)[keyof typeof KORankingSnapshotScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -15412,6 +21863,443 @@ export namespace Prisma {
     ipHash?: StringNullableWithAggregatesFilter<"AnalyticsEvent"> | string | null
     metadata?: StringNullableWithAggregatesFilter<"AnalyticsEvent"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"AnalyticsEvent"> | Date | string
+  }
+
+  export type KOParticipantWhereInput = {
+    AND?: KOParticipantWhereInput | KOParticipantWhereInput[]
+    OR?: KOParticipantWhereInput[]
+    NOT?: KOParticipantWhereInput | KOParticipantWhereInput[]
+    id?: StringFilter<"KOParticipant"> | string
+    fullName?: StringFilter<"KOParticipant"> | string
+    nationalId?: StringFilter<"KOParticipant"> | string
+    phone?: StringFilter<"KOParticipant"> | string
+    email?: StringNullableFilter<"KOParticipant"> | string | null
+    city?: StringNullableFilter<"KOParticipant"> | string | null
+    participationCode?: StringFilter<"KOParticipant"> | string
+    phase?: StringFilter<"KOParticipant"> | string
+    submittedAt?: DateTimeNullableFilter<"KOParticipant"> | Date | string | null
+    isComplete?: BoolFilter<"KOParticipant"> | boolean
+    createdAt?: DateTimeFilter<"KOParticipant"> | Date | string
+    updatedAt?: DateTimeFilter<"KOParticipant"> | Date | string
+    picks?: KOPickListRelationFilter
+    payment?: XOR<KOPaymentNullableScalarRelationFilter, KOPaymentWhereInput> | null
+    ranking?: XOR<KORankingSnapshotNullableScalarRelationFilter, KORankingSnapshotWhereInput> | null
+  }
+
+  export type KOParticipantOrderByWithRelationInput = {
+    id?: SortOrder
+    fullName?: SortOrder
+    nationalId?: SortOrder
+    phone?: SortOrder
+    email?: SortOrderInput | SortOrder
+    city?: SortOrderInput | SortOrder
+    participationCode?: SortOrder
+    phase?: SortOrder
+    submittedAt?: SortOrderInput | SortOrder
+    isComplete?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    picks?: KOPickOrderByRelationAggregateInput
+    payment?: KOPaymentOrderByWithRelationInput
+    ranking?: KORankingSnapshotOrderByWithRelationInput
+  }
+
+  export type KOParticipantWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    participationCode?: string
+    AND?: KOParticipantWhereInput | KOParticipantWhereInput[]
+    OR?: KOParticipantWhereInput[]
+    NOT?: KOParticipantWhereInput | KOParticipantWhereInput[]
+    fullName?: StringFilter<"KOParticipant"> | string
+    nationalId?: StringFilter<"KOParticipant"> | string
+    phone?: StringFilter<"KOParticipant"> | string
+    email?: StringNullableFilter<"KOParticipant"> | string | null
+    city?: StringNullableFilter<"KOParticipant"> | string | null
+    phase?: StringFilter<"KOParticipant"> | string
+    submittedAt?: DateTimeNullableFilter<"KOParticipant"> | Date | string | null
+    isComplete?: BoolFilter<"KOParticipant"> | boolean
+    createdAt?: DateTimeFilter<"KOParticipant"> | Date | string
+    updatedAt?: DateTimeFilter<"KOParticipant"> | Date | string
+    picks?: KOPickListRelationFilter
+    payment?: XOR<KOPaymentNullableScalarRelationFilter, KOPaymentWhereInput> | null
+    ranking?: XOR<KORankingSnapshotNullableScalarRelationFilter, KORankingSnapshotWhereInput> | null
+  }, "id" | "participationCode">
+
+  export type KOParticipantOrderByWithAggregationInput = {
+    id?: SortOrder
+    fullName?: SortOrder
+    nationalId?: SortOrder
+    phone?: SortOrder
+    email?: SortOrderInput | SortOrder
+    city?: SortOrderInput | SortOrder
+    participationCode?: SortOrder
+    phase?: SortOrder
+    submittedAt?: SortOrderInput | SortOrder
+    isComplete?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: KOParticipantCountOrderByAggregateInput
+    _max?: KOParticipantMaxOrderByAggregateInput
+    _min?: KOParticipantMinOrderByAggregateInput
+  }
+
+  export type KOParticipantScalarWhereWithAggregatesInput = {
+    AND?: KOParticipantScalarWhereWithAggregatesInput | KOParticipantScalarWhereWithAggregatesInput[]
+    OR?: KOParticipantScalarWhereWithAggregatesInput[]
+    NOT?: KOParticipantScalarWhereWithAggregatesInput | KOParticipantScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"KOParticipant"> | string
+    fullName?: StringWithAggregatesFilter<"KOParticipant"> | string
+    nationalId?: StringWithAggregatesFilter<"KOParticipant"> | string
+    phone?: StringWithAggregatesFilter<"KOParticipant"> | string
+    email?: StringNullableWithAggregatesFilter<"KOParticipant"> | string | null
+    city?: StringNullableWithAggregatesFilter<"KOParticipant"> | string | null
+    participationCode?: StringWithAggregatesFilter<"KOParticipant"> | string
+    phase?: StringWithAggregatesFilter<"KOParticipant"> | string
+    submittedAt?: DateTimeNullableWithAggregatesFilter<"KOParticipant"> | Date | string | null
+    isComplete?: BoolWithAggregatesFilter<"KOParticipant"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"KOParticipant"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"KOParticipant"> | Date | string
+  }
+
+  export type KOPaymentWhereInput = {
+    AND?: KOPaymentWhereInput | KOPaymentWhereInput[]
+    OR?: KOPaymentWhereInput[]
+    NOT?: KOPaymentWhereInput | KOPaymentWhereInput[]
+    id?: StringFilter<"KOPayment"> | string
+    participantId?: StringFilter<"KOPayment"> | string
+    paymentMethod?: EnumPaymentMethodFilter<"KOPayment"> | $Enums.PaymentMethod
+    amountUsd?: FloatFilter<"KOPayment"> | number
+    exchangeRate?: FloatNullableFilter<"KOPayment"> | number | null
+    amountVes?: FloatNullableFilter<"KOPayment"> | number | null
+    senderBank?: StringNullableFilter<"KOPayment"> | string | null
+    senderName?: StringNullableFilter<"KOPayment"> | string | null
+    senderEmail?: StringNullableFilter<"KOPayment"> | string | null
+    paymentReference?: StringNullableFilter<"KOPayment"> | string | null
+    paymentDate?: DateTimeNullableFilter<"KOPayment"> | Date | string | null
+    paymentStatus?: EnumPaymentStatusFilter<"KOPayment"> | $Enums.PaymentStatus
+    adminNotes?: StringNullableFilter<"KOPayment"> | string | null
+    verifiedAt?: DateTimeNullableFilter<"KOPayment"> | Date | string | null
+    rejectedAt?: DateTimeNullableFilter<"KOPayment"> | Date | string | null
+    createdAt?: DateTimeFilter<"KOPayment"> | Date | string
+    updatedAt?: DateTimeFilter<"KOPayment"> | Date | string
+    participant?: XOR<KOParticipantScalarRelationFilter, KOParticipantWhereInput>
+  }
+
+  export type KOPaymentOrderByWithRelationInput = {
+    id?: SortOrder
+    participantId?: SortOrder
+    paymentMethod?: SortOrder
+    amountUsd?: SortOrder
+    exchangeRate?: SortOrderInput | SortOrder
+    amountVes?: SortOrderInput | SortOrder
+    senderBank?: SortOrderInput | SortOrder
+    senderName?: SortOrderInput | SortOrder
+    senderEmail?: SortOrderInput | SortOrder
+    paymentReference?: SortOrderInput | SortOrder
+    paymentDate?: SortOrderInput | SortOrder
+    paymentStatus?: SortOrder
+    adminNotes?: SortOrderInput | SortOrder
+    verifiedAt?: SortOrderInput | SortOrder
+    rejectedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    participant?: KOParticipantOrderByWithRelationInput
+  }
+
+  export type KOPaymentWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    participantId?: string
+    paymentReference?: string
+    AND?: KOPaymentWhereInput | KOPaymentWhereInput[]
+    OR?: KOPaymentWhereInput[]
+    NOT?: KOPaymentWhereInput | KOPaymentWhereInput[]
+    paymentMethod?: EnumPaymentMethodFilter<"KOPayment"> | $Enums.PaymentMethod
+    amountUsd?: FloatFilter<"KOPayment"> | number
+    exchangeRate?: FloatNullableFilter<"KOPayment"> | number | null
+    amountVes?: FloatNullableFilter<"KOPayment"> | number | null
+    senderBank?: StringNullableFilter<"KOPayment"> | string | null
+    senderName?: StringNullableFilter<"KOPayment"> | string | null
+    senderEmail?: StringNullableFilter<"KOPayment"> | string | null
+    paymentDate?: DateTimeNullableFilter<"KOPayment"> | Date | string | null
+    paymentStatus?: EnumPaymentStatusFilter<"KOPayment"> | $Enums.PaymentStatus
+    adminNotes?: StringNullableFilter<"KOPayment"> | string | null
+    verifiedAt?: DateTimeNullableFilter<"KOPayment"> | Date | string | null
+    rejectedAt?: DateTimeNullableFilter<"KOPayment"> | Date | string | null
+    createdAt?: DateTimeFilter<"KOPayment"> | Date | string
+    updatedAt?: DateTimeFilter<"KOPayment"> | Date | string
+    participant?: XOR<KOParticipantScalarRelationFilter, KOParticipantWhereInput>
+  }, "id" | "participantId" | "paymentReference">
+
+  export type KOPaymentOrderByWithAggregationInput = {
+    id?: SortOrder
+    participantId?: SortOrder
+    paymentMethod?: SortOrder
+    amountUsd?: SortOrder
+    exchangeRate?: SortOrderInput | SortOrder
+    amountVes?: SortOrderInput | SortOrder
+    senderBank?: SortOrderInput | SortOrder
+    senderName?: SortOrderInput | SortOrder
+    senderEmail?: SortOrderInput | SortOrder
+    paymentReference?: SortOrderInput | SortOrder
+    paymentDate?: SortOrderInput | SortOrder
+    paymentStatus?: SortOrder
+    adminNotes?: SortOrderInput | SortOrder
+    verifiedAt?: SortOrderInput | SortOrder
+    rejectedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: KOPaymentCountOrderByAggregateInput
+    _avg?: KOPaymentAvgOrderByAggregateInput
+    _max?: KOPaymentMaxOrderByAggregateInput
+    _min?: KOPaymentMinOrderByAggregateInput
+    _sum?: KOPaymentSumOrderByAggregateInput
+  }
+
+  export type KOPaymentScalarWhereWithAggregatesInput = {
+    AND?: KOPaymentScalarWhereWithAggregatesInput | KOPaymentScalarWhereWithAggregatesInput[]
+    OR?: KOPaymentScalarWhereWithAggregatesInput[]
+    NOT?: KOPaymentScalarWhereWithAggregatesInput | KOPaymentScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"KOPayment"> | string
+    participantId?: StringWithAggregatesFilter<"KOPayment"> | string
+    paymentMethod?: EnumPaymentMethodWithAggregatesFilter<"KOPayment"> | $Enums.PaymentMethod
+    amountUsd?: FloatWithAggregatesFilter<"KOPayment"> | number
+    exchangeRate?: FloatNullableWithAggregatesFilter<"KOPayment"> | number | null
+    amountVes?: FloatNullableWithAggregatesFilter<"KOPayment"> | number | null
+    senderBank?: StringNullableWithAggregatesFilter<"KOPayment"> | string | null
+    senderName?: StringNullableWithAggregatesFilter<"KOPayment"> | string | null
+    senderEmail?: StringNullableWithAggregatesFilter<"KOPayment"> | string | null
+    paymentReference?: StringNullableWithAggregatesFilter<"KOPayment"> | string | null
+    paymentDate?: DateTimeNullableWithAggregatesFilter<"KOPayment"> | Date | string | null
+    paymentStatus?: EnumPaymentStatusWithAggregatesFilter<"KOPayment"> | $Enums.PaymentStatus
+    adminNotes?: StringNullableWithAggregatesFilter<"KOPayment"> | string | null
+    verifiedAt?: DateTimeNullableWithAggregatesFilter<"KOPayment"> | Date | string | null
+    rejectedAt?: DateTimeNullableWithAggregatesFilter<"KOPayment"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"KOPayment"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"KOPayment"> | Date | string
+  }
+
+  export type KOPickWhereInput = {
+    AND?: KOPickWhereInput | KOPickWhereInput[]
+    OR?: KOPickWhereInput[]
+    NOT?: KOPickWhereInput | KOPickWhereInput[]
+    id?: StringFilter<"KOPick"> | string
+    participantId?: StringFilter<"KOPick"> | string
+    matchId?: StringFilter<"KOPick"> | string
+    homeGoals?: IntFilter<"KOPick"> | number
+    awayGoals?: IntFilter<"KOPick"> | number
+    penaltyWinner?: StringNullableFilter<"KOPick"> | string | null
+    points?: IntNullableFilter<"KOPick"> | number | null
+    createdAt?: DateTimeFilter<"KOPick"> | Date | string
+    updatedAt?: DateTimeFilter<"KOPick"> | Date | string
+    participant?: XOR<KOParticipantScalarRelationFilter, KOParticipantWhereInput>
+  }
+
+  export type KOPickOrderByWithRelationInput = {
+    id?: SortOrder
+    participantId?: SortOrder
+    matchId?: SortOrder
+    homeGoals?: SortOrder
+    awayGoals?: SortOrder
+    penaltyWinner?: SortOrderInput | SortOrder
+    points?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    participant?: KOParticipantOrderByWithRelationInput
+  }
+
+  export type KOPickWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    participantId_matchId?: KOPickParticipantIdMatchIdCompoundUniqueInput
+    AND?: KOPickWhereInput | KOPickWhereInput[]
+    OR?: KOPickWhereInput[]
+    NOT?: KOPickWhereInput | KOPickWhereInput[]
+    participantId?: StringFilter<"KOPick"> | string
+    matchId?: StringFilter<"KOPick"> | string
+    homeGoals?: IntFilter<"KOPick"> | number
+    awayGoals?: IntFilter<"KOPick"> | number
+    penaltyWinner?: StringNullableFilter<"KOPick"> | string | null
+    points?: IntNullableFilter<"KOPick"> | number | null
+    createdAt?: DateTimeFilter<"KOPick"> | Date | string
+    updatedAt?: DateTimeFilter<"KOPick"> | Date | string
+    participant?: XOR<KOParticipantScalarRelationFilter, KOParticipantWhereInput>
+  }, "id" | "participantId_matchId">
+
+  export type KOPickOrderByWithAggregationInput = {
+    id?: SortOrder
+    participantId?: SortOrder
+    matchId?: SortOrder
+    homeGoals?: SortOrder
+    awayGoals?: SortOrder
+    penaltyWinner?: SortOrderInput | SortOrder
+    points?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: KOPickCountOrderByAggregateInput
+    _avg?: KOPickAvgOrderByAggregateInput
+    _max?: KOPickMaxOrderByAggregateInput
+    _min?: KOPickMinOrderByAggregateInput
+    _sum?: KOPickSumOrderByAggregateInput
+  }
+
+  export type KOPickScalarWhereWithAggregatesInput = {
+    AND?: KOPickScalarWhereWithAggregatesInput | KOPickScalarWhereWithAggregatesInput[]
+    OR?: KOPickScalarWhereWithAggregatesInput[]
+    NOT?: KOPickScalarWhereWithAggregatesInput | KOPickScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"KOPick"> | string
+    participantId?: StringWithAggregatesFilter<"KOPick"> | string
+    matchId?: StringWithAggregatesFilter<"KOPick"> | string
+    homeGoals?: IntWithAggregatesFilter<"KOPick"> | number
+    awayGoals?: IntWithAggregatesFilter<"KOPick"> | number
+    penaltyWinner?: StringNullableWithAggregatesFilter<"KOPick"> | string | null
+    points?: IntNullableWithAggregatesFilter<"KOPick"> | number | null
+    createdAt?: DateTimeWithAggregatesFilter<"KOPick"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"KOPick"> | Date | string
+  }
+
+  export type KOMatchResultWhereInput = {
+    AND?: KOMatchResultWhereInput | KOMatchResultWhereInput[]
+    OR?: KOMatchResultWhereInput[]
+    NOT?: KOMatchResultWhereInput | KOMatchResultWhereInput[]
+    id?: StringFilter<"KOMatchResult"> | string
+    homeGoals?: IntNullableFilter<"KOMatchResult"> | number | null
+    awayGoals?: IntNullableFilter<"KOMatchResult"> | number | null
+    penaltyWinner?: StringNullableFilter<"KOMatchResult"> | string | null
+    status?: StringFilter<"KOMatchResult"> | string
+    updatedAt?: DateTimeFilter<"KOMatchResult"> | Date | string
+  }
+
+  export type KOMatchResultOrderByWithRelationInput = {
+    id?: SortOrder
+    homeGoals?: SortOrderInput | SortOrder
+    awayGoals?: SortOrderInput | SortOrder
+    penaltyWinner?: SortOrderInput | SortOrder
+    status?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type KOMatchResultWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: KOMatchResultWhereInput | KOMatchResultWhereInput[]
+    OR?: KOMatchResultWhereInput[]
+    NOT?: KOMatchResultWhereInput | KOMatchResultWhereInput[]
+    homeGoals?: IntNullableFilter<"KOMatchResult"> | number | null
+    awayGoals?: IntNullableFilter<"KOMatchResult"> | number | null
+    penaltyWinner?: StringNullableFilter<"KOMatchResult"> | string | null
+    status?: StringFilter<"KOMatchResult"> | string
+    updatedAt?: DateTimeFilter<"KOMatchResult"> | Date | string
+  }, "id">
+
+  export type KOMatchResultOrderByWithAggregationInput = {
+    id?: SortOrder
+    homeGoals?: SortOrderInput | SortOrder
+    awayGoals?: SortOrderInput | SortOrder
+    penaltyWinner?: SortOrderInput | SortOrder
+    status?: SortOrder
+    updatedAt?: SortOrder
+    _count?: KOMatchResultCountOrderByAggregateInput
+    _avg?: KOMatchResultAvgOrderByAggregateInput
+    _max?: KOMatchResultMaxOrderByAggregateInput
+    _min?: KOMatchResultMinOrderByAggregateInput
+    _sum?: KOMatchResultSumOrderByAggregateInput
+  }
+
+  export type KOMatchResultScalarWhereWithAggregatesInput = {
+    AND?: KOMatchResultScalarWhereWithAggregatesInput | KOMatchResultScalarWhereWithAggregatesInput[]
+    OR?: KOMatchResultScalarWhereWithAggregatesInput[]
+    NOT?: KOMatchResultScalarWhereWithAggregatesInput | KOMatchResultScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"KOMatchResult"> | string
+    homeGoals?: IntNullableWithAggregatesFilter<"KOMatchResult"> | number | null
+    awayGoals?: IntNullableWithAggregatesFilter<"KOMatchResult"> | number | null
+    penaltyWinner?: StringNullableWithAggregatesFilter<"KOMatchResult"> | string | null
+    status?: StringWithAggregatesFilter<"KOMatchResult"> | string
+    updatedAt?: DateTimeWithAggregatesFilter<"KOMatchResult"> | Date | string
+  }
+
+  export type KORankingSnapshotWhereInput = {
+    AND?: KORankingSnapshotWhereInput | KORankingSnapshotWhereInput[]
+    OR?: KORankingSnapshotWhereInput[]
+    NOT?: KORankingSnapshotWhereInput | KORankingSnapshotWhereInput[]
+    id?: StringFilter<"KORankingSnapshot"> | string
+    participantId?: StringFilter<"KORankingSnapshot"> | string
+    phase?: StringFilter<"KORankingSnapshot"> | string
+    totalPoints?: IntFilter<"KORankingSnapshot"> | number
+    classifiedCorrect?: IntFilter<"KORankingSnapshot"> | number
+    exactScores?: IntFilter<"KORankingSnapshot"> | number
+    penaltyBonus?: IntFilter<"KORankingSnapshot"> | number
+    playedMatches?: IntFilter<"KORankingSnapshot"> | number
+    currentPosition?: IntFilter<"KORankingSnapshot"> | number
+    previousPosition?: IntNullableFilter<"KORankingSnapshot"> | number | null
+    updatedAt?: DateTimeFilter<"KORankingSnapshot"> | Date | string
+    participant?: XOR<KOParticipantScalarRelationFilter, KOParticipantWhereInput>
+  }
+
+  export type KORankingSnapshotOrderByWithRelationInput = {
+    id?: SortOrder
+    participantId?: SortOrder
+    phase?: SortOrder
+    totalPoints?: SortOrder
+    classifiedCorrect?: SortOrder
+    exactScores?: SortOrder
+    penaltyBonus?: SortOrder
+    playedMatches?: SortOrder
+    currentPosition?: SortOrder
+    previousPosition?: SortOrderInput | SortOrder
+    updatedAt?: SortOrder
+    participant?: KOParticipantOrderByWithRelationInput
+  }
+
+  export type KORankingSnapshotWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    participantId?: string
+    AND?: KORankingSnapshotWhereInput | KORankingSnapshotWhereInput[]
+    OR?: KORankingSnapshotWhereInput[]
+    NOT?: KORankingSnapshotWhereInput | KORankingSnapshotWhereInput[]
+    phase?: StringFilter<"KORankingSnapshot"> | string
+    totalPoints?: IntFilter<"KORankingSnapshot"> | number
+    classifiedCorrect?: IntFilter<"KORankingSnapshot"> | number
+    exactScores?: IntFilter<"KORankingSnapshot"> | number
+    penaltyBonus?: IntFilter<"KORankingSnapshot"> | number
+    playedMatches?: IntFilter<"KORankingSnapshot"> | number
+    currentPosition?: IntFilter<"KORankingSnapshot"> | number
+    previousPosition?: IntNullableFilter<"KORankingSnapshot"> | number | null
+    updatedAt?: DateTimeFilter<"KORankingSnapshot"> | Date | string
+    participant?: XOR<KOParticipantScalarRelationFilter, KOParticipantWhereInput>
+  }, "id" | "participantId">
+
+  export type KORankingSnapshotOrderByWithAggregationInput = {
+    id?: SortOrder
+    participantId?: SortOrder
+    phase?: SortOrder
+    totalPoints?: SortOrder
+    classifiedCorrect?: SortOrder
+    exactScores?: SortOrder
+    penaltyBonus?: SortOrder
+    playedMatches?: SortOrder
+    currentPosition?: SortOrder
+    previousPosition?: SortOrderInput | SortOrder
+    updatedAt?: SortOrder
+    _count?: KORankingSnapshotCountOrderByAggregateInput
+    _avg?: KORankingSnapshotAvgOrderByAggregateInput
+    _max?: KORankingSnapshotMaxOrderByAggregateInput
+    _min?: KORankingSnapshotMinOrderByAggregateInput
+    _sum?: KORankingSnapshotSumOrderByAggregateInput
+  }
+
+  export type KORankingSnapshotScalarWhereWithAggregatesInput = {
+    AND?: KORankingSnapshotScalarWhereWithAggregatesInput | KORankingSnapshotScalarWhereWithAggregatesInput[]
+    OR?: KORankingSnapshotScalarWhereWithAggregatesInput[]
+    NOT?: KORankingSnapshotScalarWhereWithAggregatesInput | KORankingSnapshotScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"KORankingSnapshot"> | string
+    participantId?: StringWithAggregatesFilter<"KORankingSnapshot"> | string
+    phase?: StringWithAggregatesFilter<"KORankingSnapshot"> | string
+    totalPoints?: IntWithAggregatesFilter<"KORankingSnapshot"> | number
+    classifiedCorrect?: IntWithAggregatesFilter<"KORankingSnapshot"> | number
+    exactScores?: IntWithAggregatesFilter<"KORankingSnapshot"> | number
+    penaltyBonus?: IntWithAggregatesFilter<"KORankingSnapshot"> | number
+    playedMatches?: IntWithAggregatesFilter<"KORankingSnapshot"> | number
+    currentPosition?: IntWithAggregatesFilter<"KORankingSnapshot"> | number
+    previousPosition?: IntNullableWithAggregatesFilter<"KORankingSnapshot"> | number | null
+    updatedAt?: DateTimeWithAggregatesFilter<"KORankingSnapshot"> | Date | string
   }
 
   export type SettingCreateInput = {
@@ -16692,6 +23580,505 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type KOParticipantCreateInput = {
+    id?: string
+    fullName: string
+    nationalId: string
+    phone: string
+    email?: string | null
+    city?: string | null
+    participationCode: string
+    phase?: string
+    submittedAt?: Date | string | null
+    isComplete?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    picks?: KOPickCreateNestedManyWithoutParticipantInput
+    payment?: KOPaymentCreateNestedOneWithoutParticipantInput
+    ranking?: KORankingSnapshotCreateNestedOneWithoutParticipantInput
+  }
+
+  export type KOParticipantUncheckedCreateInput = {
+    id?: string
+    fullName: string
+    nationalId: string
+    phone: string
+    email?: string | null
+    city?: string | null
+    participationCode: string
+    phase?: string
+    submittedAt?: Date | string | null
+    isComplete?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    picks?: KOPickUncheckedCreateNestedManyWithoutParticipantInput
+    payment?: KOPaymentUncheckedCreateNestedOneWithoutParticipantInput
+    ranking?: KORankingSnapshotUncheckedCreateNestedOneWithoutParticipantInput
+  }
+
+  export type KOParticipantUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullName?: StringFieldUpdateOperationsInput | string
+    nationalId?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    participationCode?: StringFieldUpdateOperationsInput | string
+    phase?: StringFieldUpdateOperationsInput | string
+    submittedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isComplete?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    picks?: KOPickUpdateManyWithoutParticipantNestedInput
+    payment?: KOPaymentUpdateOneWithoutParticipantNestedInput
+    ranking?: KORankingSnapshotUpdateOneWithoutParticipantNestedInput
+  }
+
+  export type KOParticipantUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullName?: StringFieldUpdateOperationsInput | string
+    nationalId?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    participationCode?: StringFieldUpdateOperationsInput | string
+    phase?: StringFieldUpdateOperationsInput | string
+    submittedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isComplete?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    picks?: KOPickUncheckedUpdateManyWithoutParticipantNestedInput
+    payment?: KOPaymentUncheckedUpdateOneWithoutParticipantNestedInput
+    ranking?: KORankingSnapshotUncheckedUpdateOneWithoutParticipantNestedInput
+  }
+
+  export type KOParticipantCreateManyInput = {
+    id?: string
+    fullName: string
+    nationalId: string
+    phone: string
+    email?: string | null
+    city?: string | null
+    participationCode: string
+    phase?: string
+    submittedAt?: Date | string | null
+    isComplete?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type KOParticipantUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullName?: StringFieldUpdateOperationsInput | string
+    nationalId?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    participationCode?: StringFieldUpdateOperationsInput | string
+    phase?: StringFieldUpdateOperationsInput | string
+    submittedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isComplete?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KOParticipantUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullName?: StringFieldUpdateOperationsInput | string
+    nationalId?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    participationCode?: StringFieldUpdateOperationsInput | string
+    phase?: StringFieldUpdateOperationsInput | string
+    submittedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isComplete?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KOPaymentCreateInput = {
+    id?: string
+    paymentMethod?: $Enums.PaymentMethod
+    amountUsd?: number
+    exchangeRate?: number | null
+    amountVes?: number | null
+    senderBank?: string | null
+    senderName?: string | null
+    senderEmail?: string | null
+    paymentReference?: string | null
+    paymentDate?: Date | string | null
+    paymentStatus?: $Enums.PaymentStatus
+    adminNotes?: string | null
+    verifiedAt?: Date | string | null
+    rejectedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    participant: KOParticipantCreateNestedOneWithoutPaymentInput
+  }
+
+  export type KOPaymentUncheckedCreateInput = {
+    id?: string
+    participantId: string
+    paymentMethod?: $Enums.PaymentMethod
+    amountUsd?: number
+    exchangeRate?: number | null
+    amountVes?: number | null
+    senderBank?: string | null
+    senderName?: string | null
+    senderEmail?: string | null
+    paymentReference?: string | null
+    paymentDate?: Date | string | null
+    paymentStatus?: $Enums.PaymentStatus
+    adminNotes?: string | null
+    verifiedAt?: Date | string | null
+    rejectedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type KOPaymentUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
+    amountUsd?: FloatFieldUpdateOperationsInput | number
+    exchangeRate?: NullableFloatFieldUpdateOperationsInput | number | null
+    amountVes?: NullableFloatFieldUpdateOperationsInput | number | null
+    senderBank?: NullableStringFieldUpdateOperationsInput | string | null
+    senderName?: NullableStringFieldUpdateOperationsInput | string | null
+    senderEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    adminNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    participant?: KOParticipantUpdateOneRequiredWithoutPaymentNestedInput
+  }
+
+  export type KOPaymentUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    participantId?: StringFieldUpdateOperationsInput | string
+    paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
+    amountUsd?: FloatFieldUpdateOperationsInput | number
+    exchangeRate?: NullableFloatFieldUpdateOperationsInput | number | null
+    amountVes?: NullableFloatFieldUpdateOperationsInput | number | null
+    senderBank?: NullableStringFieldUpdateOperationsInput | string | null
+    senderName?: NullableStringFieldUpdateOperationsInput | string | null
+    senderEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    adminNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KOPaymentCreateManyInput = {
+    id?: string
+    participantId: string
+    paymentMethod?: $Enums.PaymentMethod
+    amountUsd?: number
+    exchangeRate?: number | null
+    amountVes?: number | null
+    senderBank?: string | null
+    senderName?: string | null
+    senderEmail?: string | null
+    paymentReference?: string | null
+    paymentDate?: Date | string | null
+    paymentStatus?: $Enums.PaymentStatus
+    adminNotes?: string | null
+    verifiedAt?: Date | string | null
+    rejectedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type KOPaymentUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
+    amountUsd?: FloatFieldUpdateOperationsInput | number
+    exchangeRate?: NullableFloatFieldUpdateOperationsInput | number | null
+    amountVes?: NullableFloatFieldUpdateOperationsInput | number | null
+    senderBank?: NullableStringFieldUpdateOperationsInput | string | null
+    senderName?: NullableStringFieldUpdateOperationsInput | string | null
+    senderEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    adminNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KOPaymentUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    participantId?: StringFieldUpdateOperationsInput | string
+    paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
+    amountUsd?: FloatFieldUpdateOperationsInput | number
+    exchangeRate?: NullableFloatFieldUpdateOperationsInput | number | null
+    amountVes?: NullableFloatFieldUpdateOperationsInput | number | null
+    senderBank?: NullableStringFieldUpdateOperationsInput | string | null
+    senderName?: NullableStringFieldUpdateOperationsInput | string | null
+    senderEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    adminNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KOPickCreateInput = {
+    id?: string
+    matchId: string
+    homeGoals: number
+    awayGoals: number
+    penaltyWinner?: string | null
+    points?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    participant: KOParticipantCreateNestedOneWithoutPicksInput
+  }
+
+  export type KOPickUncheckedCreateInput = {
+    id?: string
+    participantId: string
+    matchId: string
+    homeGoals: number
+    awayGoals: number
+    penaltyWinner?: string | null
+    points?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type KOPickUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    matchId?: StringFieldUpdateOperationsInput | string
+    homeGoals?: IntFieldUpdateOperationsInput | number
+    awayGoals?: IntFieldUpdateOperationsInput | number
+    penaltyWinner?: NullableStringFieldUpdateOperationsInput | string | null
+    points?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    participant?: KOParticipantUpdateOneRequiredWithoutPicksNestedInput
+  }
+
+  export type KOPickUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    participantId?: StringFieldUpdateOperationsInput | string
+    matchId?: StringFieldUpdateOperationsInput | string
+    homeGoals?: IntFieldUpdateOperationsInput | number
+    awayGoals?: IntFieldUpdateOperationsInput | number
+    penaltyWinner?: NullableStringFieldUpdateOperationsInput | string | null
+    points?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KOPickCreateManyInput = {
+    id?: string
+    participantId: string
+    matchId: string
+    homeGoals: number
+    awayGoals: number
+    penaltyWinner?: string | null
+    points?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type KOPickUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    matchId?: StringFieldUpdateOperationsInput | string
+    homeGoals?: IntFieldUpdateOperationsInput | number
+    awayGoals?: IntFieldUpdateOperationsInput | number
+    penaltyWinner?: NullableStringFieldUpdateOperationsInput | string | null
+    points?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KOPickUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    participantId?: StringFieldUpdateOperationsInput | string
+    matchId?: StringFieldUpdateOperationsInput | string
+    homeGoals?: IntFieldUpdateOperationsInput | number
+    awayGoals?: IntFieldUpdateOperationsInput | number
+    penaltyWinner?: NullableStringFieldUpdateOperationsInput | string | null
+    points?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KOMatchResultCreateInput = {
+    id: string
+    homeGoals?: number | null
+    awayGoals?: number | null
+    penaltyWinner?: string | null
+    status?: string
+    updatedAt?: Date | string
+  }
+
+  export type KOMatchResultUncheckedCreateInput = {
+    id: string
+    homeGoals?: number | null
+    awayGoals?: number | null
+    penaltyWinner?: string | null
+    status?: string
+    updatedAt?: Date | string
+  }
+
+  export type KOMatchResultUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    homeGoals?: NullableIntFieldUpdateOperationsInput | number | null
+    awayGoals?: NullableIntFieldUpdateOperationsInput | number | null
+    penaltyWinner?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KOMatchResultUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    homeGoals?: NullableIntFieldUpdateOperationsInput | number | null
+    awayGoals?: NullableIntFieldUpdateOperationsInput | number | null
+    penaltyWinner?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KOMatchResultCreateManyInput = {
+    id: string
+    homeGoals?: number | null
+    awayGoals?: number | null
+    penaltyWinner?: string | null
+    status?: string
+    updatedAt?: Date | string
+  }
+
+  export type KOMatchResultUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    homeGoals?: NullableIntFieldUpdateOperationsInput | number | null
+    awayGoals?: NullableIntFieldUpdateOperationsInput | number | null
+    penaltyWinner?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KOMatchResultUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    homeGoals?: NullableIntFieldUpdateOperationsInput | number | null
+    awayGoals?: NullableIntFieldUpdateOperationsInput | number | null
+    penaltyWinner?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KORankingSnapshotCreateInput = {
+    id?: string
+    phase?: string
+    totalPoints?: number
+    classifiedCorrect?: number
+    exactScores?: number
+    penaltyBonus?: number
+    playedMatches?: number
+    currentPosition?: number
+    previousPosition?: number | null
+    updatedAt?: Date | string
+    participant: KOParticipantCreateNestedOneWithoutRankingInput
+  }
+
+  export type KORankingSnapshotUncheckedCreateInput = {
+    id?: string
+    participantId: string
+    phase?: string
+    totalPoints?: number
+    classifiedCorrect?: number
+    exactScores?: number
+    penaltyBonus?: number
+    playedMatches?: number
+    currentPosition?: number
+    previousPosition?: number | null
+    updatedAt?: Date | string
+  }
+
+  export type KORankingSnapshotUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    phase?: StringFieldUpdateOperationsInput | string
+    totalPoints?: IntFieldUpdateOperationsInput | number
+    classifiedCorrect?: IntFieldUpdateOperationsInput | number
+    exactScores?: IntFieldUpdateOperationsInput | number
+    penaltyBonus?: IntFieldUpdateOperationsInput | number
+    playedMatches?: IntFieldUpdateOperationsInput | number
+    currentPosition?: IntFieldUpdateOperationsInput | number
+    previousPosition?: NullableIntFieldUpdateOperationsInput | number | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    participant?: KOParticipantUpdateOneRequiredWithoutRankingNestedInput
+  }
+
+  export type KORankingSnapshotUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    participantId?: StringFieldUpdateOperationsInput | string
+    phase?: StringFieldUpdateOperationsInput | string
+    totalPoints?: IntFieldUpdateOperationsInput | number
+    classifiedCorrect?: IntFieldUpdateOperationsInput | number
+    exactScores?: IntFieldUpdateOperationsInput | number
+    penaltyBonus?: IntFieldUpdateOperationsInput | number
+    playedMatches?: IntFieldUpdateOperationsInput | number
+    currentPosition?: IntFieldUpdateOperationsInput | number
+    previousPosition?: NullableIntFieldUpdateOperationsInput | number | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KORankingSnapshotCreateManyInput = {
+    id?: string
+    participantId: string
+    phase?: string
+    totalPoints?: number
+    classifiedCorrect?: number
+    exactScores?: number
+    penaltyBonus?: number
+    playedMatches?: number
+    currentPosition?: number
+    previousPosition?: number | null
+    updatedAt?: Date | string
+  }
+
+  export type KORankingSnapshotUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    phase?: StringFieldUpdateOperationsInput | string
+    totalPoints?: IntFieldUpdateOperationsInput | number
+    classifiedCorrect?: IntFieldUpdateOperationsInput | number
+    exactScores?: IntFieldUpdateOperationsInput | number
+    penaltyBonus?: IntFieldUpdateOperationsInput | number
+    playedMatches?: IntFieldUpdateOperationsInput | number
+    currentPosition?: IntFieldUpdateOperationsInput | number
+    previousPosition?: NullableIntFieldUpdateOperationsInput | number | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KORankingSnapshotUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    participantId?: StringFieldUpdateOperationsInput | string
+    phase?: StringFieldUpdateOperationsInput | string
+    totalPoints?: IntFieldUpdateOperationsInput | number
+    classifiedCorrect?: IntFieldUpdateOperationsInput | number
+    exactScores?: IntFieldUpdateOperationsInput | number
+    penaltyBonus?: IntFieldUpdateOperationsInput | number
+    playedMatches?: IntFieldUpdateOperationsInput | number
+    currentPosition?: IntFieldUpdateOperationsInput | number
+    previousPosition?: NullableIntFieldUpdateOperationsInput | number | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -17720,6 +25107,300 @@ export namespace Prisma {
     createdAt?: SortOrder
   }
 
+  export type KOPickListRelationFilter = {
+    every?: KOPickWhereInput
+    some?: KOPickWhereInput
+    none?: KOPickWhereInput
+  }
+
+  export type KOPaymentNullableScalarRelationFilter = {
+    is?: KOPaymentWhereInput | null
+    isNot?: KOPaymentWhereInput | null
+  }
+
+  export type KORankingSnapshotNullableScalarRelationFilter = {
+    is?: KORankingSnapshotWhereInput | null
+    isNot?: KORankingSnapshotWhereInput | null
+  }
+
+  export type KOPickOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type KOParticipantCountOrderByAggregateInput = {
+    id?: SortOrder
+    fullName?: SortOrder
+    nationalId?: SortOrder
+    phone?: SortOrder
+    email?: SortOrder
+    city?: SortOrder
+    participationCode?: SortOrder
+    phase?: SortOrder
+    submittedAt?: SortOrder
+    isComplete?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type KOParticipantMaxOrderByAggregateInput = {
+    id?: SortOrder
+    fullName?: SortOrder
+    nationalId?: SortOrder
+    phone?: SortOrder
+    email?: SortOrder
+    city?: SortOrder
+    participationCode?: SortOrder
+    phase?: SortOrder
+    submittedAt?: SortOrder
+    isComplete?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type KOParticipantMinOrderByAggregateInput = {
+    id?: SortOrder
+    fullName?: SortOrder
+    nationalId?: SortOrder
+    phone?: SortOrder
+    email?: SortOrder
+    city?: SortOrder
+    participationCode?: SortOrder
+    phase?: SortOrder
+    submittedAt?: SortOrder
+    isComplete?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type KOParticipantScalarRelationFilter = {
+    is?: KOParticipantWhereInput
+    isNot?: KOParticipantWhereInput
+  }
+
+  export type KOPaymentCountOrderByAggregateInput = {
+    id?: SortOrder
+    participantId?: SortOrder
+    paymentMethod?: SortOrder
+    amountUsd?: SortOrder
+    exchangeRate?: SortOrder
+    amountVes?: SortOrder
+    senderBank?: SortOrder
+    senderName?: SortOrder
+    senderEmail?: SortOrder
+    paymentReference?: SortOrder
+    paymentDate?: SortOrder
+    paymentStatus?: SortOrder
+    adminNotes?: SortOrder
+    verifiedAt?: SortOrder
+    rejectedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type KOPaymentAvgOrderByAggregateInput = {
+    amountUsd?: SortOrder
+    exchangeRate?: SortOrder
+    amountVes?: SortOrder
+  }
+
+  export type KOPaymentMaxOrderByAggregateInput = {
+    id?: SortOrder
+    participantId?: SortOrder
+    paymentMethod?: SortOrder
+    amountUsd?: SortOrder
+    exchangeRate?: SortOrder
+    amountVes?: SortOrder
+    senderBank?: SortOrder
+    senderName?: SortOrder
+    senderEmail?: SortOrder
+    paymentReference?: SortOrder
+    paymentDate?: SortOrder
+    paymentStatus?: SortOrder
+    adminNotes?: SortOrder
+    verifiedAt?: SortOrder
+    rejectedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type KOPaymentMinOrderByAggregateInput = {
+    id?: SortOrder
+    participantId?: SortOrder
+    paymentMethod?: SortOrder
+    amountUsd?: SortOrder
+    exchangeRate?: SortOrder
+    amountVes?: SortOrder
+    senderBank?: SortOrder
+    senderName?: SortOrder
+    senderEmail?: SortOrder
+    paymentReference?: SortOrder
+    paymentDate?: SortOrder
+    paymentStatus?: SortOrder
+    adminNotes?: SortOrder
+    verifiedAt?: SortOrder
+    rejectedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type KOPaymentSumOrderByAggregateInput = {
+    amountUsd?: SortOrder
+    exchangeRate?: SortOrder
+    amountVes?: SortOrder
+  }
+
+  export type KOPickParticipantIdMatchIdCompoundUniqueInput = {
+    participantId: string
+    matchId: string
+  }
+
+  export type KOPickCountOrderByAggregateInput = {
+    id?: SortOrder
+    participantId?: SortOrder
+    matchId?: SortOrder
+    homeGoals?: SortOrder
+    awayGoals?: SortOrder
+    penaltyWinner?: SortOrder
+    points?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type KOPickAvgOrderByAggregateInput = {
+    homeGoals?: SortOrder
+    awayGoals?: SortOrder
+    points?: SortOrder
+  }
+
+  export type KOPickMaxOrderByAggregateInput = {
+    id?: SortOrder
+    participantId?: SortOrder
+    matchId?: SortOrder
+    homeGoals?: SortOrder
+    awayGoals?: SortOrder
+    penaltyWinner?: SortOrder
+    points?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type KOPickMinOrderByAggregateInput = {
+    id?: SortOrder
+    participantId?: SortOrder
+    matchId?: SortOrder
+    homeGoals?: SortOrder
+    awayGoals?: SortOrder
+    penaltyWinner?: SortOrder
+    points?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type KOPickSumOrderByAggregateInput = {
+    homeGoals?: SortOrder
+    awayGoals?: SortOrder
+    points?: SortOrder
+  }
+
+  export type KOMatchResultCountOrderByAggregateInput = {
+    id?: SortOrder
+    homeGoals?: SortOrder
+    awayGoals?: SortOrder
+    penaltyWinner?: SortOrder
+    status?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type KOMatchResultAvgOrderByAggregateInput = {
+    homeGoals?: SortOrder
+    awayGoals?: SortOrder
+  }
+
+  export type KOMatchResultMaxOrderByAggregateInput = {
+    id?: SortOrder
+    homeGoals?: SortOrder
+    awayGoals?: SortOrder
+    penaltyWinner?: SortOrder
+    status?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type KOMatchResultMinOrderByAggregateInput = {
+    id?: SortOrder
+    homeGoals?: SortOrder
+    awayGoals?: SortOrder
+    penaltyWinner?: SortOrder
+    status?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type KOMatchResultSumOrderByAggregateInput = {
+    homeGoals?: SortOrder
+    awayGoals?: SortOrder
+  }
+
+  export type KORankingSnapshotCountOrderByAggregateInput = {
+    id?: SortOrder
+    participantId?: SortOrder
+    phase?: SortOrder
+    totalPoints?: SortOrder
+    classifiedCorrect?: SortOrder
+    exactScores?: SortOrder
+    penaltyBonus?: SortOrder
+    playedMatches?: SortOrder
+    currentPosition?: SortOrder
+    previousPosition?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type KORankingSnapshotAvgOrderByAggregateInput = {
+    totalPoints?: SortOrder
+    classifiedCorrect?: SortOrder
+    exactScores?: SortOrder
+    penaltyBonus?: SortOrder
+    playedMatches?: SortOrder
+    currentPosition?: SortOrder
+    previousPosition?: SortOrder
+  }
+
+  export type KORankingSnapshotMaxOrderByAggregateInput = {
+    id?: SortOrder
+    participantId?: SortOrder
+    phase?: SortOrder
+    totalPoints?: SortOrder
+    classifiedCorrect?: SortOrder
+    exactScores?: SortOrder
+    penaltyBonus?: SortOrder
+    playedMatches?: SortOrder
+    currentPosition?: SortOrder
+    previousPosition?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type KORankingSnapshotMinOrderByAggregateInput = {
+    id?: SortOrder
+    participantId?: SortOrder
+    phase?: SortOrder
+    totalPoints?: SortOrder
+    classifiedCorrect?: SortOrder
+    exactScores?: SortOrder
+    penaltyBonus?: SortOrder
+    playedMatches?: SortOrder
+    currentPosition?: SortOrder
+    previousPosition?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type KORankingSnapshotSumOrderByAggregateInput = {
+    totalPoints?: SortOrder
+    classifiedCorrect?: SortOrder
+    exactScores?: SortOrder
+    penaltyBonus?: SortOrder
+    playedMatches?: SortOrder
+    currentPosition?: SortOrder
+    previousPosition?: SortOrder
+  }
+
   export type StringFieldUpdateOperationsInput = {
     set?: string
   }
@@ -18110,6 +25791,154 @@ export namespace Prisma {
     upsert?: ParticipantUpsertWithoutRankingInput
     connect?: ParticipantWhereUniqueInput
     update?: XOR<XOR<ParticipantUpdateToOneWithWhereWithoutRankingInput, ParticipantUpdateWithoutRankingInput>, ParticipantUncheckedUpdateWithoutRankingInput>
+  }
+
+  export type KOPickCreateNestedManyWithoutParticipantInput = {
+    create?: XOR<KOPickCreateWithoutParticipantInput, KOPickUncheckedCreateWithoutParticipantInput> | KOPickCreateWithoutParticipantInput[] | KOPickUncheckedCreateWithoutParticipantInput[]
+    connectOrCreate?: KOPickCreateOrConnectWithoutParticipantInput | KOPickCreateOrConnectWithoutParticipantInput[]
+    createMany?: KOPickCreateManyParticipantInputEnvelope
+    connect?: KOPickWhereUniqueInput | KOPickWhereUniqueInput[]
+  }
+
+  export type KOPaymentCreateNestedOneWithoutParticipantInput = {
+    create?: XOR<KOPaymentCreateWithoutParticipantInput, KOPaymentUncheckedCreateWithoutParticipantInput>
+    connectOrCreate?: KOPaymentCreateOrConnectWithoutParticipantInput
+    connect?: KOPaymentWhereUniqueInput
+  }
+
+  export type KORankingSnapshotCreateNestedOneWithoutParticipantInput = {
+    create?: XOR<KORankingSnapshotCreateWithoutParticipantInput, KORankingSnapshotUncheckedCreateWithoutParticipantInput>
+    connectOrCreate?: KORankingSnapshotCreateOrConnectWithoutParticipantInput
+    connect?: KORankingSnapshotWhereUniqueInput
+  }
+
+  export type KOPickUncheckedCreateNestedManyWithoutParticipantInput = {
+    create?: XOR<KOPickCreateWithoutParticipantInput, KOPickUncheckedCreateWithoutParticipantInput> | KOPickCreateWithoutParticipantInput[] | KOPickUncheckedCreateWithoutParticipantInput[]
+    connectOrCreate?: KOPickCreateOrConnectWithoutParticipantInput | KOPickCreateOrConnectWithoutParticipantInput[]
+    createMany?: KOPickCreateManyParticipantInputEnvelope
+    connect?: KOPickWhereUniqueInput | KOPickWhereUniqueInput[]
+  }
+
+  export type KOPaymentUncheckedCreateNestedOneWithoutParticipantInput = {
+    create?: XOR<KOPaymentCreateWithoutParticipantInput, KOPaymentUncheckedCreateWithoutParticipantInput>
+    connectOrCreate?: KOPaymentCreateOrConnectWithoutParticipantInput
+    connect?: KOPaymentWhereUniqueInput
+  }
+
+  export type KORankingSnapshotUncheckedCreateNestedOneWithoutParticipantInput = {
+    create?: XOR<KORankingSnapshotCreateWithoutParticipantInput, KORankingSnapshotUncheckedCreateWithoutParticipantInput>
+    connectOrCreate?: KORankingSnapshotCreateOrConnectWithoutParticipantInput
+    connect?: KORankingSnapshotWhereUniqueInput
+  }
+
+  export type KOPickUpdateManyWithoutParticipantNestedInput = {
+    create?: XOR<KOPickCreateWithoutParticipantInput, KOPickUncheckedCreateWithoutParticipantInput> | KOPickCreateWithoutParticipantInput[] | KOPickUncheckedCreateWithoutParticipantInput[]
+    connectOrCreate?: KOPickCreateOrConnectWithoutParticipantInput | KOPickCreateOrConnectWithoutParticipantInput[]
+    upsert?: KOPickUpsertWithWhereUniqueWithoutParticipantInput | KOPickUpsertWithWhereUniqueWithoutParticipantInput[]
+    createMany?: KOPickCreateManyParticipantInputEnvelope
+    set?: KOPickWhereUniqueInput | KOPickWhereUniqueInput[]
+    disconnect?: KOPickWhereUniqueInput | KOPickWhereUniqueInput[]
+    delete?: KOPickWhereUniqueInput | KOPickWhereUniqueInput[]
+    connect?: KOPickWhereUniqueInput | KOPickWhereUniqueInput[]
+    update?: KOPickUpdateWithWhereUniqueWithoutParticipantInput | KOPickUpdateWithWhereUniqueWithoutParticipantInput[]
+    updateMany?: KOPickUpdateManyWithWhereWithoutParticipantInput | KOPickUpdateManyWithWhereWithoutParticipantInput[]
+    deleteMany?: KOPickScalarWhereInput | KOPickScalarWhereInput[]
+  }
+
+  export type KOPaymentUpdateOneWithoutParticipantNestedInput = {
+    create?: XOR<KOPaymentCreateWithoutParticipantInput, KOPaymentUncheckedCreateWithoutParticipantInput>
+    connectOrCreate?: KOPaymentCreateOrConnectWithoutParticipantInput
+    upsert?: KOPaymentUpsertWithoutParticipantInput
+    disconnect?: KOPaymentWhereInput | boolean
+    delete?: KOPaymentWhereInput | boolean
+    connect?: KOPaymentWhereUniqueInput
+    update?: XOR<XOR<KOPaymentUpdateToOneWithWhereWithoutParticipantInput, KOPaymentUpdateWithoutParticipantInput>, KOPaymentUncheckedUpdateWithoutParticipantInput>
+  }
+
+  export type KORankingSnapshotUpdateOneWithoutParticipantNestedInput = {
+    create?: XOR<KORankingSnapshotCreateWithoutParticipantInput, KORankingSnapshotUncheckedCreateWithoutParticipantInput>
+    connectOrCreate?: KORankingSnapshotCreateOrConnectWithoutParticipantInput
+    upsert?: KORankingSnapshotUpsertWithoutParticipantInput
+    disconnect?: KORankingSnapshotWhereInput | boolean
+    delete?: KORankingSnapshotWhereInput | boolean
+    connect?: KORankingSnapshotWhereUniqueInput
+    update?: XOR<XOR<KORankingSnapshotUpdateToOneWithWhereWithoutParticipantInput, KORankingSnapshotUpdateWithoutParticipantInput>, KORankingSnapshotUncheckedUpdateWithoutParticipantInput>
+  }
+
+  export type KOPickUncheckedUpdateManyWithoutParticipantNestedInput = {
+    create?: XOR<KOPickCreateWithoutParticipantInput, KOPickUncheckedCreateWithoutParticipantInput> | KOPickCreateWithoutParticipantInput[] | KOPickUncheckedCreateWithoutParticipantInput[]
+    connectOrCreate?: KOPickCreateOrConnectWithoutParticipantInput | KOPickCreateOrConnectWithoutParticipantInput[]
+    upsert?: KOPickUpsertWithWhereUniqueWithoutParticipantInput | KOPickUpsertWithWhereUniqueWithoutParticipantInput[]
+    createMany?: KOPickCreateManyParticipantInputEnvelope
+    set?: KOPickWhereUniqueInput | KOPickWhereUniqueInput[]
+    disconnect?: KOPickWhereUniqueInput | KOPickWhereUniqueInput[]
+    delete?: KOPickWhereUniqueInput | KOPickWhereUniqueInput[]
+    connect?: KOPickWhereUniqueInput | KOPickWhereUniqueInput[]
+    update?: KOPickUpdateWithWhereUniqueWithoutParticipantInput | KOPickUpdateWithWhereUniqueWithoutParticipantInput[]
+    updateMany?: KOPickUpdateManyWithWhereWithoutParticipantInput | KOPickUpdateManyWithWhereWithoutParticipantInput[]
+    deleteMany?: KOPickScalarWhereInput | KOPickScalarWhereInput[]
+  }
+
+  export type KOPaymentUncheckedUpdateOneWithoutParticipantNestedInput = {
+    create?: XOR<KOPaymentCreateWithoutParticipantInput, KOPaymentUncheckedCreateWithoutParticipantInput>
+    connectOrCreate?: KOPaymentCreateOrConnectWithoutParticipantInput
+    upsert?: KOPaymentUpsertWithoutParticipantInput
+    disconnect?: KOPaymentWhereInput | boolean
+    delete?: KOPaymentWhereInput | boolean
+    connect?: KOPaymentWhereUniqueInput
+    update?: XOR<XOR<KOPaymentUpdateToOneWithWhereWithoutParticipantInput, KOPaymentUpdateWithoutParticipantInput>, KOPaymentUncheckedUpdateWithoutParticipantInput>
+  }
+
+  export type KORankingSnapshotUncheckedUpdateOneWithoutParticipantNestedInput = {
+    create?: XOR<KORankingSnapshotCreateWithoutParticipantInput, KORankingSnapshotUncheckedCreateWithoutParticipantInput>
+    connectOrCreate?: KORankingSnapshotCreateOrConnectWithoutParticipantInput
+    upsert?: KORankingSnapshotUpsertWithoutParticipantInput
+    disconnect?: KORankingSnapshotWhereInput | boolean
+    delete?: KORankingSnapshotWhereInput | boolean
+    connect?: KORankingSnapshotWhereUniqueInput
+    update?: XOR<XOR<KORankingSnapshotUpdateToOneWithWhereWithoutParticipantInput, KORankingSnapshotUpdateWithoutParticipantInput>, KORankingSnapshotUncheckedUpdateWithoutParticipantInput>
+  }
+
+  export type KOParticipantCreateNestedOneWithoutPaymentInput = {
+    create?: XOR<KOParticipantCreateWithoutPaymentInput, KOParticipantUncheckedCreateWithoutPaymentInput>
+    connectOrCreate?: KOParticipantCreateOrConnectWithoutPaymentInput
+    connect?: KOParticipantWhereUniqueInput
+  }
+
+  export type KOParticipantUpdateOneRequiredWithoutPaymentNestedInput = {
+    create?: XOR<KOParticipantCreateWithoutPaymentInput, KOParticipantUncheckedCreateWithoutPaymentInput>
+    connectOrCreate?: KOParticipantCreateOrConnectWithoutPaymentInput
+    upsert?: KOParticipantUpsertWithoutPaymentInput
+    connect?: KOParticipantWhereUniqueInput
+    update?: XOR<XOR<KOParticipantUpdateToOneWithWhereWithoutPaymentInput, KOParticipantUpdateWithoutPaymentInput>, KOParticipantUncheckedUpdateWithoutPaymentInput>
+  }
+
+  export type KOParticipantCreateNestedOneWithoutPicksInput = {
+    create?: XOR<KOParticipantCreateWithoutPicksInput, KOParticipantUncheckedCreateWithoutPicksInput>
+    connectOrCreate?: KOParticipantCreateOrConnectWithoutPicksInput
+    connect?: KOParticipantWhereUniqueInput
+  }
+
+  export type KOParticipantUpdateOneRequiredWithoutPicksNestedInput = {
+    create?: XOR<KOParticipantCreateWithoutPicksInput, KOParticipantUncheckedCreateWithoutPicksInput>
+    connectOrCreate?: KOParticipantCreateOrConnectWithoutPicksInput
+    upsert?: KOParticipantUpsertWithoutPicksInput
+    connect?: KOParticipantWhereUniqueInput
+    update?: XOR<XOR<KOParticipantUpdateToOneWithWhereWithoutPicksInput, KOParticipantUpdateWithoutPicksInput>, KOParticipantUncheckedUpdateWithoutPicksInput>
+  }
+
+  export type KOParticipantCreateNestedOneWithoutRankingInput = {
+    create?: XOR<KOParticipantCreateWithoutRankingInput, KOParticipantUncheckedCreateWithoutRankingInput>
+    connectOrCreate?: KOParticipantCreateOrConnectWithoutRankingInput
+    connect?: KOParticipantWhereUniqueInput
+  }
+
+  export type KOParticipantUpdateOneRequiredWithoutRankingNestedInput = {
+    create?: XOR<KOParticipantCreateWithoutRankingInput, KOParticipantUncheckedCreateWithoutRankingInput>
+    connectOrCreate?: KOParticipantCreateOrConnectWithoutRankingInput
+    upsert?: KOParticipantUpsertWithoutRankingInput
+    connect?: KOParticipantWhereUniqueInput
+    update?: XOR<XOR<KOParticipantUpdateToOneWithWhereWithoutRankingInput, KOParticipantUpdateWithoutRankingInput>, KOParticipantUncheckedUpdateWithoutRankingInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -19468,6 +27297,481 @@ export namespace Prisma {
     payment?: PaymentUncheckedUpdateOneWithoutParticipantNestedInput
   }
 
+  export type KOPickCreateWithoutParticipantInput = {
+    id?: string
+    matchId: string
+    homeGoals: number
+    awayGoals: number
+    penaltyWinner?: string | null
+    points?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type KOPickUncheckedCreateWithoutParticipantInput = {
+    id?: string
+    matchId: string
+    homeGoals: number
+    awayGoals: number
+    penaltyWinner?: string | null
+    points?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type KOPickCreateOrConnectWithoutParticipantInput = {
+    where: KOPickWhereUniqueInput
+    create: XOR<KOPickCreateWithoutParticipantInput, KOPickUncheckedCreateWithoutParticipantInput>
+  }
+
+  export type KOPickCreateManyParticipantInputEnvelope = {
+    data: KOPickCreateManyParticipantInput | KOPickCreateManyParticipantInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type KOPaymentCreateWithoutParticipantInput = {
+    id?: string
+    paymentMethod?: $Enums.PaymentMethod
+    amountUsd?: number
+    exchangeRate?: number | null
+    amountVes?: number | null
+    senderBank?: string | null
+    senderName?: string | null
+    senderEmail?: string | null
+    paymentReference?: string | null
+    paymentDate?: Date | string | null
+    paymentStatus?: $Enums.PaymentStatus
+    adminNotes?: string | null
+    verifiedAt?: Date | string | null
+    rejectedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type KOPaymentUncheckedCreateWithoutParticipantInput = {
+    id?: string
+    paymentMethod?: $Enums.PaymentMethod
+    amountUsd?: number
+    exchangeRate?: number | null
+    amountVes?: number | null
+    senderBank?: string | null
+    senderName?: string | null
+    senderEmail?: string | null
+    paymentReference?: string | null
+    paymentDate?: Date | string | null
+    paymentStatus?: $Enums.PaymentStatus
+    adminNotes?: string | null
+    verifiedAt?: Date | string | null
+    rejectedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type KOPaymentCreateOrConnectWithoutParticipantInput = {
+    where: KOPaymentWhereUniqueInput
+    create: XOR<KOPaymentCreateWithoutParticipantInput, KOPaymentUncheckedCreateWithoutParticipantInput>
+  }
+
+  export type KORankingSnapshotCreateWithoutParticipantInput = {
+    id?: string
+    phase?: string
+    totalPoints?: number
+    classifiedCorrect?: number
+    exactScores?: number
+    penaltyBonus?: number
+    playedMatches?: number
+    currentPosition?: number
+    previousPosition?: number | null
+    updatedAt?: Date | string
+  }
+
+  export type KORankingSnapshotUncheckedCreateWithoutParticipantInput = {
+    id?: string
+    phase?: string
+    totalPoints?: number
+    classifiedCorrect?: number
+    exactScores?: number
+    penaltyBonus?: number
+    playedMatches?: number
+    currentPosition?: number
+    previousPosition?: number | null
+    updatedAt?: Date | string
+  }
+
+  export type KORankingSnapshotCreateOrConnectWithoutParticipantInput = {
+    where: KORankingSnapshotWhereUniqueInput
+    create: XOR<KORankingSnapshotCreateWithoutParticipantInput, KORankingSnapshotUncheckedCreateWithoutParticipantInput>
+  }
+
+  export type KOPickUpsertWithWhereUniqueWithoutParticipantInput = {
+    where: KOPickWhereUniqueInput
+    update: XOR<KOPickUpdateWithoutParticipantInput, KOPickUncheckedUpdateWithoutParticipantInput>
+    create: XOR<KOPickCreateWithoutParticipantInput, KOPickUncheckedCreateWithoutParticipantInput>
+  }
+
+  export type KOPickUpdateWithWhereUniqueWithoutParticipantInput = {
+    where: KOPickWhereUniqueInput
+    data: XOR<KOPickUpdateWithoutParticipantInput, KOPickUncheckedUpdateWithoutParticipantInput>
+  }
+
+  export type KOPickUpdateManyWithWhereWithoutParticipantInput = {
+    where: KOPickScalarWhereInput
+    data: XOR<KOPickUpdateManyMutationInput, KOPickUncheckedUpdateManyWithoutParticipantInput>
+  }
+
+  export type KOPickScalarWhereInput = {
+    AND?: KOPickScalarWhereInput | KOPickScalarWhereInput[]
+    OR?: KOPickScalarWhereInput[]
+    NOT?: KOPickScalarWhereInput | KOPickScalarWhereInput[]
+    id?: StringFilter<"KOPick"> | string
+    participantId?: StringFilter<"KOPick"> | string
+    matchId?: StringFilter<"KOPick"> | string
+    homeGoals?: IntFilter<"KOPick"> | number
+    awayGoals?: IntFilter<"KOPick"> | number
+    penaltyWinner?: StringNullableFilter<"KOPick"> | string | null
+    points?: IntNullableFilter<"KOPick"> | number | null
+    createdAt?: DateTimeFilter<"KOPick"> | Date | string
+    updatedAt?: DateTimeFilter<"KOPick"> | Date | string
+  }
+
+  export type KOPaymentUpsertWithoutParticipantInput = {
+    update: XOR<KOPaymentUpdateWithoutParticipantInput, KOPaymentUncheckedUpdateWithoutParticipantInput>
+    create: XOR<KOPaymentCreateWithoutParticipantInput, KOPaymentUncheckedCreateWithoutParticipantInput>
+    where?: KOPaymentWhereInput
+  }
+
+  export type KOPaymentUpdateToOneWithWhereWithoutParticipantInput = {
+    where?: KOPaymentWhereInput
+    data: XOR<KOPaymentUpdateWithoutParticipantInput, KOPaymentUncheckedUpdateWithoutParticipantInput>
+  }
+
+  export type KOPaymentUpdateWithoutParticipantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
+    amountUsd?: FloatFieldUpdateOperationsInput | number
+    exchangeRate?: NullableFloatFieldUpdateOperationsInput | number | null
+    amountVes?: NullableFloatFieldUpdateOperationsInput | number | null
+    senderBank?: NullableStringFieldUpdateOperationsInput | string | null
+    senderName?: NullableStringFieldUpdateOperationsInput | string | null
+    senderEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    adminNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KOPaymentUncheckedUpdateWithoutParticipantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
+    amountUsd?: FloatFieldUpdateOperationsInput | number
+    exchangeRate?: NullableFloatFieldUpdateOperationsInput | number | null
+    amountVes?: NullableFloatFieldUpdateOperationsInput | number | null
+    senderBank?: NullableStringFieldUpdateOperationsInput | string | null
+    senderName?: NullableStringFieldUpdateOperationsInput | string | null
+    senderEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    adminNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KORankingSnapshotUpsertWithoutParticipantInput = {
+    update: XOR<KORankingSnapshotUpdateWithoutParticipantInput, KORankingSnapshotUncheckedUpdateWithoutParticipantInput>
+    create: XOR<KORankingSnapshotCreateWithoutParticipantInput, KORankingSnapshotUncheckedCreateWithoutParticipantInput>
+    where?: KORankingSnapshotWhereInput
+  }
+
+  export type KORankingSnapshotUpdateToOneWithWhereWithoutParticipantInput = {
+    where?: KORankingSnapshotWhereInput
+    data: XOR<KORankingSnapshotUpdateWithoutParticipantInput, KORankingSnapshotUncheckedUpdateWithoutParticipantInput>
+  }
+
+  export type KORankingSnapshotUpdateWithoutParticipantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    phase?: StringFieldUpdateOperationsInput | string
+    totalPoints?: IntFieldUpdateOperationsInput | number
+    classifiedCorrect?: IntFieldUpdateOperationsInput | number
+    exactScores?: IntFieldUpdateOperationsInput | number
+    penaltyBonus?: IntFieldUpdateOperationsInput | number
+    playedMatches?: IntFieldUpdateOperationsInput | number
+    currentPosition?: IntFieldUpdateOperationsInput | number
+    previousPosition?: NullableIntFieldUpdateOperationsInput | number | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KORankingSnapshotUncheckedUpdateWithoutParticipantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    phase?: StringFieldUpdateOperationsInput | string
+    totalPoints?: IntFieldUpdateOperationsInput | number
+    classifiedCorrect?: IntFieldUpdateOperationsInput | number
+    exactScores?: IntFieldUpdateOperationsInput | number
+    penaltyBonus?: IntFieldUpdateOperationsInput | number
+    playedMatches?: IntFieldUpdateOperationsInput | number
+    currentPosition?: IntFieldUpdateOperationsInput | number
+    previousPosition?: NullableIntFieldUpdateOperationsInput | number | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KOParticipantCreateWithoutPaymentInput = {
+    id?: string
+    fullName: string
+    nationalId: string
+    phone: string
+    email?: string | null
+    city?: string | null
+    participationCode: string
+    phase?: string
+    submittedAt?: Date | string | null
+    isComplete?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    picks?: KOPickCreateNestedManyWithoutParticipantInput
+    ranking?: KORankingSnapshotCreateNestedOneWithoutParticipantInput
+  }
+
+  export type KOParticipantUncheckedCreateWithoutPaymentInput = {
+    id?: string
+    fullName: string
+    nationalId: string
+    phone: string
+    email?: string | null
+    city?: string | null
+    participationCode: string
+    phase?: string
+    submittedAt?: Date | string | null
+    isComplete?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    picks?: KOPickUncheckedCreateNestedManyWithoutParticipantInput
+    ranking?: KORankingSnapshotUncheckedCreateNestedOneWithoutParticipantInput
+  }
+
+  export type KOParticipantCreateOrConnectWithoutPaymentInput = {
+    where: KOParticipantWhereUniqueInput
+    create: XOR<KOParticipantCreateWithoutPaymentInput, KOParticipantUncheckedCreateWithoutPaymentInput>
+  }
+
+  export type KOParticipantUpsertWithoutPaymentInput = {
+    update: XOR<KOParticipantUpdateWithoutPaymentInput, KOParticipantUncheckedUpdateWithoutPaymentInput>
+    create: XOR<KOParticipantCreateWithoutPaymentInput, KOParticipantUncheckedCreateWithoutPaymentInput>
+    where?: KOParticipantWhereInput
+  }
+
+  export type KOParticipantUpdateToOneWithWhereWithoutPaymentInput = {
+    where?: KOParticipantWhereInput
+    data: XOR<KOParticipantUpdateWithoutPaymentInput, KOParticipantUncheckedUpdateWithoutPaymentInput>
+  }
+
+  export type KOParticipantUpdateWithoutPaymentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullName?: StringFieldUpdateOperationsInput | string
+    nationalId?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    participationCode?: StringFieldUpdateOperationsInput | string
+    phase?: StringFieldUpdateOperationsInput | string
+    submittedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isComplete?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    picks?: KOPickUpdateManyWithoutParticipantNestedInput
+    ranking?: KORankingSnapshotUpdateOneWithoutParticipantNestedInput
+  }
+
+  export type KOParticipantUncheckedUpdateWithoutPaymentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullName?: StringFieldUpdateOperationsInput | string
+    nationalId?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    participationCode?: StringFieldUpdateOperationsInput | string
+    phase?: StringFieldUpdateOperationsInput | string
+    submittedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isComplete?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    picks?: KOPickUncheckedUpdateManyWithoutParticipantNestedInput
+    ranking?: KORankingSnapshotUncheckedUpdateOneWithoutParticipantNestedInput
+  }
+
+  export type KOParticipantCreateWithoutPicksInput = {
+    id?: string
+    fullName: string
+    nationalId: string
+    phone: string
+    email?: string | null
+    city?: string | null
+    participationCode: string
+    phase?: string
+    submittedAt?: Date | string | null
+    isComplete?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    payment?: KOPaymentCreateNestedOneWithoutParticipantInput
+    ranking?: KORankingSnapshotCreateNestedOneWithoutParticipantInput
+  }
+
+  export type KOParticipantUncheckedCreateWithoutPicksInput = {
+    id?: string
+    fullName: string
+    nationalId: string
+    phone: string
+    email?: string | null
+    city?: string | null
+    participationCode: string
+    phase?: string
+    submittedAt?: Date | string | null
+    isComplete?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    payment?: KOPaymentUncheckedCreateNestedOneWithoutParticipantInput
+    ranking?: KORankingSnapshotUncheckedCreateNestedOneWithoutParticipantInput
+  }
+
+  export type KOParticipantCreateOrConnectWithoutPicksInput = {
+    where: KOParticipantWhereUniqueInput
+    create: XOR<KOParticipantCreateWithoutPicksInput, KOParticipantUncheckedCreateWithoutPicksInput>
+  }
+
+  export type KOParticipantUpsertWithoutPicksInput = {
+    update: XOR<KOParticipantUpdateWithoutPicksInput, KOParticipantUncheckedUpdateWithoutPicksInput>
+    create: XOR<KOParticipantCreateWithoutPicksInput, KOParticipantUncheckedCreateWithoutPicksInput>
+    where?: KOParticipantWhereInput
+  }
+
+  export type KOParticipantUpdateToOneWithWhereWithoutPicksInput = {
+    where?: KOParticipantWhereInput
+    data: XOR<KOParticipantUpdateWithoutPicksInput, KOParticipantUncheckedUpdateWithoutPicksInput>
+  }
+
+  export type KOParticipantUpdateWithoutPicksInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullName?: StringFieldUpdateOperationsInput | string
+    nationalId?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    participationCode?: StringFieldUpdateOperationsInput | string
+    phase?: StringFieldUpdateOperationsInput | string
+    submittedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isComplete?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    payment?: KOPaymentUpdateOneWithoutParticipantNestedInput
+    ranking?: KORankingSnapshotUpdateOneWithoutParticipantNestedInput
+  }
+
+  export type KOParticipantUncheckedUpdateWithoutPicksInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullName?: StringFieldUpdateOperationsInput | string
+    nationalId?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    participationCode?: StringFieldUpdateOperationsInput | string
+    phase?: StringFieldUpdateOperationsInput | string
+    submittedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isComplete?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    payment?: KOPaymentUncheckedUpdateOneWithoutParticipantNestedInput
+    ranking?: KORankingSnapshotUncheckedUpdateOneWithoutParticipantNestedInput
+  }
+
+  export type KOParticipantCreateWithoutRankingInput = {
+    id?: string
+    fullName: string
+    nationalId: string
+    phone: string
+    email?: string | null
+    city?: string | null
+    participationCode: string
+    phase?: string
+    submittedAt?: Date | string | null
+    isComplete?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    picks?: KOPickCreateNestedManyWithoutParticipantInput
+    payment?: KOPaymentCreateNestedOneWithoutParticipantInput
+  }
+
+  export type KOParticipantUncheckedCreateWithoutRankingInput = {
+    id?: string
+    fullName: string
+    nationalId: string
+    phone: string
+    email?: string | null
+    city?: string | null
+    participationCode: string
+    phase?: string
+    submittedAt?: Date | string | null
+    isComplete?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    picks?: KOPickUncheckedCreateNestedManyWithoutParticipantInput
+    payment?: KOPaymentUncheckedCreateNestedOneWithoutParticipantInput
+  }
+
+  export type KOParticipantCreateOrConnectWithoutRankingInput = {
+    where: KOParticipantWhereUniqueInput
+    create: XOR<KOParticipantCreateWithoutRankingInput, KOParticipantUncheckedCreateWithoutRankingInput>
+  }
+
+  export type KOParticipantUpsertWithoutRankingInput = {
+    update: XOR<KOParticipantUpdateWithoutRankingInput, KOParticipantUncheckedUpdateWithoutRankingInput>
+    create: XOR<KOParticipantCreateWithoutRankingInput, KOParticipantUncheckedCreateWithoutRankingInput>
+    where?: KOParticipantWhereInput
+  }
+
+  export type KOParticipantUpdateToOneWithWhereWithoutRankingInput = {
+    where?: KOParticipantWhereInput
+    data: XOR<KOParticipantUpdateWithoutRankingInput, KOParticipantUncheckedUpdateWithoutRankingInput>
+  }
+
+  export type KOParticipantUpdateWithoutRankingInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullName?: StringFieldUpdateOperationsInput | string
+    nationalId?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    participationCode?: StringFieldUpdateOperationsInput | string
+    phase?: StringFieldUpdateOperationsInput | string
+    submittedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isComplete?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    picks?: KOPickUpdateManyWithoutParticipantNestedInput
+    payment?: KOPaymentUpdateOneWithoutParticipantNestedInput
+  }
+
+  export type KOParticipantUncheckedUpdateWithoutRankingInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullName?: StringFieldUpdateOperationsInput | string
+    nationalId?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    participationCode?: StringFieldUpdateOperationsInput | string
+    phase?: StringFieldUpdateOperationsInput | string
+    submittedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isComplete?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    picks?: KOPickUncheckedUpdateManyWithoutParticipantNestedInput
+    payment?: KOPaymentUncheckedUpdateOneWithoutParticipantNestedInput
+  }
+
   export type MatchCreateManyTeam1Input = {
     id?: string
     matchNumber: number
@@ -19798,6 +28102,50 @@ export namespace Prisma {
     isCorrectResult?: NullableBoolFieldUpdateOperationsInput | boolean | null
     goalDifferenceError?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KOPickCreateManyParticipantInput = {
+    id?: string
+    matchId: string
+    homeGoals: number
+    awayGoals: number
+    penaltyWinner?: string | null
+    points?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type KOPickUpdateWithoutParticipantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    matchId?: StringFieldUpdateOperationsInput | string
+    homeGoals?: IntFieldUpdateOperationsInput | number
+    awayGoals?: IntFieldUpdateOperationsInput | number
+    penaltyWinner?: NullableStringFieldUpdateOperationsInput | string | null
+    points?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KOPickUncheckedUpdateWithoutParticipantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    matchId?: StringFieldUpdateOperationsInput | string
+    homeGoals?: IntFieldUpdateOperationsInput | number
+    awayGoals?: IntFieldUpdateOperationsInput | number
+    penaltyWinner?: NullableStringFieldUpdateOperationsInput | string | null
+    points?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KOPickUncheckedUpdateManyWithoutParticipantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    matchId?: StringFieldUpdateOperationsInput | string
+    homeGoals?: IntFieldUpdateOperationsInput | number
+    awayGoals?: IntFieldUpdateOperationsInput | number
+    penaltyWinner?: NullableStringFieldUpdateOperationsInput | string | null
+    points?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 

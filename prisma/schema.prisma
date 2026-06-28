@@ -251,3 +251,89 @@ model AnalyticsEvent {
   @@index([createdAt])
   @@index([visitorId])
 }
+
+// ── QUINIELA ELIMINATORIAS 2026 ──────────────────────────────────────────────
+// Tablas independientes de la Fase de Grupos.
+
+model KOParticipant {
+  id                String    @id @default(cuid())
+  fullName          String
+  nationalId        String
+  phone             String
+  email             String?
+  city              String?
+  participationCode String    @unique
+  phase             String    @default("R32")
+  submittedAt       DateTime?
+  isComplete        Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  picks   KOPick[]
+  payment KOPayment?
+  ranking KORankingSnapshot?
+}
+
+model KOPayment {
+  id               String        @id @default(cuid())
+  participantId    String        @unique
+  paymentMethod    PaymentMethod @default(PAGO_MOVIL)
+  amountUsd        Float         @default(20)
+  exchangeRate     Float?
+  amountVes        Float?
+  senderBank       String?
+  senderName       String?
+  senderEmail      String?
+  paymentReference String?       @unique
+  paymentDate      DateTime?
+  paymentStatus    PaymentStatus @default(PENDING)
+  adminNotes       String?
+  verifiedAt       DateTime?
+  rejectedAt       DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  participant KOParticipant @relation(fields: [participantId], references: [id])
+}
+
+model KOPick {
+  id            String   @id @default(cuid())
+  participantId String
+  matchId       String
+  homeGoals     Int
+  awayGoals     Int
+  penaltyWinner String?
+  points        Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  participant KOParticipant @relation(fields: [participantId], references: [id])
+
+  @@unique([participantId, matchId])
+  @@index([matchId])
+}
+
+model KOMatchResult {
+  id            String   @id
+  homeGoals     Int?
+  awayGoals     Int?
+  penaltyWinner String?
+  status        String   @default("SCHEDULED")
+  updatedAt     DateTime @updatedAt
+}
+
+model KORankingSnapshot {
+  id                String   @id @default(cuid())
+  participantId     String   @unique
+  phase             String   @default("R32")
+  totalPoints       Int      @default(0)
+  classifiedCorrect Int      @default(0)
+  exactScores       Int      @default(0)
+  penaltyBonus      Int      @default(0)
+  playedMatches     Int      @default(0)
+  currentPosition   Int      @default(0)
+  previousPosition  Int?
+  updatedAt         DateTime @updatedAt
+
+  participant KOParticipant @relation(fields: [participantId], references: [id])
+}
