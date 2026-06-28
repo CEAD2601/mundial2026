@@ -615,6 +615,21 @@ export default function PrototipoEliminatoriasV3() {
   // FAQ accordion
   const [faqOpen, setFaqOpen] = useState<number | null>(null)
 
+  // Ranking real desde DB
+  type RealRankingEntry = {
+    position: number; previousPosition: number | null; movement: number
+    participationCode: string; fullName: string; city: string | null
+    totalPoints: number; classifiedCorrect: number; exactScores: number
+    penaltyBonus: number; playedMatches: number; paymentStatus: string
+  }
+  const [koRealRanking, setKoRealRanking] = useState<RealRankingEntry[]>([])
+  useEffect(() => {
+    fetch('/api/ko/ranking')
+      .then(r => r.ok ? r.json() : { ranking: [] })
+      .then(d => setKoRealRanking(d.ranking ?? []))
+      .catch(() => {})
+  }, [])
+
   // Bracket — ronda activa (mobile tabs)
   const [bktRound, setBktRound] = useState('r32')
 
@@ -1767,7 +1782,7 @@ export default function PrototipoEliminatoriasV3() {
             <div className="flex items-center justify-between mb-2">
               <div>
                 <p className="text-xs text-green-200">Quiniela de</p>
-                <p className="font-bold text-sm truncate max-w-[160px]">{DEMO_NAME}</p>
+                <p className="font-bold text-sm truncate max-w-[160px]">{participantSession?.displayName ?? 'Tu quiniela'}</p>
               </div>
               <div className="text-right">
                 <p className="text-xs text-green-200">Marcadores</p>
@@ -2651,12 +2666,21 @@ export default function PrototipoEliminatoriasV3() {
     // Puntos finales de Fase de Grupos; NO se mezclan con Eliminatorias.
     const GRUPOS_HISTORICAL = DEMO_RANKING  // imported from knockout-data.ts
 
-    const baseRanking = [...KO_DEMO_RANKING]
-    koEnrolled.filter(p => p.paymentStatus !== 'rejected').forEach(ep => {
-      if (!baseRanking.find(r => r.cedula === ep.cedula)) {
-        baseRanking.push({ cedula: ep.cedula, displayName: ep.displayName, ciudad: ep.ciudad, totalPoints: 0, exactScores: 0, correctResults: 0, penaltyCorrects: 0, wrongPredictions: 0, playedMatches: 0, previousPosition: null, movement: 0, paymentStatus: ep.paymentStatus })
-      }
-    })
+    // Ranking real de DB; mapear al shape que usa el template
+    const baseRanking = koRealRanking.map(r => ({
+      cedula:           r.participationCode,
+      displayName:      r.fullName,
+      ciudad:           r.city,
+      totalPoints:      r.totalPoints,
+      exactScores:      r.exactScores,
+      correctResults:   r.classifiedCorrect,
+      penaltyCorrects:  r.penaltyBonus,
+      wrongPredictions: 0,
+      playedMatches:    r.playedMatches,
+      previousPosition: r.previousPosition,
+      movement:         r.movement,
+      paymentStatus:    r.paymentStatus,
+    }))
     const ranking = baseRanking.map((r, i) => ({ ...r, position: i + 1 }))
     const top3 = ranking.slice(0, 3)
     const podiumOrder = [top3[1] ?? null, top3[0] ?? null, top3[2] ?? null]
@@ -4152,18 +4176,32 @@ export default function PrototipoEliminatoriasV3() {
       }
     }
 
-    function handleConfirmExisting() {
+    async function handleConfirmExisting() {
       if (!lookupResult) return
-      const entry: KOParticipant = { ...lookupResult, enrolledInKO: true, registeredAt: new Date().toISOString() }
-      const next = [...koEnrolled.filter(p => p.cedula !== entry.cedula), entry]
-      setKoEnrolled(next); saveKOEnrolled(next)
-      setRegistered(true)
-      setRegForm({ nombre: entry.nombre, cedula: entry.cedula, whatsapp: entry.whatsapp, ciudad: entry.ciudad ?? '', email: entry.email ?? '' })
-      activateSession({ cedula: entry.cedula, displayName: entry.displayName })
-      trackEvent('ENTRY_CONFIRMED', { cedula: entry.cedula, displayName: entry.displayName, whatsapp: entry.whatsapp })
-      setToast('✅ ¡Inscripción confirmada! Ahora llena tu quiniela.')
-      setRegStep('choose'); setLookupQuery(''); setLookupResult(null)
-      setView('llenado')
+      setLookupLoading(true)
+      try {
+        const res = await fetch('/api/ko/participants', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fullName:   lookupResult.nombre,
+            nationalId: lookupResult.cedula,
+            phone:      lookupResult.whatsapp,
+            email:      lookupResult.email ?? '',
+            city:       lookupResult.ciudad ?? '',
+          }),
+        })
+        const data = await res.json()
+        if (!res.ok && res.status !== 409) {
+          setToast('⚠️ ' + (data.error ?? 'Error al inscribir')); setLookupLoading(false); return
+        }
+        const code = res.status === 409 ? data.code : data.participant.participationCode
+        const displayName = lookupResult.displayName
+        activateSession({ cedula: lookupResult.cedula, displayName })
+        trackEvent('ENTRY_CONFIRMED', { cedula: lookupResult.cedula, displayName, whatsapp: lookupResult.whatsapp })
+        setRegStep('choose'); setLookupQuery(''); setLookupResult(null); setLookupLoading(false)
+        router.push(`/eliminatorias/pago/${code}`)
+      } catch { setToast('⚠️ Error de conexión'); setLookupLoading(false) }
     }
 
     function validateNew() {
@@ -4176,28 +4214,39 @@ export default function PrototipoEliminatoriasV3() {
       return errs
     }
 
-    function handleNewSubmit() {
+    async function handleNewSubmit() {
       const errs = validateNew(); setRegErrors(errs)
       if (Object.keys(errs).length > 0) return
-      // Check duplicate
-      if (findEnrolled(regForm.cedula.trim(), koEnrolled)) {
-        setRegErrors({ cedula: 'Esta cédula ya está inscrita en Eliminatorias.' }); return
-      }
-      const entry: KOParticipant = {
-        cedula: regForm.cedula.trim(), nombre: regForm.nombre.trim(),
-        displayName: regForm.nombre.trim().split(' ').slice(0, 2).join(' '),
-        whatsapp: regForm.whatsapp.trim(), ciudad: regForm.ciudad.trim() || null,
-        email: regForm.email.trim() || null, previousRound: null,
-        registeredAt: new Date().toISOString(), paymentStatus: 'pending', enrolledInKO: true,
-      }
-      const next = [...koEnrolled, entry]
-      setKoEnrolled(next); saveKOEnrolled(next)
-      setRegistered(true)
-      activateSession({ cedula: entry.cedula, displayName: entry.displayName })
-      trackEvent('ENTRY_CONFIRMED', { cedula: entry.cedula, displayName: entry.displayName, whatsapp: entry.whatsapp })
-      setToast('✅ ¡Inscripción exitosa! Ahora llena tu quiniela.')
-      setRegStep('choose'); setRegErrors({})
-      setView('llenado')
+      setLookupLoading(true)
+      try {
+        const res = await fetch('/api/ko/participants', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fullName:   regForm.nombre.trim(),
+            nationalId: regForm.cedula.trim(),
+            phone:      regForm.whatsapp.trim(),
+            email:      regForm.email.trim()  || '',
+            city:       regForm.ciudad.trim() || '',
+          }),
+        })
+        const data = await res.json()
+        if (!res.ok && res.status !== 409) {
+          if (res.status === 400 && data.details) {
+            const fieldMap: Record<string,string> = { fullName:'nombre', nationalId:'cedula', phone:'whatsapp' }
+            const newErrs: Record<string,string> = {}
+            data.details.forEach((d: {path:string[]; message:string}) => { if (d.path[0]) newErrs[fieldMap[d.path[0]] ?? d.path[0]] = d.message })
+            setRegErrors(newErrs)
+          } else { setToast('⚠️ ' + (data.error ?? 'Error al registrar')) }
+          setLookupLoading(false); return
+        }
+        const code = res.status === 409 ? data.code : data.participant.participationCode
+        const displayName = regForm.nombre.trim().split(' ').slice(0, 2).join(' ')
+        activateSession({ cedula: regForm.cedula.trim(), displayName })
+        trackEvent('ENTRY_CONFIRMED', { cedula: regForm.cedula.trim(), displayName, whatsapp: regForm.whatsapp.trim() })
+        setRegStep('choose'); setRegErrors({}); setLookupLoading(false)
+        router.push(`/eliminatorias/pago/${code}`)
+      } catch { setToast('⚠️ Error de conexión'); setLookupLoading(false) }
     }
 
     const field = (id: keyof typeof regForm, label: string, placeholder: string, required: boolean, hint?: string, type = 'text') => (
@@ -4682,11 +4731,6 @@ export default function PrototipoEliminatoriasV3() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Demo banner */}
-      <div className="bg-amber-400 text-slate-900 text-xs font-bold py-1.5 text-center px-4">
-        🔒 PROTOTIPO PRIVADO · Sin conexión a producción
-      </div>
-
       {/* Navigation tabs */}
       <nav className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-2xl mx-auto px-2">
@@ -4694,7 +4738,12 @@ export default function PrototipoEliminatoriasV3() {
             {navItems.map(item => (
               <button
                 key={item.id}
-                onClick={() => setView(item.id)}
+                onClick={() => {
+                  if (item.id === 'llenado' && !participantSession && !adminUnlocked) {
+                    setView('registro'); return
+                  }
+                  setView(item.id)
+                }}
                 aria-current={view === item.id ? 'page' : undefined}
                 className={`flex-1 flex flex-col items-center py-2.5 px-1 text-[10px] font-semibold transition-colors touch-manipulation border-b-2 ${
                   view === item.id
