@@ -187,44 +187,76 @@ async function DashboardGrupos() {
 }
 
 // ── DIECISEISAVOS (activa) ───────────────────────────────────────────────────
-function DashboardDieciseisavos() {
-  // Datos reales de Dieciseisavos estarán en DB cuando se implementen inscripciones.
-  // Por ahora: dashboard preparado con estado actual del prototipo.
-  const ENTRY_USD   = 20
-  const FIXED_RATE  = 730
-  const ENTRY_VES   = ENTRY_USD * FIXED_RATE
+async function DashboardDieciseisavos() {
+  const ENTRY_USD  = 20
+  const FIXED_RATE = 730
 
-  // Placeholder stats — se leerán de DB cuando haya datos reales
-  const verifiedKO  = 0
-  const pendingKO   = 0
-  const totalPool   = verifiedKO * ENTRY_USD
-  const prize1      = totalPool * 0.65
-  const prize2      = totalPool * 0.20
-  const orgFee      = totalPool * 0.15
+  const [
+    totalKO, completeKO,
+    verifiedKO, inReviewKO, rejectedKO, pendingKO,
+    finishedKO,
+    recentPaymentsKO, recentRegistrationsKO,
+  ] = await Promise.all([
+    prisma.kOParticipant.count({ where: { phase: 'R32' } }),
+    prisma.kOParticipant.count({ where: { phase: 'R32', isComplete: true } }),
+    prisma.kOPayment.count({ where: { paymentStatus: 'VERIFIED',  participant: { phase: 'R32' } } }),
+    prisma.kOPayment.count({ where: { paymentStatus: 'IN_REVIEW', participant: { phase: 'R32' } } }),
+    prisma.kOPayment.count({ where: { paymentStatus: 'REJECTED',  participant: { phase: 'R32' } } }),
+    prisma.kOPayment.count({ where: { paymentStatus: 'PENDING',   participant: { phase: 'R32' } } }),
+    prisma.kOMatchResult.count({ where: { status: { not: 'SCHEDULED' } } }),
+    prisma.kOPayment.findMany({
+      where: { paymentStatus: 'IN_REVIEW', participant: { phase: 'R32' } },
+      include: { participant: true },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+    }),
+    prisma.kOParticipant.findMany({
+      where: { phase: 'R32' },
+      include: { payment: true, picks: { select: { matchId: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 8,
+    }),
+  ])
+
+  const sinPagoKO = totalKO - verifiedKO - inReviewKO - rejectedKO - pendingKO >= 0
+    ? totalKO - verifiedKO - inReviewKO - rejectedKO - pendingKO
+    : pendingKO
+
+  const totalPool = verifiedKO * ENTRY_USD
+  const prize1    = totalPool * 0.65
+  const prize2    = totalPool * 0.20
+  const orgFee    = totalPool * 0.15
+  const ENTRY_VES = ENTRY_USD * FIXED_RATE
 
   return (
     <div className="p-4 sm:p-6">
       {/* Active banner */}
-      <div className="bg-green-50 border border-green-200 rounded-xl p-3 mb-5 flex items-center gap-3 text-sm">
-        <span className="text-xl shrink-0">🟢</span>
-        <div>
-          <span className="font-semibold text-green-800">Dieciseisavos — Quiniela Activa</span>
-          <span className="ml-2 text-xs text-green-600">Inscripciones y pagos independientes de Fase de Grupos.</span>
+      <div className="bg-green-50 border border-green-200 rounded-xl p-3 mb-5 flex items-center justify-between gap-3 text-sm">
+        <div className="flex items-center gap-3">
+          <span className="text-xl shrink-0">🟢</span>
+          <div>
+            <span className="font-semibold text-green-800">Dieciseisavos — Quiniela Activa</span>
+            <span className="ml-2 text-xs text-green-600">Inscripciones y pagos independientes de Fase de Grupos.</span>
+          </div>
         </div>
+        <Link href="/admin/eliminatorias"
+          className="shrink-0 bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl transition-colors whitespace-nowrap">
+          Admin KO →
+        </Link>
       </div>
 
       <h1 className="text-2xl font-bold text-slate-800 mb-4">Dashboard · Dieciseisavos</h1>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
         {[
-          { val: 0, label: 'Inscritos',           color: 'text-green-600',   icon: '👥' },
-          { val: 0, label: 'Quinielas completas', color: 'text-blue-600',    icon: '📋' },
+          { val: totalKO,    label: 'Inscritos',           color: 'text-green-600',   icon: '👥' },
+          { val: completeKO, label: 'Quinielas completas', color: 'text-blue-600',    icon: '📋' },
           { val: verifiedKO, label: 'Pagos verificados',   color: 'text-emerald-600', icon: '✅' },
-          { val: pendingKO,  label: 'Pagos pendientes',    color: 'text-orange-500',  icon: '⏳' },
-          { val: 0, label: 'Sin pago',            color: 'text-slate-500',   icon: '❌' },
-          { val: 0, label: 'Rechazados',          color: 'text-red-500',     icon: '🚫' },
-          { val: 16, label: 'Partidos',           color: 'text-purple-600',  icon: '⚽' },
-          { val: 0, label: 'Jugados',             color: 'text-indigo-500',  icon: '📅' },
+          { val: inReviewKO, label: 'En revisión',         color: 'text-orange-500',  icon: '⏳' },
+          { val: pendingKO,  label: 'Sin pago',            color: 'text-slate-500',   icon: '❌' },
+          { val: rejectedKO, label: 'Rechazados',          color: 'text-red-500',     icon: '🚫' },
+          { val: 16,         label: 'Partidos',            color: 'text-purple-600',  icon: '⚽' },
+          { val: finishedKO, label: 'Jugados',             color: 'text-indigo-500',  icon: '📅' },
         ].map(({ val, label, color, icon }) => (
           <div key={label} className="bg-white rounded-xl shadow-sm p-3 sm:p-4 border border-slate-100">
             <div className="text-lg sm:text-xl mb-0.5">{icon}</div>
@@ -245,10 +277,10 @@ function DashboardDieciseisavos() {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-center">
           {[
-            { label: 'Total recaudado', usd: totalPool, ves: totalPool * FIXED_RATE,   badge: null   },
-            { label: '1er premio (65%)',   usd: prize1,     ves: prize1 * FIXED_RATE,  badge: '🥇' },
-            { label: '2do premio (20%)',   usd: prize2,     ves: prize2 * FIXED_RATE,  badge: '🥈' },
-            { label: 'Organización (15%)', usd: orgFee,     ves: orgFee * FIXED_RATE,  badge: '🏛️' },
+            { label: 'Total recaudado',    usd: totalPool, ves: totalPool * FIXED_RATE, badge: null   },
+            { label: '1er premio (65%)',   usd: prize1,    ves: prize1 * FIXED_RATE,    badge: '🥇' },
+            { label: '2do premio (20%)',   usd: prize2,    ves: prize2 * FIXED_RATE,    badge: '🥈' },
+            { label: 'Organización (15%)', usd: orgFee,    ves: orgFee * FIXED_RATE,    badge: '🏛️' },
           ].map((row) => (
             <div key={row.label} className="bg-white/20 rounded-xl p-3">
               <div className="text-xs text-green-100 mb-1">{row.badge} {row.label}</div>
@@ -258,45 +290,72 @@ function DashboardDieciseisavos() {
           ))}
         </div>
         <div className="mt-3 text-xs text-green-100 text-center">
-          Entrada: ${ENTRY_USD} USD / {fmtVes(ENTRY_VES)} Bs · {verifiedKO} pagos verificados
+          Entrada: ${ENTRY_USD} USD / {fmtVes(ENTRY_VES)} Bs · {verifiedKO} pago{verifiedKO !== 1 ? 's' : ''} verificado{verifiedKO !== 1 ? 's' : ''}
         </div>
       </div>
 
-      {/* Info cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Pagos en revisión */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
-          <h2 className="font-bold text-slate-700 mb-3">⚙️ Configuración · Dieciseisavos</h2>
-          <div className="space-y-2 text-sm">
-            {[
-              ['Inscripciones', 'Abiertas'],
-              ['Monto',         `$${ENTRY_USD} USD / ${fmtVes(ENTRY_VES)} Bs`],
-              ['Tasa fija',     `${FIXED_RATE} Bs/USD`],
-              ['1er premio',    '65% del pozo'],
-              ['2do premio',    '20% del pozo'],
-              ['Organización',  '15% del pozo'],
-              ['Partidos',      '16 (Dieciseisavos)'],
-            ].map(([k, v]) => (
-              <div key={k} className="flex justify-between border-b border-slate-50 pb-1">
-                <span className="text-slate-500">{k}</span>
-                <span className="font-semibold text-slate-700">{v}</span>
-              </div>
-            ))}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-slate-700">⏳ Pagos en revisión</h2>
+            <Link href="/admin/eliminatorias/pagos" className="text-xs text-green-600 hover:underline">Ver todos →</Link>
           </div>
+          {recentPaymentsKO.length === 0 ? (
+            <p className="text-slate-400 text-sm text-center py-4">No hay pagos pendientes 🎉</p>
+          ) : (
+            <div className="space-y-2">
+              {recentPaymentsKO.map((p) => (
+                <div key={p.id} className="flex items-start justify-between py-2 border-b border-slate-50 last:border-0 gap-2">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-slate-700 truncate">{p.participant.fullName}</div>
+                    <div className="text-xs text-slate-400">
+                      CI: {p.participant.nationalId} · {p.participant.phone}
+                    </div>
+                    {p.paymentReference && (
+                      <div className="text-xs text-slate-400">Ref: {p.paymentReference}</div>
+                    )}
+                    <div className="text-xs text-slate-500">${p.amountUsd} USD{p.amountVes ? ` / ${fmtVes(p.amountVes)} Bs` : ''}</div>
+                  </div>
+                  <Link href="/admin/eliminatorias/pagos"
+                    className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full hover:bg-orange-200 shrink-0 whitespace-nowrap">
+                    Verificar →
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
+        {/* Registros recientes */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
-          <h2 className="font-bold text-slate-700 mb-3">📋 Acciones rápidas</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-slate-700">👥 Registros recientes</h2>
+            <Link href="/admin/eliminatorias/participantes" className="text-xs text-green-600 hover:underline">Ver todos →</Link>
+          </div>
           <div className="space-y-2">
-            {[
-              { href: '/admin/participantes?phase=knockout_round_32', label: 'Ver participantes Dieciseisavos', icon: '👥' },
-              { href: '/admin/pagos?phase=knockout_round_32',         label: 'Verificar pagos Dieciseisavos',  icon: '💳' },
-              { href: '/admin/ranking?phase=knockout_round_32',       label: 'Ver ranking Dieciseisavos',      icon: '🏆' },
-              { href: '/admin/resultados?phase=knockout_round_32',    label: 'Resultados Dieciseisavos',       icon: '⚽' },
-            ].map(({ href, label, icon }) => (
-              <Link key={href} href={href}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 hover:bg-green-50 border border-slate-100 hover:border-green-200 text-sm text-slate-700 hover:text-green-800 transition-colors">
-                <span>{icon}</span>{label}
-              </Link>
+            {recentRegistrationsKO.length === 0 ? (
+              <p className="text-slate-400 text-sm text-center py-4">Sin registros aún</p>
+            ) : recentRegistrationsKO.map((p) => (
+              <div key={p.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                <div className="min-w-0">
+                  <div className="text-sm font-medium text-slate-700 truncate">{p.fullName}</div>
+                  <div className="text-xs text-slate-400">{p.picks.length}/16 picks</div>
+                </div>
+                <div className="flex items-center gap-1 shrink-0 ml-2">
+                  {p.isComplete && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">✓ Completa</span>}
+                  <span className={`text-xs px-1.5 py-0.5 rounded ${
+                    p.payment?.paymentStatus === 'VERIFIED'  ? 'bg-green-100 text-green-700' :
+                    p.payment?.paymentStatus === 'IN_REVIEW' ? 'bg-orange-100 text-orange-700' :
+                    p.payment?.paymentStatus === 'REJECTED'  ? 'bg-red-100 text-red-600' :
+                    'bg-slate-100 text-slate-500'
+                  }`}>
+                    {p.payment?.paymentStatus === 'VERIFIED'  ? 'Pagado' :
+                     p.payment?.paymentStatus === 'IN_REVIEW' ? 'En revisión' :
+                     p.payment?.paymentStatus === 'REJECTED'  ? 'Rechazado' : 'Sin pago'}
+                  </span>
+                </div>
+              </div>
             ))}
           </div>
         </div>
