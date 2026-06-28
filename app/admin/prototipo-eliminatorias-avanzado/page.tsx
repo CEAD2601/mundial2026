@@ -1209,7 +1209,7 @@ export default function PrototipoEliminatoriasV3() {
 
               {/* ── BLOQUE 1: QUINIELA DIECISEISAVOS (ACTIVA) ── */}
               {(() => {
-                const open = openMatches('R32')
+                const open = allMatches('R32')   // 16 partidos, incluyendo #73
                 const filled = open.filter(m => pickComplete(picks[m.id])).length
                 const done   = stageComplete('R32', picks)
                 const partial = stagePartial('R32', picks)
