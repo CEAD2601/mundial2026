@@ -35,37 +35,25 @@ const STATUS_COLOR: Record<string, string> = {
 }
 
 export default async function AdminEliminatoriasPage() {
-  const [
-    totalKO,
-    completeKO,
-    verifiedKO,
-    inReviewKO,
-    rejectedKO,
-    pendingKO,
-    paymentsInReview,
-    recentParticipants,
-  ] = await Promise.all([
-    prisma.kOParticipant.count({ where: { phase: 'R32' } }),
-    prisma.kOParticipant.count({ where: { phase: 'R32', isComplete: true } }),
-    prisma.kOPayment.count({ where: { paymentStatus: 'VERIFIED',  participant: { phase: 'R32' } } }),
-    prisma.kOPayment.count({ where: { paymentStatus: 'IN_REVIEW', participant: { phase: 'R32' } } }),
-    prisma.kOPayment.count({ where: { paymentStatus: 'REJECTED',  participant: { phase: 'R32' } } }),
-    prisma.kOPayment.count({ where: { paymentStatus: 'PENDING',   participant: { phase: 'R32' } } }),
-    prisma.kOPayment.findMany({
-      where: { paymentStatus: 'IN_REVIEW', participant: { phase: 'R32' } },
-      include: { participant: { include: { picks: { select: { matchId: true } } } } },
-      orderBy: { createdAt: 'desc' },
-    }),
-    prisma.kOParticipant.findMany({
-      where: { phase: 'R32' },
-      include: {
-        payment: { select: { paymentStatus: true } },
-        picks:   { select: { matchId: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 10,
-    }),
-  ])
+  // Todos los participantes KO con sus picks y pago
+  const allParticipants = await prisma.kOParticipant.findMany({
+    where: { phase: 'R32' },
+    include: {
+      payment: true,
+      picks: { select: { matchId: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  // Stats derivadas del mismo array
+  const totalKO    = allParticipants.length
+  const completeKO = allParticipants.filter(p => p.isComplete).length
+  const verifiedKO = allParticipants.filter(p => p.payment?.paymentStatus === 'VERIFIED').length
+  const inReviewKO = allParticipants.filter(p => p.payment?.paymentStatus === 'IN_REVIEW').length
+  const rejectedKO = allParticipants.filter(p => p.payment?.paymentStatus === 'REJECTED').length
+  const pendingKO  = allParticipants.filter(
+    p => !p.payment || p.payment.paymentStatus === 'PENDING'
+  ).length
 
   const pozoUSD  = verifiedKO * ENTRY_USD
   const pozoBs   = pozoUSD * FIXED_RATE
@@ -73,17 +61,36 @@ export default async function AdminEliminatoriasPage() {
   const prize2   = pozoUSD * 0.20
   const prizeOrg = pozoUSD * 0.15
 
+  // Secciones
+  const completedPendingPayment = allParticipants.filter(
+    p => p.isComplete && p.payment && p.payment.paymentStatus !== 'VERIFIED'
+  )
+  const inReviewList = allParticipants.filter(
+    p => p.payment?.paymentStatus === 'IN_REVIEW'
+  )
+  const recentList = allParticipants.slice(0, 10)
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
 
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-extrabold text-slate-800">Eliminatorias 2026</h1>
-        <p className="text-slate-500 text-sm">Dashboard KO — Dieciseisavos de Final</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold text-slate-800">Eliminatorias 2026</h1>
+          <p className="text-slate-500 text-sm">Dashboard KO — Dieciseisavos de Final</p>
+        </div>
+        <form action="" method="GET">
+          <button formAction={undefined}
+            onClick={() => window.location.reload()}
+            type="button"
+            className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-xl font-semibold">
+            🔄 Actualizar
+          </button>
+        </form>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
         {[
           { val: totalKO,    label: 'Inscritos',   color: 'text-blue-700',   bg: 'bg-blue-50',   border: 'border-blue-100'   },
           { val: completeKO, label: 'Completas',   color: 'text-indigo-700', bg: 'bg-indigo-50', border: 'border-indigo-100' },
@@ -101,11 +108,11 @@ export default async function AdminEliminatoriasPage() {
 
       {/* Pozo */}
       <div className="bg-gradient-to-br from-green-600 to-emerald-700 rounded-2xl p-5 text-white shadow-lg">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2">
           <h2 className="font-bold text-lg">💰 Pozo · Dieciseisavos</h2>
-          <span className="text-xs text-green-200">{FIXED_RATE} Bs/USD</span>
+          <span className="text-xs text-green-200">{FIXED_RATE} Bs/USD · ${ENTRY_USD}/entrada</span>
         </div>
-        <div className="text-3xl font-extrabold mb-1">${pozoUSD.toLocaleString('es-VE')} USD</div>
+        <div className="text-3xl font-extrabold">${pozoUSD.toLocaleString('es-VE')} USD</div>
         <div className="text-green-200 text-sm mb-3">{fmtVes(pozoBs)} Bs · {verifiedKO} pago{verifiedKO !== 1 ? 's' : ''} verificado{verifiedKO !== 1 ? 's' : ''}</div>
         <div className="grid grid-cols-3 gap-2 text-center">
           {[
@@ -121,93 +128,142 @@ export default async function AdminEliminatoriasPage() {
         </div>
       </div>
 
-      {/* Pagos en revisión */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-extrabold text-slate-700 flex items-center gap-2">
-            ⏳ Pagos en revisión
-            {inReviewKO > 0 && (
-              <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                {inReviewKO}
-              </span>
-            )}
-          </h2>
-          <Link href="/admin/eliminatorias/pagos" className="text-xs text-green-600 hover:underline font-semibold">
-            Ver todos →
-          </Link>
-        </div>
-
-        {paymentsInReview.length === 0 ? (
-          <div className="bg-white border border-slate-100 rounded-2xl p-6 text-center text-sm text-slate-400">
-            No hay pagos en revisión 🎉
+      {/* ── QUINIELAS COMPLETAS CON PAGO PENDIENTE ── */}
+      {completedPendingPayment.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <h2 className="font-extrabold text-slate-800">
+              🔒 Quinielas completas — confirmar pago
+            </h2>
+            <span className="bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+              {completedPendingPayment.length}
+            </span>
           </div>
-        ) : (
           <div className="space-y-2">
-            {paymentsInReview.map(pay => (
-              <div key={pay.id} className="bg-white border border-amber-100 rounded-2xl px-4 py-3 shadow-sm">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-bold text-slate-800 truncate">{pay.participant.fullName}</p>
-                    <p className="text-xs text-slate-500">
-                      CI: {pay.participant.nationalId} · {pay.participant.phone}
-                    </p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">
-                      {pay.participant.picks.length}/16 picks
-                      {pay.paymentMethod ? ` · ${pay.paymentMethod === 'PAGO_MOVIL' ? 'Pago Móvil' : 'Zelle'}` : ''}
-                      {pay.senderBank ? ` · ${pay.senderBank}` : ''}
-                      {pay.paymentReference ? ` · Ref: ${pay.paymentReference}` : ''}
-                    </p>
-                    <p className="text-[10px] text-slate-400">
-                      ${pay.amountUsd} USD{pay.amountVes ? ` / ${fmtVes(pay.amountVes)} Bs` : ''}
-                      {' · '}{timeAgo(pay.createdAt)}
-                    </p>
-                  </div>
-                  <PaymentActions paymentId={pay.id} participantName={pay.participant.fullName} />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Registros recientes */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-extrabold text-slate-700">🕐 Registros recientes</h2>
-          <Link href="/admin/eliminatorias/participantes" className="text-xs text-green-600 hover:underline font-semibold">
-            Ver todos ({totalKO}) →
-          </Link>
-        </div>
-
-        <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
-          {recentParticipants.length === 0 ? (
-            <p className="text-sm text-slate-400 text-center py-6">Sin registros aún</p>
-          ) : (
-            <div>
-              {recentParticipants.map(p => {
-                const pStatus = p.payment?.paymentStatus ?? 'PENDING'
-                return (
-                  <div key={p.id} className="flex items-center justify-between px-4 py-3 border-b border-slate-100 last:border-b-0 gap-3">
+            {completedPendingPayment.map(p => {
+              const pay = p.payment!
+              const pStatus = pay.paymentStatus as string
+              return (
+                <div key={p.id} className="bg-white border-2 border-green-200 rounded-2xl px-4 py-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-slate-800 truncate">{p.fullName}</p>
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <p className="font-extrabold text-slate-800">{p.fullName}</p>
+                        <span className="text-[10px] bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full">
+                          🔒 16/16 completa
+                        </span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_COLOR[pStatus]}`}>
+                          {STATUS_LABEL[pStatus]}
+                        </span>
+                      </div>
                       <p className="text-xs text-slate-500">
-                        {p.nationalId} · {p.phone}
+                        CI: {p.nationalId} · {p.phone}
                       </p>
-                      <p className="text-xs text-slate-400">
-                        {p.picks.length}/16 picks
-                        {p.isComplete ? ' · 🔒 Confirmada' : ' · ✏️ Abierta'}
+                      {pay.paymentMethod && (
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          {pay.paymentMethod === 'PAGO_MOVIL' ? 'Pago Móvil' : 'Zelle'}
+                          {pay.senderBank ? ` · ${pay.senderBank}` : ''}
+                          {pay.paymentReference ? ` · Ref: ${pay.paymentReference}` : ''}
+                          {pay.senderName ? ` · ${pay.senderName}` : ''}
+                        </p>
+                      )}
+                      <p className="text-[10px] text-slate-400 mt-0.5">
+                        ${pay.amountUsd} USD
+                        {pay.amountVes ? ` / ${fmtVes(pay.amountVes)} Bs` : ''}
                         {' · '}{timeAgo(p.createdAt)}
                       </p>
                     </div>
-                    <div className="flex flex-col items-end gap-1 shrink-0">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg ${STATUS_COLOR[pStatus]}`}>
-                        {STATUS_LABEL[pStatus]}
-                      </span>
+                    <PaymentActions paymentId={pay.id} participantName={p.fullName} />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── PAGOS EN REVISIÓN (sin quiniela completa también) ── */}
+      {inReviewList.filter(p => !p.isComplete).length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <h2 className="font-extrabold text-slate-700">⏳ Pagos reportados — quiniela incompleta</h2>
+            <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+              {inReviewList.filter(p => !p.isComplete).length}
+            </span>
+          </div>
+          <div className="space-y-2">
+            {inReviewList.filter(p => !p.isComplete).map(p => {
+              const pay = p.payment!
+              return (
+                <div key={p.id} className="bg-white border border-amber-100 rounded-2xl px-4 py-3 shadow-sm">
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-bold text-slate-800">{p.fullName}</p>
+                        <span className="text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded-full">
+                          {p.picks.length}/16 picks
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500">CI: {p.nationalId} · {p.phone}</p>
+                      {pay.paymentMethod && (
+                        <p className="text-xs text-slate-400">
+                          {pay.paymentMethod === 'PAGO_MOVIL' ? 'Pago Móvil' : 'Zelle'}
+                          {pay.senderBank ? ` · ${pay.senderBank}` : ''}
+                          {pay.paymentReference ? ` · Ref: ${pay.paymentReference}` : ''}
+                        </p>
+                      )}
                     </div>
+                    <PaymentActions paymentId={pay.id} participantName={p.fullName} />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── REGISTROS RECIENTES ── */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-extrabold text-slate-700">👥 Todos los inscritos</h2>
+          <Link href="/admin/eliminatorias/participantes"
+            className="text-xs text-green-600 hover:underline font-semibold">
+            Vista detallada →
+          </Link>
+        </div>
+        <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
+          {recentList.length === 0 ? (
+            <p className="text-sm text-slate-400 text-center py-6">Sin registros aún</p>
+          ) : (
+            <>
+              <div className="grid px-4 py-2 bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-500 uppercase"
+                style={{ gridTemplateColumns: '1fr 52px 90px 70px' }}>
+                <span>Participante</span>
+                <span>Picks</span>
+                <span>Pago</span>
+                <span>Inscripción</span>
+              </div>
+              {recentList.map(p => {
+                const pStatus = p.payment?.paymentStatus ?? 'PENDING'
+                return (
+                  <div key={p.id}
+                    className="grid px-4 py-2.5 border-b border-slate-100 last:border-b-0 items-center gap-2"
+                    style={{ gridTemplateColumns: '1fr 52px 90px 70px' }}>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-slate-800 truncate">{p.fullName}</p>
+                      <p className="text-[10px] text-slate-400">{p.nationalId}</p>
+                    </div>
+                    <span className="text-xs font-bold text-slate-700 tabular-nums">
+                      {p.picks.length}/16{p.isComplete ? ' 🔒' : ''}
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg ${STATUS_COLOR[pStatus]}`}>
+                      {STATUS_LABEL[pStatus]}
+                    </span>
+                    <span className="text-[10px] text-slate-400">{timeAgo(p.createdAt)}</span>
                   </div>
                 )
               })}
-            </div>
+            </>
           )}
         </div>
       </div>
@@ -215,7 +271,7 @@ export default async function AdminEliminatoriasPage() {
       {/* Navegación */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { href: '/admin/eliminatorias/pagos',         label: '💳 Verificar pagos',    desc: `${inReviewKO} en revisión`  },
+          { href: '/admin/eliminatorias/pagos',         label: '💳 Gestión de pagos',   desc: `${inReviewKO} en revisión`  },
           { href: '/admin/eliminatorias/participantes', label: '👥 Participantes',       desc: `${totalKO} inscritos`       },
           { href: '/admin/eliminatorias/resultados',    label: '⚽ Resultados',          desc: 'Ingresar resultados KO'     },
           { href: '/admin/eliminatorias/ranking',       label: '🏆 Ranking KO',         desc: `${verifiedKO} verificados`  },
@@ -230,7 +286,7 @@ export default async function AdminEliminatoriasPage() {
 
       <div className="pt-2 border-t border-slate-100 flex items-center gap-4 text-sm">
         <Link href="/admin" className="text-slate-400 hover:text-slate-600 hover:underline">
-          ← Volver al admin principal
+          ← Admin principal
         </Link>
         <a href="/eliminatorias" target="_blank" className="text-green-600 hover:underline">
           Ver sitio público →

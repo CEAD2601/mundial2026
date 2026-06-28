@@ -15,7 +15,7 @@ export function PaymentActions({ paymentId, participantName }: Props) {
   const update = async (status: 'VERIFIED' | 'REJECTED') => {
     setBusy(true)
     try {
-      const r = await fetch('/api/admin/ko/payments', {
+      const r = await fetch('/api/admin/ko/payments?secret=CEAD2601', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ paymentId, status }),
