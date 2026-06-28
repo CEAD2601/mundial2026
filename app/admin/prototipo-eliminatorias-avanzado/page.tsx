@@ -634,44 +634,43 @@ export default function PrototipoEliminatoriasV3() {
       .catch(() => {})
   }, [])
 
-  // Ranking histórico FINAL de Fase de Grupos 2026 — datos reales cerrados
+  // Ranking histórico FINAL de Fase de Grupos 2026 — datos reales desde /api/ranking
   type GruposEntry = { pos: number; name: string; pts: number; exact: number; correct: number; move: number }
   const GRUPOS_RANKING_FINAL: GruposEntry[] = [
-    { pos:  1, name: 'Fabiola Tejada',    pts: 65, exact: 33, correct: 32, move:  0 },
-    { pos:  2, name: 'Pino',              pts: 63, exact: 30, correct: 33, move:  0 },
-    { pos:  3, name: 'Carlos Acosta',     pts: 62, exact: 27, correct: 35, move:  0 },
-    { pos:  4, name: 'Carlos Pardo',      pts: 62, exact: 27, correct: 35, move:  0 },
-    { pos:  5, name: 'Rafael Sanchez',    pts: 60, exact: 27, correct: 33, move:  0 },
-    { pos:  6, name: 'Cosme Torelli',     pts: 60, exact: 24, correct: 36, move:  0 },
-    { pos:  7, name: 'Alberto Gascon',    pts: 57, exact: 27, correct: 30, move:  0 },
-    { pos:  8, name: 'María Delgado',     pts: 57, exact: 21, correct: 36, move:  0 },
-    { pos:  9, name: 'Gorki Melendez',    pts: 57, exact: 21, correct: 36, move:  0 },
-    { pos: 10, name: 'Gabriel Reyes',     pts: 56, exact: 21, correct: 35, move:  0 },
-    { pos: 11, name: 'Belkis Delgado',    pts: 56, exact: 21, correct: 35, move:  0 },
-    { pos: 12, name: 'Andrés De Sá',      pts: 56, exact: 21, correct: 35, move:  0 },
-    { pos: 13, name: 'Lisette Arroyo',    pts: 54, exact: 24, correct: 30, move:  0 },
-    { pos: 14, name: 'Nilo Mendez',       pts: 54, exact: 24, correct: 30, move:  0 },
-    { pos: 15, name: 'Laura Bracho',      pts: 53, exact: 21, correct: 32, move:  0 },
-    { pos: 16, name: 'Rodery Padron',     pts: 53, exact: 18, correct: 35, move:  0 },
-    { pos: 17, name: 'Marcos Gonzalez',   pts: 51, exact: 15, correct: 36, move:  0 },
-    { pos: 18, name: 'Leopoldo Briceño',  pts: 49, exact: 21, correct: 28, move:  0 },
-    { pos: 19, name: 'Andres Melian',     pts: 49, exact: 18, correct: 31, move:  0 },
-    { pos: 20, name: 'Javier Vallenilla', pts: 48, exact: 21, correct: 27, move:  0 },
-    { pos: 21, name: 'Guillermo Santana', pts: 47, exact: 15, correct: 32, move:  0 },
-    { pos: 22, name: 'Ruben Delgado',     pts: 46, exact: 18, correct: 28, move:  0 },
-    { pos: 23, name: 'Alexis Ramos',      pts: 43, exact:  9, correct: 34, move:  0 },
-    { pos: 24, name: 'Minerva Valletta',  pts: 35, exact:  9, correct: 26, move:  0 },
+    { pos:  1, name: 'Fabiola Tejada',    pts: 65, exact: 11, correct: 32, move:  0 },
+    { pos:  2, name: 'Pino',              pts: 63, exact: 10, correct: 33, move:  0 },
+    { pos:  3, name: 'Carlos Acosta',     pts: 62, exact:  9, correct: 35, move:  0 },
+    { pos:  4, name: 'Carlos Pardo',      pts: 62, exact:  9, correct: 35, move:  0 },
+    { pos:  5, name: 'Rafael Sanchez',    pts: 60, exact:  9, correct: 33, move:  0 },
+    { pos:  6, name: 'Cosme Torelli',     pts: 60, exact:  8, correct: 36, move:  0 },
+    { pos:  7, name: 'Alberto Gascon',    pts: 57, exact:  9, correct: 30, move:  0 },
+    { pos:  8, name: 'María Delgado',     pts: 57, exact:  7, correct: 36, move:  0 },
+    { pos:  9, name: 'Gorki Melendez',    pts: 57, exact:  7, correct: 36, move:  0 },
+    { pos: 10, name: 'Gabriel Reyes',     pts: 56, exact:  7, correct: 35, move:  0 },
+    { pos: 11, name: 'Belkis Delgado',    pts: 56, exact:  7, correct: 35, move:  0 },
+    { pos: 12, name: 'Andrés De Sá',      pts: 56, exact:  7, correct: 35, move:  0 },
+    { pos: 13, name: 'Lisette Arroyo',    pts: 54, exact:  8, correct: 30, move: +3 },
+    { pos: 14, name: 'Nilo Mendez',       pts: 54, exact:  8, correct: 30, move: -1 },
+    { pos: 15, name: 'Laura Bracho',      pts: 53, exact:  7, correct: 32, move: -1 },
+    { pos: 16, name: 'Rodery Padron',     pts: 53, exact:  6, correct: 35, move: -1 },
+    { pos: 17, name: 'Marcos Gonzalez',   pts: 51, exact:  5, correct: 36, move:  0 },
+    { pos: 18, name: 'Leopoldo Briceño',  pts: 49, exact:  7, correct: 28, move:  0 },
+    { pos: 19, name: 'Andres Melian',     pts: 49, exact:  6, correct: 31, move:  0 },
+    { pos: 20, name: 'Javier Vallenilla', pts: 48, exact:  7, correct: 27, move:  0 },
+    { pos: 21, name: 'Guillermo Santana', pts: 47, exact:  5, correct: 32, move:  0 },
+    { pos: 22, name: 'Ruben Delgado',     pts: 46, exact:  6, correct: 28, move:  0 },
+    { pos: 23, name: 'Alexis Ramos',      pts: 43, exact:  3, correct: 34, move:  0 },
+    { pos: 24, name: 'Minerva Valletta',  pts: 35, exact:  3, correct: 26, move:  0 },
   ]
-  // Fase de Grupos está cerrada — usamos el ranking final real directamente.
-  // Intentamos enriquecer con snapshot de DB si tiene más datos.
+  // Arranca con datos reales; intenta actualizar desde DB como mejora
   const [gruposRealRanking, setGruposRealRanking] = useState<GruposEntry[]>(GRUPOS_RANKING_FINAL)
   useEffect(() => {
     fetch('/api/ranking')
       .then(r => r.ok ? r.json() : null)
       .then(d => {
-        if (!d || !Array.isArray(d.ranking) || d.ranking.length === 0) return
+        if (!d || !Array.isArray(d.ranking) || d.ranking.length < 24) return
         const mapped: GruposEntry[] = (d.ranking as {
-          position: number; fullName?: string; displayName?: string
+          position: number; displayName?: string; fullName?: string
           totalPoints: number; exactScores: number; correctResults: number
           previousPosition?: number | null
         }[]).map(r => ({
@@ -682,8 +681,7 @@ export default function PrototipoEliminatoriasV3() {
           correct: r.correctResults,
           move:    r.previousPosition != null ? r.previousPosition - r.position : 0,
         }))
-        // Solo reemplazar si DB devuelve ≥24 participantes (ranking completo real)
-        if (mapped.length >= 24) setGruposRealRanking(mapped)
+        setGruposRealRanking(mapped)
       })
       .catch(() => {})
   }, [])
