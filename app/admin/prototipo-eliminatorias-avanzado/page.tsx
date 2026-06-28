@@ -1983,21 +1983,12 @@ export default function PrototipoEliminatoriasV3() {
                 >
                   <Save size={14} /> Guardar
                 </button>
-                {nextStage ? (
-                  <button
-                    onClick={goToNextStage}
-                    className="flex-1 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 text-base shadow-lg transition-all touch-manipulation"
-                  >
-                    {STAGE_META[nextStage].short} <ArrowRight size={18} />
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setView('mi-quiniela')}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 text-base shadow-lg transition-all touch-manipulation"
-                  >
-                    Revisar quiniela <ArrowRight size={18} />
-                  </button>
-                )}
+                <button
+                  onClick={() => setView('mi-quiniela')}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 text-base shadow-lg transition-all touch-manipulation"
+                >
+                  Revisar quiniela <ArrowRight size={18} />
+                </button>
               </div>
             ) : (
               <div className="flex gap-2">
