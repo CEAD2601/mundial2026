@@ -12,7 +12,17 @@ const registerSchema = z.object({
   city:       z.string().optional(),
 })
 
+// ── INSCRIPCIONES CERRADAS ── 28-jun-2026 19:00 VET
+const REGISTRATION_CLOSED = true
+
 export async function POST(req: NextRequest) {
+  if (REGISTRATION_CLOSED) {
+    return NextResponse.json(
+      { error: 'Las inscripciones para la Quiniela Dieciseisavos están cerradas.' },
+      { status: 403 }
+    )
+  }
+
   try {
     await ensureKOTables()
     const body = await req.json()
