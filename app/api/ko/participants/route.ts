@@ -90,7 +90,7 @@ export async function GET(req: NextRequest) {
     if (nationalId) {
       const p = await prisma.kOParticipant.findFirst({ where: { nationalId, phase: 'R32' } })
       if (!p) return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
-      return NextResponse.json({ participationCode: p.participationCode })
+      return NextResponse.json({ participationCode: p.participationCode, fullName: p.fullName })
     }
 
     if (phone) {
@@ -99,7 +99,7 @@ export async function GET(req: NextRequest) {
         where: { phone: { endsWith: last10 }, phase: 'R32' },
       })
       if (!p) return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
-      return NextResponse.json({ participationCode: p.participationCode })
+      return NextResponse.json({ participationCode: p.participationCode, fullName: p.fullName })
     }
 
     // Buscar datos previos de Fase de Grupos para pre-llenar formulario

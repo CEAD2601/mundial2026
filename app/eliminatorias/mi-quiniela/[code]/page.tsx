@@ -293,6 +293,13 @@ export default function KOPicksPage() {
     return r && r.status !== 'SCHEDULED'
   }
 
+  // Bloqueo por tiempo: el partido no acepta picks si ya comenzó
+  // Usa la hora VET (UTC-4) del match: match.date + 'T' + match.timeVet + ':00-04:00'
+  const isMatchTimePassed = (match: KOMatch) => {
+    const matchStart = new Date(`${match.date}T${match.timeVet}:00-04:00`)
+    return Date.now() >= matchStart.getTime()
+  }
+
   const handleScoreChange = (matchId: string, field: 'homeGoals' | 'awayGoals', val: number) => {
     setTouched(prev => new Set([...prev, matchId]))
     setPicks(prev => {
@@ -363,7 +370,7 @@ export default function KOPicksPage() {
   const isVerified  = participant.payment?.paymentStatus === 'VERIFIED'
   const isComplete  = participant.isComplete
   const stageMatches = data.matches.filter(m => m.stage === stage)
-  const openMatches  = stageMatches.filter(m => m.isOpenForPredictions && !isMatchLocked(m.id))
+  const openMatches  = stageMatches.filter(m => !isMatchLocked(m.id) && !isMatchTimePassed(m))
 
   // filledCount: solo partidos touched con pick válido
   const filledCount  = stageMatches.filter(m => touched.has(m.id) && isValidPick(picks[m.id])).length
@@ -490,7 +497,7 @@ export default function KOPicksPage() {
               touched={touched.has(match.id)}
               onScoreChange={handleScoreChange}
               onPenalty={handlePenalty}
-              locked={!!isMatchLocked(match.id) || isComplete || !match.isOpenForPredictions}
+              locked={!!isMatchLocked(match.id) || isComplete || isMatchTimePassed(match)}
               result={data.results[match.id]}
               savedPts={data.picks.find(p => p.matchId === match.id)?.points}
             />

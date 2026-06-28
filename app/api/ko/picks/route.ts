@@ -80,9 +80,16 @@ export async function POST(req: NextRequest) {
     }
 
     // Confirmación: verificar que todos los partidos abiertos tienen pick
+    // Un partido está abierto si no ha comenzado (hora VET) y no está en lockedIds (DB)
     if (data.confirm) {
+      const now = Date.now()
       const openMatchIds = KNOCKOUT_MATCHES
-        .filter(m => m.stage === 'R32' && m.isOpenForPredictions && !lockedIds.has(m.id))
+        .filter(m => {
+          if (m.stage !== 'R32') return false
+          if (lockedIds.has(m.id)) return false
+          const matchStart = new Date(`${m.date}T${m.timeVet}:00-04:00`)
+          return now < matchStart.getTime()
+        })
         .map(m => m.id)
 
       const savedPicks = await prisma.kOPick.findMany({
