@@ -619,7 +619,7 @@ export default function PrototipoEliminatoriasV3() {
   // FAQ accordion
   const [faqOpen, setFaqOpen] = useState<number | null>(null)
 
-  // Ranking real desde DB
+  // Ranking real desde DB (Dieciseisavos KO)
   type RealRankingEntry = {
     position: number; previousPosition: number | null; movement: number
     participationCode: string; fullName: string; city: string | null
@@ -632,6 +632,31 @@ export default function PrototipoEliminatoriasV3() {
       .then(r => r.ok ? r.json() : { ranking: [] })
       .then(d => setKoRealRanking(d.ranking ?? []))
       .catch(() => {})
+  }, [])
+
+  // Ranking real desde DB (Fase de Grupos — histórico)
+  type GruposEntry = { pos: number; name: string; pts: number; exact: number; correct: number; move: number }
+  const [gruposRealRanking, setGruposRealRanking] = useState<GruposEntry[] | null>(null)
+  useEffect(() => {
+    fetch('/api/ranking')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (!d || !Array.isArray(d.ranking)) { setGruposRealRanking([]); return }
+        const mapped: GruposEntry[] = (d.ranking as {
+          position: number; fullName?: string; displayName?: string
+          totalPoints: number; exactScores: number; correctResults: number
+          previousPosition?: number | null
+        }[]).map(r => ({
+          pos:     r.position,
+          name:    r.displayName ?? r.fullName ?? '—',
+          pts:     r.totalPoints,
+          exact:   r.exactScores,
+          correct: r.correctResults,
+          move:    r.previousPosition != null ? r.previousPosition - r.position : 0,
+        }))
+        setGruposRealRanking(mapped)
+      })
+      .catch(() => setGruposRealRanking([]))
   }, [])
 
   // Bracket — ronda activa (mobile tabs)
@@ -2672,7 +2697,7 @@ export default function PrototipoEliminatoriasV3() {
   function renderRanking() {
     // ── HISTÓRICO FASE DE GRUPOS (datos del torneo anterior) ──────────────────
     // Puntos finales de Fase de Grupos; NO se mezclan con Eliminatorias.
-    const GRUPOS_HISTORICAL = DEMO_RANKING  // imported from knockout-data.ts
+    const GRUPOS_HISTORICAL = gruposRealRanking  // null = cargando, [] = sin datos, [...] = datos reales
 
     // Ranking real de DB; mapear al shape que usa el template
     const baseRanking = koRealRanking.map(r => ({
@@ -2768,6 +2793,23 @@ export default function PrototipoEliminatoriasV3() {
                 </div>
               </div>
 
+              {/* Cargando */}
+              {GRUPOS_HISTORICAL === null && (
+                <div className="text-center py-10 text-slate-400 text-sm">Cargando ranking histórico…</div>
+              )}
+
+              {/* Sin datos reales */}
+              {GRUPOS_HISTORICAL !== null && GRUPOS_HISTORICAL.length === 0 && (
+                <div className="text-center py-10">
+                  <div className="text-4xl mb-2">📋</div>
+                  <p className="text-slate-500 font-medium">No se pudo cargar el ranking histórico real de Fase de Grupos.</p>
+                  <p className="text-slate-400 text-xs mt-1">Los datos se cargarán desde la base de datos cuando estén disponibles.</p>
+                </div>
+              )}
+
+              {/* Datos reales */}
+              {GRUPOS_HISTORICAL !== null && GRUPOS_HISTORICAL.length > 0 && (<>
+
               {/* Podio Grupos */}
               {GRUPOS_HISTORICAL.length >= 2 && (
                 <div className="flex items-end justify-center gap-3 pt-2">
@@ -2828,6 +2870,9 @@ export default function PrototipoEliminatoriasV3() {
                 })}
               </div>
               <p className="text-xs text-slate-400 text-center">Ranking final · Fase de Grupos 2026 · {GRUPOS_HISTORICAL.length} participantes</p>
+
+              </>)}
+
               <button
                 onClick={() => setRankingView('dieciseisavos')}
                 className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl text-sm transition-all touch-manipulation"
