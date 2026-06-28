@@ -203,7 +203,7 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center w-full max-w-sm sm:max-w-none">
-            <Link href="/eliminatorias/registro"
+            <Link href="/eliminatorias"
               className="ko-btn-cta group relative bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-slate-900 font-extrabold px-8 py-4 rounded-2xl text-base sm:text-lg shadow-2xl inline-flex items-center gap-2 w-full sm:w-auto justify-center touch-manipulation"
               style={{ boxShadow: '0 8px 32px rgba(251,191,36,0.4), 0 2px 8px rgba(0,0,0,0.3)' }}>
               <span className="text-xl group-hover:scale-110 transition-transform">⚽</span>
@@ -311,7 +311,7 @@ export default function Home() {
                       <p className="text-xs text-slate-500">16 partidos · 28 jun – 3 jul</p>
                     </div>
                   </div>
-                  <Link href="/eliminatorias/registro"
+                  <Link href="/eliminatorias"
                     className="text-sm font-bold px-4 py-2.5 rounded-xl bg-green-600 text-white hover:bg-green-700 transition-all active:scale-95 touch-manipulation">
                     Inscribirme
                   </Link>
@@ -389,7 +389,7 @@ export default function Home() {
           </div>
 
           <div className="text-center mt-8">
-            <Link href="/eliminatorias/registro"
+            <Link href="/eliminatorias"
               className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold px-8 py-3.5 rounded-2xl transition-all shadow-lg hover:shadow-green-500/25 hover:-translate-y-0.5 text-sm touch-manipulation">
               ⚽ Empezar ahora · 20 USD
             </Link>
@@ -739,7 +739,7 @@ export default function Home() {
             <p className="text-green-100 mb-8 max-w-md mx-auto">
               Predice los 32 partidos de la fase eliminatoria y compite por el primer lugar.
             </p>
-            <Link href="/eliminatorias/registro"
+            <Link href="/eliminatorias"
               className="ko-btn-cta inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-slate-900 font-extrabold px-10 py-4 rounded-2xl text-lg shadow-xl touch-manipulation">
               ⚽ Inscribirme ahora · 20 USD
             </Link>
