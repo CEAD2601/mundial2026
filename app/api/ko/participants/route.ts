@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { generateKOCode } from '@/lib/ko/utils'
+import { ensureKOTables } from '@/lib/ko/migrate'
 import { z } from 'zod'
 
 const registerSchema = z.object({
@@ -13,6 +14,7 @@ const registerSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    await ensureKOTables()
     const body = await req.json()
     const data = registerSchema.parse(body)
 
@@ -70,6 +72,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
+    await ensureKOTables()
     const { searchParams } = new URL(req.url)
     const code       = searchParams.get('code')
     const nationalId = searchParams.get('nationalId')

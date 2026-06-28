@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { ensureKOTables } from '@/lib/ko/migrate'
 
 export async function GET() {
   try {
+    await ensureKOTables()
     const snapshots = await prisma.kORankingSnapshot.findMany({
       include: {
         participant: {
