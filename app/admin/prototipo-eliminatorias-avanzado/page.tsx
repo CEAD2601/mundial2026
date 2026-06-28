@@ -4614,12 +4614,6 @@ export default function PrototipoEliminatoriasV3() {
                 const isFinished = m.status === 'FINISHED'
                 const isLive     = m.status === 'LIVE'
 
-                // Demo predictions for this match
-                const demoPreds = KO_DEMO_RANKING.slice(0, 6).map((r, i) => ({
-                  name: r.displayName,
-                  home: Math.floor(Math.random() * 4),
-                  away: Math.floor(Math.random() * 3),
-                }))
 
                 return (
                   <div key={m.id} className={`bg-white rounded-xl border shadow-sm overflow-hidden transition-all ${
@@ -4676,47 +4670,13 @@ export default function PrototipoEliminatoriasV3() {
                       {/* Venue */}
                       <div className="mt-2 text-[10px] text-slate-400 text-center">{m.venue} · {m.city}</div>
 
-                      {/* Toggle */}
+                      {/* Predictions locked until registration closes */}
                       <div className="mt-3 pt-3 border-t border-slate-100">
-                        <button onClick={() => setResultMatchExpanded(isExpanded ? null : m.id)}
-                          className={`w-full flex items-center justify-center gap-2 text-sm font-semibold py-1.5 rounded-lg transition-colors ${
-                            isFinished ? 'text-green-700 hover:bg-green-50' : 'text-blue-700 hover:bg-blue-50'
-                          }`}>
-                          {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                          {isExpanded ? 'Ocultar' : isFinished ? `🏆 Ver puntos (${demoPreds.length})` : `👁 Ver pronósticos (${demoPreds.length})`}
-                        </button>
+                        <p className="text-xs text-slate-400 text-center py-1">
+                          🔒 Los pronósticos se mostrarán cuando cierre la inscripción.
+                        </p>
                       </div>
                     </div>
-
-                    {/* Expanded predictions */}
-                    {isExpanded && (
-                      <div className="border-t border-slate-100 px-4 pb-4">
-                        <div className="space-y-1.5 mt-3 max-h-72 overflow-y-auto pr-1">
-                          {demoPreds.map((p, i) => (
-                            <div key={i} className="rounded-xl px-3 py-2 flex items-center justify-between gap-2 bg-white border border-slate-100">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span className="text-slate-400 text-xs font-mono w-5 text-right shrink-0">{i + 1}</span>
-                                <p className="font-semibold text-slate-800 text-sm truncate">{p.name}</p>
-                              </div>
-                              <div className="flex items-center gap-2 shrink-0">
-                                <div className="bg-slate-700 text-white text-sm font-bold rounded-lg px-2.5 py-1 tabular-nums">
-                                  {p.home}–{p.away}
-                                </div>
-                                {isFinished && (
-                                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">— pts</span>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        {!isFinished && (
-                          <p className="text-xs text-slate-400 text-center mt-2">
-                            Puntos pendientes hasta que se cargue el resultado final.
-                          </p>
-                        )}
-                        <p className="text-[10px] text-slate-300 text-center mt-1">Demo · Los pronósticos reales se cargarán del backend</p>
-                      </div>
-                    )}
                   </div>
                 )
               })}
@@ -4731,8 +4691,8 @@ export default function PrototipoEliminatoriasV3() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Navigation tabs */}
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+      {/* Navigation tabs — hidden on home view */}
+      {view !== 'home' && <nav className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-2xl mx-auto px-2">
           <div className="flex">
             {navItems.map(item => (
@@ -4757,7 +4717,7 @@ export default function PrototipoEliminatoriasV3() {
             ))}
           </div>
         </div>
-      </nav>
+      </nav>}
 
       {/* Main content */}
       <main>
