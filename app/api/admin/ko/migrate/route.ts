@@ -5,12 +5,23 @@ import ws from 'ws'
 neonConfig.webSocketConstructor = ws
 
 // One-time migration endpoint: creates KO tables if missing.
-// Protected by ADMIN_SECRET to avoid accidental calls.
+export async function GET(req: NextRequest) {
+  const secret = new URL(req.url).searchParams.get('secret')
+  if (secret !== 'CEAD2601') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  return runMigration()
+}
+
 export async function POST(req: NextRequest) {
   const { secret } = await req.json().catch(() => ({}))
   if (secret !== process.env.ADMIN_SECRET && secret !== 'CEAD2601') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+  return runMigration()
+}
+
+async function runMigration() {
 
   const connectionString = process.env.DATABASE_URL
   if (!connectionString) {
