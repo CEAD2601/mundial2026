@@ -1,24 +1,28 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { prisma } from '@/lib/prisma'
-import { KO_ENTRY_USD } from '@/lib/ko/utils'
-import { KNOCKOUT_MATCHES } from '@/lib/prototype/knockout-data'
 
-async function getStats() {
-  const [total, verified, inReview, finished] = await Promise.all([
-    prisma.kOParticipant.count(),
-    prisma.kOPayment.count({ where: { paymentStatus: 'VERIFIED' } }),
-    prisma.kOPayment.count({ where: { paymentStatus: 'IN_REVIEW' } }),
-    prisma.kOMatchResult.count({ where: { status: 'FINISHED' } }),
-  ])
-  return { total, verified, inReview, finished, pool: verified * KO_ENTRY_USD }
-}
+type Stats = { total: number; verified: number; inReview: number; finished: number; pool: number }
 
-export default async function AdminKOPage() {
-  const s     = await getStats()
-  const total = KNOCKOUT_MATCHES.filter(m => m.stage === 'R32').length
+export default function AdminKOPage() {
+  const [stats, setStats] = useState<Stats | null>(null)
+
+  useEffect(() => {
+    fetch('/api/admin/ko/participants')
+      .then(r => r.json())
+      .then(d => {
+        const p = d.participants ?? []
+        const verified = p.filter((x: { payment?: { paymentStatus: string } }) => x.payment?.paymentStatus === 'VERIFIED').length
+        const inReview = p.filter((x: { payment?: { paymentStatus: string } }) => x.payment?.paymentStatus === 'IN_REVIEW').length
+        setStats({ total: p.length, verified, inReview, finished: 0, pool: verified * 20 })
+      })
+  }, [])
+
+  const s = stats ?? { total: 0, verified: 0, inReview: 0, finished: 0, pool: 0 }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
       <div>
         <h1 className="text-2xl font-extrabold text-slate-800">Eliminatorias 2026</h1>
         <p className="text-slate-500 text-sm">Panel de administración — Dieciseisavos</p>
@@ -26,30 +30,31 @@ export default async function AdminKOPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: 'Inscritos',    value: s.total,    color: 'blue'   },
-          { label: 'Verificados',  value: s.verified, color: 'green'  },
-          { label: 'En revisión',  value: s.inReview, color: 'amber'  },
-          { label: 'Premio total', value: `$${s.pool}`, color: 'purple' },
-        ].map(({ label, value, color }) => (
-          <div key={label} className={`bg-${color}-50 border border-${color}-100 rounded-2xl px-4 py-4`}>
-            <div className={`text-2xl font-extrabold text-${color}-700`}>{value}</div>
-            <div className={`text-xs text-${color}-500 mt-0.5`}>{label}</div>
-          </div>
-        ))}
-      </div>
-
-      <div className="bg-slate-50 rounded-xl px-4 py-3 text-sm text-slate-600">
-        Partidos terminados: <strong>{s.finished}</strong> / {total} (R32)
+        <div className="bg-blue-50 border border-blue-100 rounded-2xl px-4 py-4">
+          <div className="text-2xl font-extrabold text-blue-700">{s.total}</div>
+          <div className="text-xs text-blue-500 mt-0.5">Inscritos</div>
+        </div>
+        <div className="bg-green-50 border border-green-100 rounded-2xl px-4 py-4">
+          <div className="text-2xl font-extrabold text-green-700">{s.verified}</div>
+          <div className="text-xs text-green-500 mt-0.5">Verificados</div>
+        </div>
+        <div className="bg-amber-50 border border-amber-100 rounded-2xl px-4 py-4">
+          <div className="text-2xl font-extrabold text-amber-700">{s.inReview}</div>
+          <div className="text-xs text-amber-500 mt-0.5">En revisión</div>
+        </div>
+        <div className="bg-purple-50 border border-purple-100 rounded-2xl px-4 py-4">
+          <div className="text-2xl font-extrabold text-purple-700">${s.pool}</div>
+          <div className="text-xs text-purple-500 mt-0.5">Premio total</div>
+        </div>
       </div>
 
       {/* Links */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {[
-          { href: '/admin/eliminatorias/pagos',          label: '💳 Verificar pagos',       desc: `${s.inReview} en revisión` },
-          { href: '/admin/eliminatorias/participantes',  label: '👥 Participantes',          desc: `${s.total} inscritos` },
-          { href: '/admin/eliminatorias/resultados',     label: '⚽ Ingresar resultados',    desc: `${s.finished} terminados` },
-          { href: '/admin/eliminatorias/ranking',        label: '🏆 Ranking KO',            desc: `${s.verified} verificados` },
+          { href: '/admin/eliminatorias/pagos',         label: '💳 Verificar pagos',    desc: `${s.inReview} en revisión` },
+          { href: '/admin/eliminatorias/participantes', label: '👥 Participantes',       desc: `${s.total} inscritos` },
+          { href: '/admin/eliminatorias/resultados',    label: '⚽ Ingresar resultados', desc: 'Actualiza picks y ranking' },
+          { href: '/admin/eliminatorias/ranking',       label: '🏆 Ranking KO',         desc: `${s.verified} verificados` },
         ].map(({ href, label, desc }) => (
           <Link key={href} href={href}
             className="bg-white border border-slate-200 rounded-2xl px-5 py-4 hover:shadow-md transition-shadow">
@@ -59,11 +64,14 @@ export default async function AdminKOPage() {
         ))}
       </div>
 
-      {/* Link back */}
       <div className="pt-2 border-t border-slate-100">
         <Link href="/admin" className="text-sm text-slate-400 hover:text-slate-600 hover:underline">
           ← Volver al admin principal (Fase de Grupos)
         </Link>
+        <span className="mx-3 text-slate-200">·</span>
+        <a href="/eliminatorias" target="_blank" className="text-sm text-green-600 hover:underline">
+          Ver sitio público →
+        </a>
       </div>
     </div>
   )
