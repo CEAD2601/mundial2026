@@ -1,12 +1,11 @@
 'use client'
 
 /**
- * Inscripción pública — flujo multi-paso idéntico al renderRegistro() del prototipo aprobado.
- * Fuente: /admin/prototipo-eliminatorias-avanzado (líneas 4114–4406)
- * Diferencias mínimas: setView() → router.push(), localStorage → API real.
+ * Inscripción pública — flujo multi-paso.
+ * already-enrolled: detecta estado real (picks + pago) y muestra CTA correcto.
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -18,7 +17,14 @@ type FoundData = {
   phone: string
   email?: string | null
   city?: string | null
-  participationCode?: string  // solo si ya está inscrito en KO
+  participationCode?: string
+}
+
+type EnrolledState = {
+  loading: boolean
+  filledCount: number
+  totalCount: number
+  paymentStatus: string
 }
 
 export default function KORegistroPage() {
@@ -29,12 +35,34 @@ export default function KORegistroPage() {
   const [lookupLoading, setLookupLoading] = useState(false)
   const [lookupResult,  setLookupResult]  = useState<FoundData | null>(null)
 
+  const [enrolledState, setEnrolledState] = useState<EnrolledState>({
+    loading: true, filledCount: 0, totalCount: 16, paymentStatus: 'PENDING',
+  })
+
   const [regForm, setRegForm] = useState({ nombre: '', cedula: '', whatsapp: '', ciudad: '', email: '' })
   const [regErrors, setRegErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
 
-  // ── Lookup: busca en KO y en Fase de Grupos ─────────────────────────────────
+  // Fetch real state when already-enrolled
+  useEffect(() => {
+    if (regStep === 'already-enrolled' && lookupResult?.participationCode) {
+      setEnrolledState(s => ({ ...s, loading: true }))
+      fetch(`/api/ko/picks?code=${lookupResult.participationCode}`)
+        .then(r => r.json())
+        .then(d => {
+          const allR32 = (d.matches ?? []).filter((m: { stage: string }) => m.stage === 'R32')
+          setEnrolledState({
+            loading:       false,
+            filledCount:   (d.picks ?? []).length,
+            totalCount:    allR32.length || 16,
+            paymentStatus: d.participant?.payment?.paymentStatus ?? 'PENDING',
+          })
+        })
+        .catch(() => setEnrolledState(s => ({ ...s, loading: false })))
+    }
+  }, [regStep, lookupResult])
+
   async function handleLookup() {
     const q = lookupQuery.trim()
     if (!q) return
@@ -44,20 +72,22 @@ export default function KORegistroPage() {
     const isPhone = digits.length >= 9 && (digits.startsWith('04') || digits.startsWith('58') || digits.startsWith('0'))
 
     try {
-      // 1) ¿Ya está inscrito en Eliminatorias KO?
-      const koParam  = isPhone ? `phone=${encodeURIComponent(q)}` : `nationalId=${encodeURIComponent(digits)}`
-      const koRes    = await fetch(`/api/ko/participants?${koParam}`)
+      const koParam = isPhone ? `phone=${encodeURIComponent(q)}` : `nationalId=${encodeURIComponent(digits)}`
+      const koRes   = await fetch(`/api/ko/participants?${koParam}`)
       if (koRes.ok) {
         const koData = await koRes.json()
-        // Ya inscrito en KO → paso already-enrolled
-        setLookupResult({ fullName: '', nationalId: digits, phone: q, participationCode: koData.participationCode })
+        setLookupResult({
+          fullName: koData.fullName ?? '',
+          nationalId: digits,
+          phone: q,
+          participationCode: koData.participationCode,
+        })
         setLookupLoading(false)
         setRegStep('already-enrolled')
         return
       }
 
       if (!isPhone) {
-        // 2) ¿Tiene datos de Fase de Grupos? (solo por cédula)
         const prefillRes = await fetch(`/api/ko/participants?prefill=${encodeURIComponent(digits)}`)
         if (prefillRes.ok) {
           const fd: FoundData = await prefillRes.json()
@@ -68,7 +98,6 @@ export default function KORegistroPage() {
         }
       }
 
-      // No encontrado en ninguna parte
       setLookupLoading(false)
       setRegStep('not-found')
     } catch {
@@ -77,7 +106,6 @@ export default function KORegistroPage() {
     }
   }
 
-  // ── Confirmar datos de Fase de Grupos y crear nuevo KO participant ───────────
   async function handleConfirmExisting() {
     if (!lookupResult) return
     setSubmitting(true)
@@ -97,13 +125,13 @@ export default function KORegistroPage() {
       const data = await res.json()
       if (!res.ok) {
         if (res.status === 409) {
-          router.push(`/eliminatorias/mi-quiniela/${data.code}`)
+          router.push(`/eliminatorias/llenar/${data.code}`)
           return
         }
         setSubmitError(data.error ?? 'Error al inscribir')
         return
       }
-      router.push(`/eliminatorias/mi-quiniela/${data.participant.participationCode}`)
+      router.push(`/eliminatorias/llenar/${data.participant.participationCode}`)
     } catch {
       setSubmitError('Error de conexión')
     } finally {
@@ -111,7 +139,6 @@ export default function KORegistroPage() {
     }
   }
 
-  // ── Validar y enviar nuevo participante ──────────────────────────────────────
   function validateNew() {
     const errs: Record<string, string> = {}
     if (!regForm.nombre.trim())   errs.nombre = 'El nombre es obligatorio'
@@ -143,13 +170,13 @@ export default function KORegistroPage() {
       const data = await res.json()
       if (!res.ok) {
         if (res.status === 409) {
-          router.push(`/eliminatorias/mi-quiniela/${data.code}`)
+          router.push(`/eliminatorias/llenar/${data.code}`)
           return
         }
         setSubmitError(data.error ?? 'Error al registrar')
         return
       }
-      router.push(`/eliminatorias/mi-quiniela/${data.participant.participationCode}`)
+      router.push(`/eliminatorias/llenar/${data.participant.participationCode}`)
     } catch {
       setSubmitError('Error de conexión')
     } finally {
@@ -157,7 +184,6 @@ export default function KORegistroPage() {
     }
   }
 
-  // ── Campo de formulario (idéntico al prototipo) ──────────────────────────────
   const field = (id: keyof typeof regForm, label: string, placeholder: string, required: boolean, hint?: string, type = 'text') => (
     <div>
       <label className="block text-xs font-semibold text-slate-600 mb-1.5">
@@ -178,7 +204,6 @@ export default function KORegistroPage() {
     </div>
   )
 
-  // ── Header (idéntico al prototipo) ───────────────────────────────────────────
   const header = (
     <div className="bg-gradient-to-r from-green-700 to-blue-700 rounded-2xl p-5 text-white mb-6 shadow-lg">
       <Link href="/" className="text-green-200 text-xs mb-3 flex items-center gap-1 hover:text-white">
@@ -189,7 +214,6 @@ export default function KORegistroPage() {
     </div>
   )
 
-  // ── STEP: choose ─────────────────────────────────────────────────────────────
   if (regStep === 'choose') return (
     <div className="max-w-lg mx-auto py-2 pb-10">
       {header}
@@ -202,7 +226,7 @@ export default function KORegistroPage() {
             </div>
             <div>
               <p className="font-extrabold text-slate-800 text-base mb-1">Ya participé antes</p>
-              <p className="text-sm text-slate-500 leading-relaxed">Jugué en la Fase de Grupos 2026. Quiero continuar con mis datos guardados.</p>
+              <p className="text-sm text-slate-500 leading-relaxed">Jugué en la Fase de Grupos 2026 o ya me inscribí en Eliminatorias.</p>
               <p className="text-xs text-green-600 font-semibold mt-2">→ Busca por cédula o WhatsApp</p>
             </div>
           </div>
@@ -222,21 +246,19 @@ export default function KORegistroPage() {
           </div>
         </button>
       </div>
-
       <p className="text-[10px] text-slate-400 text-center mt-6">
         🔒 Tu cédula es tu identificador · No se comparte públicamente
       </p>
     </div>
   )
 
-  // ── STEP: lookup ─────────────────────────────────────────────────────────────
   if (regStep === 'lookup') return (
     <div className="max-w-lg mx-auto py-2 pb-10">
       {header}
       <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm mb-4">
         <h2 className="font-extrabold text-slate-800 text-base mb-1">Buscar mis datos</h2>
         <p className="text-sm text-slate-500 mb-4">
-          Ingresa tu cédula o número de WhatsApp tal como te registraste en la Fase de Grupos.
+          Ingresa tu cédula o número de WhatsApp.
         </p>
         <label className="block text-xs font-semibold text-slate-600 mb-1.5">
           Cédula o WhatsApp <span className="text-red-500">*</span>
@@ -263,7 +285,6 @@ export default function KORegistroPage() {
     </div>
   )
 
-  // ── STEP: found ──────────────────────────────────────────────────────────────
   if (regStep === 'found' && lookupResult) return (
     <div className="max-w-lg mx-auto py-2 pb-10">
       {header}
@@ -282,14 +303,9 @@ export default function KORegistroPage() {
           <p className="text-slate-800"><span className="text-slate-500 text-xs w-20 inline-block">Nombre</span> <strong>{lookupResult.fullName}</strong></p>
           <p className="text-slate-800"><span className="text-slate-500 text-xs w-20 inline-block">Cédula</span> <strong>{lookupResult.nationalId?.replace(/(\d{2})(\d+)(\d{2})/, '$1···$3')}</strong></p>
           <p className="text-slate-800"><span className="text-slate-500 text-xs w-20 inline-block">WhatsApp</span> <strong>{lookupResult.phone}</strong></p>
-          <p className="text-slate-800"><span className="text-slate-500 text-xs w-20 inline-block">Ciudad</span> <strong>{lookupResult.city ?? <span className="text-slate-400 font-normal italic">No registrada</span>}</strong></p>
-          <p className="text-slate-800"><span className="text-slate-500 text-xs w-20 inline-block">Email</span> <strong>{lookupResult.email ?? <span className="text-slate-400 font-normal italic">No registrado</span>}</strong></p>
         </div>
-        <p className="text-[10px] text-green-700 bg-green-100 rounded-lg px-3 py-1 mb-3 text-center font-mono">
-          📡 Fuente: base de datos real · Fase de Grupos 2026
-        </p>
         <p className="text-xs text-slate-600 mb-4 text-center">
-          Ya tenemos tus datos de la fase anterior. Confirma para inscribirte en <strong>Quiniela Eliminatorias 2026</strong>.
+          Ya tenemos tus datos. Confirma para inscribirte en <strong>Quiniela Eliminatorias 2026</strong>.
         </p>
         {submitError && (
           <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-3">{submitError}</div>
@@ -298,53 +314,103 @@ export default function KORegistroPage() {
           className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-extrabold py-3.5 rounded-xl transition-all active:scale-95 touch-manipulation mb-2">
           {submitting ? 'Procesando…' : '✅ Confirmar inscripción a Eliminatorias'}
         </button>
-        <button onClick={() => {
-          setRegStep('new')
-          setRegForm({ nombre: lookupResult!.fullName, cedula: lookupResult!.nationalId, whatsapp: lookupResult!.phone, ciudad: lookupResult!.city ?? '', email: lookupResult!.email ?? '' })
-          setRegErrors({})
-        }}
-          className="w-full bg-white border border-slate-200 text-slate-700 font-semibold py-3 rounded-xl transition-all hover:bg-slate-50 mb-2">
-          ✏️ Editar datos antes de confirmar
-        </button>
-        <button onClick={() => { setRegStep('choose'); setLookupQuery(''); setLookupResult(null) }}
+        <button onClick={() => setRegStep('choose')}
           className="w-full text-slate-400 text-sm py-2 hover:text-slate-600">Cancelar</button>
       </div>
     </div>
   )
 
-  // ── STEP: already-enrolled ───────────────────────────────────────────────────
-  if (regStep === 'already-enrolled') return (
-    <div className="max-w-lg mx-auto py-2 pb-10">
-      {header}
-      <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-5 shadow-sm mb-4 text-center">
-        <div className="text-4xl mb-3">🏆</div>
-        <h2 className="font-extrabold text-slate-800 text-lg mb-1">¡Ya estás inscrito!</h2>
-        <p className="text-blue-600 text-sm mb-5">
-          Ya estás inscrito en <strong>Quiniela Eliminatorias 2026</strong>. No puedes inscribirte dos veces.
-        </p>
-        <div className="space-y-2">
-          {lookupResult?.participationCode && (
+  if (regStep === 'already-enrolled' && lookupResult) {
+    const code = lookupResult.participationCode!
+    const { loading, filledCount, totalCount, paymentStatus } = enrolledState
+    const allFilled = filledCount >= totalCount
+    const isVerified = paymentStatus === 'VERIFIED'
+    const isInReview = paymentStatus === 'IN_REVIEW'
+
+    return (
+      <div className="max-w-lg mx-auto py-2 pb-10">
+        {header}
+        <div className="bg-white border-2 border-green-200 rounded-2xl p-5 shadow-sm mb-4">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-full bg-green-600 text-white flex items-center justify-center text-xl font-extrabold shrink-0">
+              {lookupResult.fullName ? lookupResult.fullName[0].toUpperCase() : '?'}
+            </div>
+            <div>
+              <p className="text-xs text-green-700 font-semibold">✅ Ya estás inscrito</p>
+              <p className="font-extrabold text-slate-800 text-base">{lookupResult.fullName || 'Participante'}</p>
+              <p className="text-xs text-slate-500">Quiniela Eliminatorias 2026</p>
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="text-center py-4 text-slate-400 text-sm">Cargando estado…</div>
+          ) : (
             <>
-              <Link href={`/eliminatorias/pago/${lookupResult.participationCode}`}
-                className="block w-full bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-extrabold py-3 rounded-xl transition-all text-center">
-                💳 Ver estado de pago
-              </Link>
-              <Link href={`/eliminatorias/mi-quiniela/${lookupResult.participationCode}`}
-                className="block w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition-all text-center">
-                📋 Ver mi quiniela
-              </Link>
+              {/* Progreso */}
+              <div className="bg-slate-50 rounded-xl p-4 mb-4">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-slate-600 font-semibold">Pronósticos</span>
+                  <span className={`font-extrabold ${allFilled ? 'text-green-600' : 'text-amber-600'}`}>
+                    {filledCount}/{totalCount}
+                  </span>
+                </div>
+                <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${allFilled ? 'bg-green-500' : 'bg-amber-400'}`}
+                    style={{ width: `${Math.round((filledCount / totalCount) * 100)}%` }}
+                  />
+                </div>
+                <div className="mt-2 flex items-center gap-2">
+                  {isVerified && <span className="text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded-full font-semibold">✅ Pago verificado</span>}
+                  {isInReview && <span className="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full font-semibold">⏳ Pago en revisión</span>}
+                  {!isVerified && !isInReview && <span className="text-xs text-red-700 bg-red-50 px-2 py-0.5 rounded-full font-semibold">💳 Pago pendiente</span>}
+                </div>
+              </div>
+
+              {/* CTA principal según estado */}
+              {!allFilled && (
+                <a href={`/eliminatorias/llenar/${code}`}
+                  className="block w-full bg-green-600 hover:bg-green-700 text-white font-extrabold py-4 rounded-xl text-center text-base shadow-lg transition-all active:scale-95 mb-2">
+                  ⚽ Continuar llenando quiniela ({filledCount}/{totalCount})
+                </a>
+              )}
+
+              {allFilled && !isVerified && !isInReview && (
+                <a href={`/eliminatorias/pago/${code}`}
+                  className="block w-full bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-extrabold py-4 rounded-xl text-center text-base shadow-lg transition-all active:scale-95 mb-2">
+                  💳 Reportar pago
+                </a>
+              )}
+
+              {allFilled && (isVerified || isInReview) && (
+                <a href={`/eliminatorias/mi-quiniela/${code}`}
+                  className="block w-full bg-green-600 hover:bg-green-700 text-white font-extrabold py-4 rounded-xl text-center text-base shadow-lg transition-all active:scale-95 mb-2">
+                  📋 Ver mi quiniela
+                </a>
+              )}
+
+              {/* CTAs secundarios */}
+              <div className="flex gap-2 mt-1">
+                {allFilled && !isVerified && !isInReview && (
+                  <a href={`/eliminatorias/llenar/${code}`}
+                    className="flex-1 text-center py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm hover:bg-slate-50">
+                    Ver pronósticos
+                  </a>
+                )}
+                <a href="/eliminatorias/ranking"
+                  className="flex-1 text-center py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm hover:bg-slate-50">
+                  🏆 Ranking
+                </a>
+              </div>
             </>
           )}
-          <Link href="/eliminatorias/ranking"
-            className="block w-full bg-white border border-slate-200 text-slate-700 font-semibold py-3 rounded-xl hover:bg-slate-50 text-center">
-            🏆 Ver ranking
-          </Link>
         </div>
+        <button onClick={() => { setRegStep('choose'); setLookupQuery('') }}
+          className="w-full text-slate-400 text-sm py-2 hover:text-slate-600">← Volver</button>
       </div>
-    </div>
-  )
+    )
+  }
 
-  // ── STEP: not-found ──────────────────────────────────────────────────────────
   if (regStep === 'not-found') return (
     <div className="max-w-lg mx-auto py-2 pb-10">
       {header}
@@ -352,13 +418,10 @@ export default function KORegistroPage() {
         <div className="text-4xl mb-3">🔍</div>
         <h2 className="font-extrabold text-slate-800 text-lg mb-2">No encontramos datos previos</h2>
         <p className="text-slate-600 text-sm mb-1">
-          No encontramos ningún participante con la cédula o WhatsApp:
+          No encontramos ningún participante con:
         </p>
         <p className="font-mono font-bold text-slate-800 mb-4 bg-white border rounded-lg px-3 py-1.5 inline-block">
           {lookupQuery}
-        </p>
-        <p className="text-xs text-slate-500 mb-5">
-          Puede que nunca hayas participado antes, o que hayas usado un número diferente.
         </p>
         <div className="space-y-2">
           <button onClick={() => {
@@ -380,12 +443,12 @@ export default function KORegistroPage() {
     </div>
   )
 
-  // ── STEP: new ────────────────────────────────────────────────────────────────
+  // STEP: new
   return (
     <div className="max-w-lg mx-auto py-2 pb-10">
       {header}
       <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-5 text-xs text-blue-700">
-        <strong>Tu cédula es tu identificador.</strong> La usarás para acceder a tu quiniela. No necesitas recordar ningún código adicional.
+        <strong>Tu cédula es tu identificador.</strong> La usarás para acceder a tu quiniela.
       </div>
       <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4 mb-4">
         {field('nombre',   'Nombre completo',     'Ej: Carlos Eduardo Acosta',    true)}

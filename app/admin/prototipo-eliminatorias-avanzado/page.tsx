@@ -537,7 +537,7 @@ const REGISTRATION_DEADLINE = new Date('2026-06-28T19:00:00Z')
 
 export default function PrototipoEliminatoriasV3() {
   const router = useRouter()
-  const [view, setView] = useState<View>('registro')
+  const [view, setView] = useState<View>('home')
   const isOpen = Date.now() < REGISTRATION_DEADLINE.getTime()
   const [picks, setPicks] = useState<Picks>({})
   const [activeStage, setActiveStage] = useState<Stage>('R32')
@@ -1113,17 +1113,17 @@ export default function PrototipoEliminatoriasV3() {
 
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center w-full max-w-sm sm:max-w-none">
-              <button
-                onClick={() => setView(registered || filledCount > 0 ? 'llenado' : 'registro')}
+              <a
+                href="/eliminatorias/registro"
                 className="ko-btn-cta group relative bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-slate-900 font-extrabold px-8 py-4 rounded-2xl text-base sm:text-lg shadow-2xl inline-flex items-center gap-2 w-full sm:w-auto justify-center touch-manipulation"
                 style={{ boxShadow: '0 8px 32px rgba(251,191,36,0.4), 0 2px 8px rgba(0,0,0,0.3)' }}
               >
                 <span className="text-xl group-hover:scale-110 transition-transform">⚽</span>
-                {filledCount > 0 ? 'Continuar quiniela' : 'Participar ahora'}
+                Participar ahora
                 <span className="absolute -top-2.5 -right-2.5 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg border border-red-400">
                   20 USD
                 </span>
-              </button>
+              </a>
               <button
                 onClick={() => setView('ranking')}
                 className="bg-white/15 hover:bg-white/25 active:bg-white/30 backdrop-blur-md border border-white/30 text-white font-semibold px-7 py-4 rounded-2xl text-base transition-all hover:-translate-y-0.5 inline-flex items-center gap-2 w-full sm:w-auto justify-center touch-manipulation"
@@ -1379,12 +1379,12 @@ export default function PrototipoEliminatoriasV3() {
             </div>
 
             <div className="text-center mt-8">
-              <button
-                onClick={() => setView(registered || filledCount > 0 ? 'llenado' : 'registro')}
+              <a
+                href="/eliminatorias/registro"
                 className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold px-8 py-3.5 rounded-2xl transition-all shadow-lg hover:shadow-green-500/25 hover:-translate-y-0.5 text-sm touch-manipulation"
               >
                 ⚽ Empezar ahora · 20 USD
-              </button>
+              </a>
             </div>
           </section>
 
@@ -1786,12 +1786,12 @@ export default function PrototipoEliminatoriasV3() {
               <p className="text-green-100 mb-8 max-w-md mx-auto">
                 Predice los 32 partidos de la fase eliminatoria y compite por el primer lugar.
               </p>
-              <button
-                onClick={() => setView(registered || filledCount > 0 ? 'llenado' : 'registro')}
+              <a
+                href="/eliminatorias/registro"
                 className="ko-btn-cta inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-slate-900 font-extrabold px-10 py-4 rounded-2xl text-lg shadow-xl touch-manipulation"
               >
-                ⚽ {registered || filledCount > 0 ? 'Llenar mi quiniela' : 'Inscribirme ahora'} · 20 USD
-              </button>
+                ⚽ Inscribirme ahora · 20 USD
+              </a>
               <p className="text-green-200 text-xs mt-4">Pago Móvil Banesco · Zelle · 20 USD / 14.600 Bs · Tasa fija 730 Bs/USD</p>
             </div>
           </section>
