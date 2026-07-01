@@ -182,7 +182,7 @@ async function fetchPlayerGoals() {
   })
 }
 
-// ── Team stats: ESPN sin caché (real-time) + override con DB cuando esté disponible ──
+// ── Team stats: DB para grupos + ESPN por fecha específica para KO ────────────
 async function fetchTeamStats() {
   type T = {
     name: string; code: string; flagUrl: string | null
@@ -191,91 +191,74 @@ async function fetchTeamStats() {
   }
   const map: Record<string, T> = {}
 
-  // Seed con los 32 equipos de R32 para garantizar que aparezcan todos
-  for (const m of KNOCKOUT_MATCHES.filter(m => m.stage === 'R32')) {
-    for (const side of [m.home, m.away]) {
-      if (side.code && side.name && !map[side.code]) {
-        map[side.code] = { name: side.name, code: side.code, flagUrl: flagUrl(side.code), played: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0 }
-      }
-    }
+  function addResult(
+    code: string, name: string, fl: string | null,
+    score: number, oppScore: number, won: boolean, lost: boolean,
+  ) {
+    if (!map[code]) map[code] = { name, code, flagUrl: fl, played: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0 }
+    const t = map[code]
+    t.played++
+    t.goalsFor     += score
+    t.goalsAgainst += oppScore
+    if (won)       t.wins++
+    else if (lost) t.losses++
+    else           t.draws++
   }
 
-  // ── ESPN sin caché: datos en tiempo real de todos los partidos finalizados ──
-  const r = await fetch(
-    'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260611-20260719&limit=300',
-    { cache: 'no-store', signal: AbortSignal.timeout(12000) }
-  )
-  if (r.ok) {
-    const d = await r.json()
-    for (const ev of d.events ?? []) {
-      const comp = ev.competitions?.[0]
-      if (!comp?.status?.type?.completed) continue
-      const comps: any[] = comp.competitors ?? []
-      if (comps.length !== 2) continue
-
-      const [c0, c1] = comps
-      const s0 = parseInt(c0.score ?? '0', 10)
-      const s1 = parseInt(c1.score ?? '0', 10)
-
-      for (const [c, score, oppScore] of [[c0, s0, s1], [c1, s1, s0]] as const) {
-        const espnCode = (c as any).team?.abbreviation ?? ''
-        const code     = isoCode(espnCode)
-        const name     = fixEncoding((c as any).team?.displayName ?? (c as any).team?.location ?? code)
-        const won      = (c as any).winner === true
-        const lost     = comps.find((x: any) => x !== c)?.winner === true
-
-        if (!map[code]) {
-          map[code] = { name, code, flagUrl: flagUrl(code), played: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0 }
-        }
-        const t = map[code]
-        t.played++
-        t.goalsFor     += score as number
-        t.goalsAgainst += oppScore as number
-        if (won)       t.wins++
-        else if (lost) t.losses++
-        else           t.draws++
-      }
-    }
-  }
-
-  // ── Override con DB para partidos KO que el admin ya ingresó manualmente ──
-  // Esto garantiza que los datos de penales sean exactos cuando están disponibles
+  // ── 1. Fase de grupos desde DB (precisa, auto-actualizada por cron) ──────────
   try {
-    const koResults = await prisma.kOMatchResult.findMany({
-      where: { status: 'FINISHED', homeGoals: { not: null }, awayGoals: { not: null } },
+    const groupMatches = await prisma.match.findMany({
+      where: { status: 'FINISHED', team1Goals: { not: null }, team2Goals: { not: null } },
+      include: { team1: true, team2: true },
     })
-    const resultById = new Map(koResults.map(r => [r.id, r]))
-    const koWithResult = KNOCKOUT_MATCHES.map(m => {
-      const res = resultById.get(m.id)
-      return {
-        ...m,
-        result: res && res.homeGoals != null && res.awayGoals != null ? {
-          homeGoals: res.homeGoals, awayGoals: res.awayGoals,
-          penaltyWinner: res.penaltyWinner ?? null, status: res.status,
-        } : null,
-      }
-    })
-    const byNumber = buildKOByNumber(koWithResult)
-
-    for (const res of koResults) {
-      if (res.homeGoals == null || res.awayGoals == null) continue
-      const rawMatch = KNOCKOUT_MATCHES.find(m => m.id === res.id)
-      if (!rawMatch) continue
-      const resolved = resolveKOMatch(rawMatch, byNumber)
-      if (!resolved.home.code || !resolved.away.code || !resolved.home.name || !resolved.away.name) continue
-
-      // Si ESPN ya contó este partido, restar para evitar doble conteo
-      // ESPN identifica equipos por su abrev, que puede diferir — usamos nuestro código FIFA
-      // La forma más segura: si el equipo ya tiene datos, dejar ESPN (ya es correcto)
-      // Solo si hay discrepancia de penales (empate con penaltyWinner), corregir W/L
-      for (const [code, isHome] of [[resolved.home.code, true], [resolved.away.code, false]] as const) {
-        if (!map[code]) continue
-        // En empate con penales: ESPN también marca winner=true/false correctamente,
-        // así que no es necesario corregir — ESPN ya lo tiene bien.
-        // Este bloque es reservado para correcciones futuras si ESPN difiere.
-      }
+    for (const m of groupMatches) {
+      if (m.team1Goals == null || m.team2Goals == null) continue
+      const t1won = m.team1Goals > m.team2Goals
+      const t2won = m.team2Goals > m.team1Goals
+      addResult(m.team1.fifaCode, m.team1.displayName, flagUrl(m.team1.fifaCode), m.team1Goals, m.team2Goals, t1won, t2won)
+      addResult(m.team2.fifaCode, m.team2.displayName, flagUrl(m.team2.fifaCode), m.team2Goals, m.team1Goals, t2won, t1won)
     }
-  } catch { /* DB opcional — ESPN ya tiene los datos */ }
+  } catch { /* continúa sin datos de grupos */ }
+
+  // ── 2. Fase KO: ESPN por fecha específica (sin caché, en tiempo real) ────────
+  // Solo fechas pasadas de partidos KO según nuestro calendario estático
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const pastKODates = [...new Set(
+    KNOCKOUT_MATCHES
+      .filter(m => m.date <= todayStr)
+      .map(m => m.date.replace(/-/g, ''))
+  )]
+
+  await Promise.allSettled(
+    pastKODates.map(async dateStr => {
+      try {
+        const r = await fetch(
+          `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${dateStr}&limit=20`,
+          { cache: 'no-store', signal: AbortSignal.timeout(8000) }
+        )
+        if (!r.ok) return
+        const d = await r.json()
+        for (const ev of d.events ?? []) {
+          const comp = ev.competitions?.[0]
+          if (!comp?.status?.type?.completed) continue
+          const comps: any[] = comp.competitors ?? []
+          if (comps.length !== 2) continue
+
+          const [c0, c1] = comps
+          const s0 = parseInt(c0.score ?? '0', 10)
+          const s1 = parseInt(c1.score ?? '0', 10)
+          for (const [c, score, oppScore] of [[c0, s0, s1], [c1, s1, s0]] as const) {
+            const espnCode = (c as any).team?.abbreviation ?? ''
+            const code     = isoCode(espnCode)
+            const name     = fixEncoding((c as any).team?.displayName ?? (c as any).team?.location ?? code)
+            const won      = (c as any).winner === true
+            const lost     = comps.find((x: any) => x !== c)?.winner === true
+            addResult(code, name, flagUrl(code), score as number, oppScore as number, won, lost)
+          }
+        }
+      } catch { /* ignora error de fecha individual */ }
+    })
+  )
 
   return Object.values(map)
     .filter(t => t.played > 0)
