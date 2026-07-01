@@ -287,7 +287,8 @@ export const revalidate = 0
 export async function GET() {
   const [pRes, tRes] = await Promise.allSettled([fetchPlayerGoals(), fetchTeamStats()])
   return NextResponse.json({
-    players: pRes.status === 'fulfilled' ? pRes.value : null,
-    teams:   tRes.status === 'fulfilled' ? tRes.value : [],
+    players:   pRes.status === 'fulfilled' ? pRes.value : null,
+    teams:     tRes.status === 'fulfilled' ? tRes.value : [],
+    updatedAt: new Date().toISOString(),
   })
 }
