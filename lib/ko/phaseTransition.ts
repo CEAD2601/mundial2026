@@ -7,8 +7,16 @@ export const ACTIVE_PHASE_R16_FINAL = 'knockout_round_16_to_final'
 
 // ── Helper: fase KO activa ────────────────────────────────────────────────────
 export async function getActiveKOPhase(): Promise<string> {
-  const s = await prisma.setting.findFirst({ select: { activeKOPhase: true } })
-  return s?.activeKOPhase ?? ACTIVE_PHASE_R32
+  try {
+    // Usar query raw para evitar error si la columna activeKOPhase no existe aún en DB
+    const rows = await prisma.$queryRaw<Array<{ activeKOPhase?: string }>>`
+      SELECT "activeKOPhase" FROM "Setting" LIMIT 1
+    `
+    return rows[0]?.activeKOPhase ?? ACTIVE_PHASE_R32
+  } catch {
+    // Columna no existe todavía (prisma db push pendiente) → fase por defecto R32
+    return ACTIVE_PHASE_R32
+  }
 }
 
 // ── ¿Están todos los partidos de R32 finalizados? ────────────────────────────

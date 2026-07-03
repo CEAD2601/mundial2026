@@ -63,18 +63,24 @@ export async function GET() {
   try {
     await ensureKOTables()
 
-    const activePhase = await getActiveKOPhase()
+    let activePhase = await getActiveKOPhase()
 
-    // Todos los participantes verificados de la fase activa
-    const participants = await prisma.kOParticipant.findMany({
-      where: { phase: activePhase },
-      include: {
-        payment: true,
-        ranking: true,
-        picks:   true,   // necesario para calcular diferencia de goles
-      },
-      orderBy: { createdAt: 'asc' },
+    // Todos los participantes de la fase activa
+    let participants = await prisma.kOParticipant.findMany({
+      where:    { phase: activePhase },
+      include:  { payment: true, ranking: true, picks: true },
+      orderBy:  { createdAt: 'asc' },
     }) as unknown as VerifiedParticipant[]
+
+    // Fallback: si la columna phase no existe o la fase activa no tiene participantes
+    if (participants.length === 0 && activePhase !== 'R32') {
+      activePhase = 'R32'
+      participants = await prisma.kOParticipant.findMany({
+        where:    { phase: 'R32' },
+        include:  { payment: true, ranking: true, picks: true },
+        orderBy:  { createdAt: 'asc' },
+      }) as unknown as VerifiedParticipant[]
+    }
 
     const verified = participants.filter(p => p.payment?.paymentStatus === 'VERIFIED')
 
