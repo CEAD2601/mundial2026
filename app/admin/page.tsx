@@ -356,46 +356,158 @@ async function DashboardDieciseisavos() {
   )
 }
 
-// ── OCTAVOS A FINAL (próximamente) ───────────────────────────────────────────
-function DashboardOctavos() {
+// ── OCTAVOS A FINAL (dashboard real) ─────────────────────────────────────────
+async function DashboardOctavos() {
+  const PHASE      = 'knockout_round_16_to_final'
+  const ENTRY_USD  = 20
+  const FIXED_RATE = 730
+
+  const allKO = await prisma.kOParticipant.findMany({
+    where:   { phase: PHASE },
+    include: { payment: true, picks: { select: { matchId: true } } },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  const totalKO    = allKO.length
+  const completeKO = allKO.filter(p => p.isComplete).length
+  const verifiedKO = allKO.filter(p => p.payment?.paymentStatus === 'VERIFIED').length
+  const inReviewKO = allKO.filter(p => p.payment?.paymentStatus === 'IN_REVIEW').length
+  const rejectedKO = allKO.filter(p => p.payment?.paymentStatus === 'REJECTED').length
+  const pendingKO  = allKO.filter(p => !p.payment || p.payment.paymentStatus === 'PENDING').length
+
+  const recentPaymentsKO      = allKO.filter(p => p.payment?.paymentStatus === 'IN_REVIEW').slice(0, 5)
+  const recentRegistrationsKO = allKO.slice(0, 8)
+
+  const totalPool = verifiedKO * ENTRY_USD
+  const prize1    = totalPool * 0.65
+  const prize2    = totalPool * 0.20
+  const orgFee    = totalPool * 0.15
+  const ENTRY_VES = ENTRY_USD * FIXED_RATE
+
   return (
     <div className="p-4 sm:p-6">
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-5 flex items-center gap-3 text-sm">
-        <span className="text-xl shrink-0">⏳</span>
-        <div>
-          <span className="font-semibold text-blue-800">Octavos a Final — Próximamente</span>
-          <span className="ml-2 text-xs text-blue-600">Esta quiniela se activará cuando finalicen los Dieciseisavos.</span>
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-5 flex items-center justify-between gap-3 text-sm">
+        <div className="flex items-center gap-3">
+          <span className="text-xl shrink-0">🔵</span>
+          <div>
+            <span className="font-semibold text-blue-800">Octavos a Final — Abierto para inscripciones</span>
+            <span className="ml-2 text-xs text-blue-600">Registro por link directo. Independiente de Dieciseisavos.</span>
+          </div>
         </div>
+        <Link href="/admin/eliminatorias/octavos"
+          className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl transition-colors whitespace-nowrap">
+          Admin KO →
+        </Link>
       </div>
 
       <h1 className="text-2xl font-bold text-slate-800 mb-4">Dashboard · Octavos a Final</h1>
 
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-10 text-center mb-5">
-        <div className="text-6xl mb-4">⏳</div>
-        <p className="text-slate-700 font-extrabold text-xl mb-2">Quiniela Octavos a Final</p>
-        <p className="text-slate-500 text-sm max-w-sm mx-auto">
-          Esta quiniela todavía no está abierta. Se activará cuando finalicen los Dieciseisavos y se configure la apertura desde Configuración.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
         {[
-          { icon: '👥', title: 'Inscripciones',    desc: 'Nuevas inscripciones independientes. Se reutilizan datos de persona si la cédula ya existe.' },
-          { icon: '💳', title: 'Pagos',            desc: 'Nuevo pago independiente. Los pagos de etapas anteriores no cuentan aquí.' },
-          { icon: '📋', title: 'Quinielas',        desc: 'Pronósticos desde Cuartos de Final hasta la Gran Final.' },
-          { icon: '🏆', title: 'Ranking',          desc: 'Ranking propio. No se mezcla con Dieciseisavos ni Fase de Grupos.' },
-          { icon: '💰', title: 'Pozo',             desc: 'Pozo independiente calculado solo con pagos verificados de esta etapa.' },
-          { icon: '⚽', title: 'Resultados',       desc: 'Partidos desde Octavos hasta la Final.' },
-        ].map(({ icon, title, desc }) => (
-          <div key={title} className="bg-white rounded-xl border border-slate-100 p-4 opacity-60">
-            <div className="flex items-center gap-2 mb-1">
-              <span>{icon}</span>
-              <span className="font-semibold text-slate-700">{title}</span>
-              <span className="ml-auto text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-bold">Próximamente</span>
-            </div>
-            <p className="text-xs text-slate-500">{desc}</p>
+          { val: totalKO,    label: 'Inscritos',           color: 'text-blue-600',    icon: '👥' },
+          { val: completeKO, label: 'Quinielas completas', color: 'text-indigo-600',  icon: '📋' },
+          { val: verifiedKO, label: 'Pagos verificados',   color: 'text-emerald-600', icon: '✅' },
+          { val: inReviewKO, label: 'En revisión',         color: 'text-orange-500',  icon: '⏳' },
+          { val: pendingKO,  label: 'Sin pago',            color: 'text-slate-500',   icon: '❌' },
+          { val: rejectedKO, label: 'Rechazados',          color: 'text-red-500',     icon: '🚫' },
+          { val: 15,         label: 'Partidos totales',    color: 'text-purple-600',  icon: '⚽' },
+          { val: completeKO, label: 'Quinielas completas', color: 'text-blue-500',    icon: '🔒' },
+        ].map(({ val, label, color, icon }) => (
+          <div key={label} className="bg-white rounded-xl shadow-sm p-3 sm:p-4 border border-slate-100">
+            <div className="text-lg sm:text-xl mb-0.5">{icon}</div>
+            <div className={`text-2xl sm:text-3xl font-bold ${color} leading-tight`}>{val}</div>
+            <div className="text-xs text-slate-500 mt-0.5 leading-snug">{label}</div>
           </div>
         ))}
+      </div>
+
+      {/* Prize pool */}
+      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-5 mb-5 text-white shadow-lg">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-bold text-lg">💰 Pozo · Octavos a Final</h2>
+          <div className="text-right text-sm">
+            <div className="text-blue-100">Tasa fija:</div>
+            <div className="font-bold">{FIXED_RATE} Bs/USD</div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-center">
+          {[
+            { label: 'Total recaudado',    usd: totalPool, ves: totalPool * FIXED_RATE, badge: null },
+            { label: '1er premio (65%)',   usd: prize1,    ves: prize1 * FIXED_RATE,    badge: '🥇' },
+            { label: '2do premio (20%)',   usd: prize2,    ves: prize2 * FIXED_RATE,    badge: '🥈' },
+            { label: 'Organización (15%)', usd: orgFee,    ves: orgFee * FIXED_RATE,    badge: '🏛️' },
+          ].map((row) => (
+            <div key={row.label} className="bg-white/20 rounded-xl p-3">
+              <div className="text-xs text-blue-100 mb-1">{row.badge} {row.label}</div>
+              <div className="text-xl font-extrabold">${row.usd.toFixed(0)}</div>
+              <div className="text-xs text-blue-100">{fmtVes(row.ves)} Bs</div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 text-xs text-blue-100 text-center">
+          Entrada: ${ENTRY_USD} USD / {fmtVes(ENTRY_VES)} Bs · {verifiedKO} pago{verifiedKO !== 1 ? 's' : ''} verificado{verifiedKO !== 1 ? 's' : ''}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Pagos en revisión */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-slate-700">⏳ Pagos en revisión</h2>
+            <Link href="/admin/eliminatorias/octavos" className="text-xs text-blue-600 hover:underline">Ver todos →</Link>
+          </div>
+          {recentPaymentsKO.length === 0 ? (
+            <p className="text-slate-400 text-sm text-center py-4">No hay pagos pendientes 🎉</p>
+          ) : (
+            <div className="space-y-2">
+              {recentPaymentsKO.map((p) => (
+                <div key={p.id} className="flex items-start justify-between py-2 border-b border-slate-50 last:border-0 gap-2">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-slate-700 truncate">{p.fullName}</div>
+                    <div className="text-xs text-slate-400">CI: {p.nationalId} · {p.phone}</div>
+                  </div>
+                  <Link href="/admin/eliminatorias/octavos"
+                    className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full hover:bg-orange-200 shrink-0 whitespace-nowrap">
+                    Verificar →
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Registros recientes */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-slate-700">👥 Registros recientes</h2>
+            <Link href="/admin/eliminatorias/octavos" className="text-xs text-blue-600 hover:underline">Ver todos →</Link>
+          </div>
+          <div className="space-y-2">
+            {recentRegistrationsKO.length === 0 ? (
+              <p className="text-slate-400 text-sm text-center py-4">Sin inscripciones aún en Octavos a Final</p>
+            ) : recentRegistrationsKO.map((p) => (
+              <div key={p.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                <div className="min-w-0">
+                  <div className="text-sm font-medium text-slate-700 truncate">{p.fullName}</div>
+                  <div className="text-xs text-slate-400">{p.picks.length}/15 picks</div>
+                </div>
+                <div className="flex items-center gap-1 shrink-0 ml-2">
+                  {p.isComplete && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">✓ Completa</span>}
+                  <span className={`text-xs px-1.5 py-0.5 rounded ${
+                    p.payment?.paymentStatus === 'VERIFIED'  ? 'bg-green-100 text-green-700' :
+                    p.payment?.paymentStatus === 'IN_REVIEW' ? 'bg-orange-100 text-orange-700' :
+                    p.payment?.paymentStatus === 'REJECTED'  ? 'bg-red-100 text-red-600' :
+                    'bg-slate-100 text-slate-500'
+                  }`}>
+                    {p.payment?.paymentStatus === 'VERIFIED'  ? 'Pagado' :
+                     p.payment?.paymentStatus === 'IN_REVIEW' ? 'En revisión' :
+                     p.payment?.paymentStatus === 'REJECTED'  ? 'Rechazado' : 'Sin pago'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   )

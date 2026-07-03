@@ -36,12 +36,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    if (isR16Final && activePhase !== ACTIVE_PHASE_R16_FINAL) {
-      return NextResponse.json(
-        { error: 'Las inscripciones para Octavos a Final aún no están abiertas.' },
-        { status: 403 }
-      )
-    }
+    // R16-Final acepta inscripciones por link directo aunque activePhase sea R32
 
     // Ya inscrito en esta misma fase
     const existing = await prisma.kOParticipant.findFirst({
