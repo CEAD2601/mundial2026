@@ -38,6 +38,9 @@ model Setting {
   poolPhase                       String   @default("GROUP_STAGE")
   nextPhaseLabel                  String   @default("Octavos · Cuartos · Semifinales · Final")
 
+  // Active KO phase: 'R32' | 'knockout_round_16_to_final'
+  activeKOPhase                   String   @default("R32")
+
   createdAt                       DateTime @default(now())
   updatedAt                       DateTime @updatedAt
 }
@@ -264,6 +267,7 @@ model KOParticipant {
   city              String?
   participationCode String    @unique
   phase             String    @default("R32")
+  lateRegistration  Boolean   @default(false)
   submittedAt       DateTime?
   isComplete        Boolean   @default(false)
   createdAt         DateTime  @default(now())
@@ -336,4 +340,15 @@ model KORankingSnapshot {
   updatedAt         DateTime @updatedAt
 
   participant KOParticipant @relation(fields: [participantId], references: [id])
+}
+
+// Snapshot histórico del ranking final por fase (inmutable después de crearlas)
+model KOPhaseSnapshot {
+  id                String   @id @default(cuid())
+  phase             String   @unique  // 'R32' | 'knockout_round_16_to_final'
+  title             String
+  finalizedAt       DateTime @default(now())
+  totalParticipants Int      @default(0)
+  dataJson          String   // JSON completo del ranking final
+  createdAt         DateTime @default(now())
 }

@@ -2,44 +2,60 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { generateKOCode } from '@/lib/ko/utils'
 import { ensureKOTables } from '@/lib/ko/migrate'
+import { getActiveKOPhase, ACTIVE_PHASE_R32, ACTIVE_PHASE_R16_FINAL } from '@/lib/ko/phaseTransition'
 import { z } from 'zod'
 
 const registerSchema = z.object({
-  fullName:   z.string().min(3, 'Nombre muy corto').max(100),
-  nationalId: z.string().min(6, 'Cédula inválida').max(10),
-  phone:      z.string().min(10, 'Teléfono inválido').max(15),
-  email:      z.string().email().optional().or(z.literal('')),
-  city:       z.string().optional(),
+  fullName:         z.string().min(3, 'Nombre muy corto').max(100),
+  nationalId:       z.string().min(6, 'Cédula inválida').max(10),
+  phone:            z.string().min(10, 'Teléfono inválido').max(15),
+  email:            z.string().email().optional().or(z.literal('')),
+  city:             z.string().optional(),
+  lateRegistration: z.boolean().optional(),
+  phase:            z.string().optional(),   // fase destino explícita
 })
 
-// ── INSCRIPCIONES CERRADAS ── 28-jun-2026 19:00 VET
-const REGISTRATION_CLOSED = true
+// ── INSCRIPCIONES R32 CERRADAS ── 28-jun-2026 19:00 VET
+const R32_REGISTRATION_CLOSED = true
 
 export async function POST(req: NextRequest) {
-  if (REGISTRATION_CLOSED) {
-    return NextResponse.json(
-      { error: 'Las inscripciones para la Quiniela Dieciseisavos están cerradas.' },
-      { status: 403 }
-    )
-  }
-
   try {
     await ensureKOTables()
     const body = await req.json()
     const data = registerSchema.parse(body)
 
-    // Un participante no puede inscribirse dos veces en la misma fase KO
+    const activePhase   = await getActiveKOPhase()
+    const targetPhase   = data.phase ?? activePhase
+    const isR16Final    = targetPhase === ACTIVE_PHASE_R16_FINAL
+
+    // R32 cerrado; R16-FINAL abierto cuando es la fase activa
+    if (!isR16Final && R32_REGISTRATION_CLOSED && !data.lateRegistration) {
+      return NextResponse.json(
+        { error: 'Las inscripciones para la Quiniela Dieciseisavos están cerradas.' },
+        { status: 403 }
+      )
+    }
+
+    if (isR16Final && activePhase !== ACTIVE_PHASE_R16_FINAL) {
+      return NextResponse.json(
+        { error: 'Las inscripciones para Octavos a Final aún no están abiertas.' },
+        { status: 403 }
+      )
+    }
+
+    // Ya inscrito en esta misma fase
     const existing = await prisma.kOParticipant.findFirst({
-      where: { nationalId: data.nationalId, phase: 'R32' },
+      where: { nationalId: data.nationalId, phase: targetPhase },
     })
     if (existing) {
+      const label = isR16Final ? 'Octavos a Final' : 'Dieciseisavos'
       return NextResponse.json(
-        { error: 'Ya estás inscrito en Dieciseisavos', code: existing.participationCode },
+        { error: `Ya estás inscrito en ${label}`, code: existing.participationCode },
         { status: 409 }
       )
     }
 
-    // Generar código único KO26-XXXXXX
+    // Generar código único
     let code = generateKOCode()
     let attempts = 0
     while (await prisma.kOParticipant.findUnique({ where: { participationCode: code } })) {
@@ -55,7 +71,8 @@ export async function POST(req: NextRequest) {
         email:             data.email || null,
         city:              data.city  || null,
         participationCode: code,
-        phase:             'R32',
+        phase:             targetPhase,
+        lateRegistration:  data.lateRegistration === true,
       },
     })
 
@@ -69,6 +86,7 @@ export async function POST(req: NextRequest) {
         id:                participant.id,
         participationCode: participant.participationCode,
         fullName:          participant.fullName,
+        phase:             participant.phase,
       },
     })
   } catch (err: unknown) {
@@ -87,6 +105,7 @@ export async function GET(req: NextRequest) {
     const code       = searchParams.get('code')
     const nationalId = searchParams.get('nationalId')
     const phone      = searchParams.get('phone')
+    const phaseParam = searchParams.get('phase')   // buscar en una fase específica
 
     if (code) {
       const p = await prisma.kOParticipant.findUnique({
@@ -97,22 +116,43 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ participant: p })
     }
 
+    const activePhase = await getActiveKOPhase()
+
     if (nationalId) {
-      const p = await prisma.kOParticipant.findFirst({ where: { nationalId, phase: 'R32' } })
+      // Buscar en la fase solicitada (o en cualquier fase para "ya participé")
+      const whereClause = phaseParam
+        ? { nationalId, phase: phaseParam }
+        : { nationalId }
+      const p = await prisma.kOParticipant.findFirst({ where: whereClause })
       if (!p) return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
-      return NextResponse.json({ participationCode: p.participationCode, fullName: p.fullName })
+      return NextResponse.json({
+        participationCode: p.participationCode,
+        fullName:          p.fullName,
+        phone:             p.phone,
+        nationalId:        p.nationalId,
+        phase:             p.phase,
+        city:              p.city,
+      })
     }
 
     if (phone) {
       const last10 = phone.replace(/\D/g, '').slice(-10)
-      const p = await prisma.kOParticipant.findFirst({
-        where: { phone: { endsWith: last10 }, phase: 'R32' },
-      })
+      const whereClause = phaseParam
+        ? { phone: { endsWith: last10 }, phase: phaseParam }
+        : { phone: { endsWith: last10 } }
+      const p = await prisma.kOParticipant.findFirst({ where: whereClause })
       if (!p) return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
-      return NextResponse.json({ participationCode: p.participationCode, fullName: p.fullName })
+      return NextResponse.json({
+        participationCode: p.participationCode,
+        fullName:          p.fullName,
+        phone:             p.phone,
+        nationalId:        p.nationalId,
+        phase:             p.phase,
+        city:              p.city,
+      })
     }
 
-    // Buscar datos previos de Fase de Grupos para pre-llenar formulario
+    // Pre-llenar desde Fase de Grupos
     const prefill = searchParams.get('prefill')
     if (prefill) {
       const p = await prisma.participant.findUnique({ where: { nationalId: prefill } })

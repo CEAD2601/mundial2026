@@ -1,478 +1,676 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { KNOCKOUT_MATCHES } from '@/lib/prototype/knockout-data'
 
 // ── Types ────────────────────────────────────────────────────────────────────
+
 type KOEntry = {
-  position: number
-  previousPosition: number | null
-  movement: number
+  position:          number
+  previousPosition:  number | null
+  movement:          number
   participationCode: string
-  fullName: string
-  city: string | null
-  totalPoints: number
+  fullName:          string
+  city:              string | null
+  totalPoints:       number
   classifiedCorrect: number
-  exactScores: number
-  penaltyBonus: number
-  playedMatches: number
-  paymentStatus: string
+  exactScores:       number
+  penaltyBonus:      number
+  playedMatches:     number
 }
 
-type MatchResult = {
-  id: string
-  homeGoals: number | null
-  awayGoals: number | null
+type KOResult = {
+  id:            string
+  homeGoals:     number | null
+  awayGoals:     number | null
   penaltyWinner: string | null
-  status: string
+  status:        string
 }
 
-type GruposEntry = {
-  pos: number; name: string; pts: number; exact: number; correct: number; move: number
+type PickEntry = {
+  participationCode: string
+  fullName:          string
+  homeGoals:         number | null
+  awayGoals:         number | null
+  penaltyWinner:     string | null
+  points:            number | null
+  hasPick:           boolean
+  lateRegistration:  boolean
+}
+
+// ── Flag helpers ─────────────────────────────────────────────────────────────
+
+const SPECIAL_FLAGS: Record<string, string> = {
+  '🏴󠁧󠁢󠁥󠁮󠁧󠁿': 'gb-eng',
+  '🏴󠁧󠁢󠁳󠁣󠁴󠁿': 'gb-sct',
+  '🏴󠁧󠁢󠁷󠁬󠁳󠁿': 'gb-wls',
+}
+
+function emojiToFlagUrl(flag: string | null | undefined): string | null {
+  if (!flag) return null
+  if (SPECIAL_FLAGS[flag]) return `https://flagcdn.com/w40/${SPECIAL_FLAGS[flag]}.png`
+  try {
+    const codePoints = [...flag].map(c => c.codePointAt(0)!)
+    if (codePoints.length < 2) return null
+    const iso2 = codePoints.map(cp => String.fromCharCode(cp - 0x1F1E6 + 65)).join('').toLowerCase()
+    if (!/^[a-z]{2}$/.test(iso2)) return null
+    return `https://flagcdn.com/w40/${iso2}.png`
+  } catch { return null }
+}
+
+function FlagImg({ flag, size = 24 }: { flag: string | null | undefined; size?: number }) {
+  const url = emojiToFlagUrl(flag)
+  if (!url) return null
+  return (
+    <img src={url} alt="" width={size} height={Math.round(size * 0.67)}
+      className="inline-block object-cover rounded-sm shrink-0 align-middle"
+      style={{ width: size, height: Math.round(size * 0.67) }}
+    />
+  )
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+
+const PREPOSITIONS = new Set(['de', 'del', 'van', 'von', 'da', 'di', 'du', 'la', 'le', 'los'])
+
+function titleCase(s: string): string {
+  // \b no funciona bien con vocales acentuadas; usamos split por espacio
+  return s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+}
+
 function formatPublicName(full: string): string {
-  const parts = full.trim().split(/\s+/)
-  if (parts.length <= 1) return full
-  return parts[0] + ' ' + parts[parts.length - 1][0] + '.'
+  const raw   = full.trim().replace(/\s+/g, ' ')
+  const parts = raw.split(' ')
+
+  let display: string
+  if (parts.length <= 2) {
+    display = raw
+  } else if (parts.length === 3) {
+    // "Andres De Sa" — preposición en el medio = apellido compuesto → mostrar todo
+    display = PREPOSITIONS.has(parts[1].toLowerCase())
+      ? raw
+      : parts[0] + ' ' + parts[1]   // "Guillermo Santana Gonzalez" → "Guillermo Santana"
+  } else {
+    // 4+ palabras: primer nombre + primer apellido (posición central)
+    const idx = Math.floor(parts.length / 2)
+    display = PREPOSITIONS.has(parts[idx].toLowerCase())
+      ? parts[0] + ' ' + parts[idx] + ' ' + (parts[idx + 1] ?? '')  // "Andres De Sa"
+      : parts[0] + ' ' + parts[idx]                                   // "Minerva Valletta"
+  }
+
+  return titleCase(display)
 }
 
-const todayStr = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Caracas' })
+function toVetDateStr(d: Date): string {
+  return d.toLocaleDateString('sv-SE', { timeZone: 'America/Caracas' })
+}
 
-function shortDateLabel(d: string) {
-  const today = todayStr()
-  if (d === today) return 'Hoy'
-  const [y, mo, dy] = d.split('-').map(Number)
+function shortDateLabel(dateStr: string, today: string): string {
+  if (dateStr === today) return 'Hoy'
+  const [y, mo, dy] = dateStr.split('-').map(Number)
   const dt = new Date(`${y}-${String(mo).padStart(2,'0')}-${String(dy).padStart(2,'0')}T12:00:00-04:00`)
-  return dt.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
+  return dt.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })
 }
 
-// ── Main Component ────────────────────────────────────────────────────────────
-export default function KORankingPage() {
-  const [tab, setTab]           = useState<'grupos' | 'dieciseisavos' | 'octavos'>('dieciseisavos')
-  const [ranking, setRanking]   = useState<KOEntry[]>([])
-  const [results, setResults]   = useState<Record<string, MatchResult>>({})
-  const [grupos, setGrupos]     = useState<GruposEntry[]>([])
-  const [myCode, setMyCode]     = useState<string | null>(null)
-  const [rankDay, setRankDay]   = useState(todayStr())
-  const [loading, setLoading]   = useState(true)
+function ptsBadge(points: number | null): { txt: string; cls: string } | null {
+  if (points === null) return null
+  if (points === 5) return { txt: '+5 ⭐',  cls: 'bg-yellow-500 text-white' }
+  if (points === 4) return { txt: '+4 🎯',  cls: 'bg-green-600 text-white' }
+  if (points === 3) return { txt: '+1 ⭐',  cls: 'bg-yellow-100 text-yellow-800' }
+  if (points === 2) return { txt: '+2 🏆',  cls: 'bg-emerald-100 text-emerald-800' }
+  if (points === 0) return { txt: '0 ❌',   cls: 'bg-red-100 text-red-700' }
+  return null
+}
 
-  // Cargar datos
+// Prioridad VISUAL de orden (no el puntaje interno crudo): +4/+5 🎯 > +2 🏆 > +1 ⭐ (bono penales, 3 pts reales) > 0 ❌
+function visualScoreRank(points: number | null): number {
+  if (points === 4 || points === 5) return 4
+  if (points === 2)                 return 3
+  if (points === 3)                 return 2 // bono de penales, se muestra como "+1 ⭐"
+  return 1                                    // 0 pts u otro
+}
+
+function pickBgClass(points: number | null): string {
+  if (points === 5) return 'bg-yellow-50 border border-yellow-200'
+  if (points === 4) return 'bg-green-50 border border-green-200'
+  if (points === 3) return 'bg-yellow-50 border border-yellow-100'
+  if (points === 2) return 'bg-emerald-50 border border-emerald-100'
+  if (points === 0) return 'bg-red-50 border border-red-100'
+  return 'bg-white border border-slate-100'
+}
+
+// ── MatchCard (expandable, lazy-loads picks) ─────────────────────────────────
+
+function KOMatchCard({
+  match,
+  result,
+  now,
+  totalParticipants,
+}: {
+  match:             typeof KNOCKOUT_MATCHES[number]
+  result:            KOResult | null
+  now:               Date
+  totalParticipants: number
+}) {
+  const [expanded,  setExpanded]  = useState(false)
+  const [picks,     setPicks]     = useState<PickEntry[] | null>(null)
+  const [loading,   setLoading]   = useState(false)
+
+  const isFinished = result?.status === 'FINISHED'
+
+  // Detectar "en juego" por tiempo — KOMatchResult no tiene estado LIVE
+  const [hh, mm] = match.timeVet.split(':').map(Number)
+  const kickoffVet = new Date(`${match.date}T${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:00-04:00`)
+  const isStarted  = now >= kickoffVet
+  // En juego: kickoff pasó + no finalizado + máximo 3h desde el inicio (cubre tiempo extra)
+  const isLive = isStarted && !isFinished && (now.getTime() - kickoffVet.getTime()) < 3 * 60 * 60 * 1000
+
+  const homeName = match.home.name ?? match.home.placeholder
+  const awayName = match.away.name ?? match.away.placeholder
+
+  async function togglePicks() {
+    if (expanded) { setExpanded(false); return }
+    setExpanded(true)
+    if (picks !== null) return
+    setLoading(true)
+    try {
+      const res  = await fetch(`/api/ko/match-picks/${match.id}?_=${Date.now()}`, { cache: 'no-store' })
+      const data = await res.json()
+      // Copia defensiva: nunca mutar el array original devuelto por la API
+      const raw: PickEntry[] = [...(data.picks ?? [])]
+      raw.sort((a, b) => {
+        // Sin pronóstico siempre al final
+        if (!a.hasPick && b.hasPick) return 1
+        if (a.hasPick && !b.hasPick) return -1
+        if (!a.hasPick && !b.hasPick) return 0
+
+        // Partidos NO finalizados (pendientes o en juego): orden ascendente por marcador,
+        // agrupando juntos a quienes pusieron el mismo resultado. No aplica lógica de puntos.
+        if (!isFinished) {
+          const aH = a.homeGoals ?? 0, aA = a.awayGoals ?? 0
+          const bH = b.homeGoals ?? 0, bA = b.awayGoals ?? 0
+          const totalA = aH + aA, totalB = bH + bA
+          if (totalA !== totalB) return totalA - totalB
+          if (aH !== bH) return aH - bH
+          if (aA !== bA) return aA - bA
+          return a.fullName.localeCompare(b.fullName)
+        }
+
+        // 1. Orden principal: por prioridad VISUAL del badge (+4 > +2 > +1 ⭐ > 0),
+        // no por el puntaje interno crudo (el bono de penales vale 3 pts pero se muestra como "+1 ⭐"
+        // y debe listarse después de los +2 🏆, no antes).
+        const rankA = visualScoreRank(a.points)
+        const rankB = visualScoreRank(b.points)
+        if (rankA !== rankB) return rankB - rankA
+        // 2. Mismo puntaje: desempate por cercanía al marcador real
+        if (result && result.homeGoals != null && result.awayGoals != null) {
+          const rH = result.homeGoals as number
+          const rA = result.awayGoals as number
+          const aH = a.homeGoals ?? 0, aA = a.awayGoals ?? 0
+          const bH = b.homeGoals ?? 0, bA = b.awayGoals ?? 0
+          // 1. Distancia total: suma de diferencias absolutas por equipo
+          const diffA = Math.abs(aH - rH) + Math.abs(aA - rA)
+          const diffB = Math.abs(bH - rH) + Math.abs(bA - rA)
+          if (diffA !== diffB) return diffA - diffB
+          // 2. Menor diferencia de gol (diferencia de marcador) respecto al real
+          const realGD = rH - rA
+          const gdDiffA = Math.abs((aH - aA) - realGD)
+          const gdDiffB = Math.abs((bH - bA) - realGD)
+          if (gdDiffA !== gdDiffB) return gdDiffA - gdDiffB
+          // 3. Menor diferencia en los goles del ganador real
+          const realWinnerGoals = realGD > 0 ? rH : realGD < 0 ? rA : Math.max(rH, rA)
+          const aWinnerGoals = (aH - aA) > 0 ? aH : (aH - aA) < 0 ? aA : Math.max(aH, aA)
+          const bWinnerGoals = (bH - bA) > 0 ? bH : (bH - bA) < 0 ? bA : Math.max(bH, bA)
+          const wgDiffA = Math.abs(aWinnerGoals - realWinnerGoals)
+          const wgDiffB = Math.abs(bWinnerGoals - realWinnerGoals)
+          if (wgDiffA !== wgDiffB) return wgDiffA - wgDiffB
+        }
+        // 4. Orden alfabético como último criterio
+        return a.fullName.localeCompare(b.fullName)
+      })
+      setPicks(raw)
+    } catch {
+      setPicks([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className={`bg-white rounded-xl border shadow-sm overflow-hidden ${
+      isFinished ? 'border-green-100' : isStarted ? 'border-blue-200' : 'border-slate-100'
+    }`}>
+      <div className="p-4">
+        {/* Header row */}
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs text-slate-400">
+            Dieciseisavos · #{match.fifaMatchNumber}
+          </span>
+          {isFinished && (
+            <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Finalizado</span>
+          )}
+          {isLive && (
+            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full flex items-center gap-1 font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" /> En juego
+            </span>
+          )}
+          {!isFinished && !isLive && (
+            <span className="text-xs text-slate-400">{match.displayTime} VET</span>
+          )}
+        </div>
+
+        {/* Teams + score */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1 min-w-0 flex items-center gap-1.5">
+            <FlagImg flag={match.home.flag} size={22} />
+            <span className="font-semibold text-slate-800 text-sm">{homeName}</span>
+          </div>
+
+          {isFinished && result ? (
+            <div className="shrink-0 w-20 flex flex-col items-center">
+              <div className="w-20 h-9 flex items-center justify-center gap-2 bg-slate-800 text-white rounded-lg">
+                <span className="text-lg font-bold leading-none">{result.homeGoals}</span>
+                <span className="text-slate-400 text-sm leading-none">—</span>
+                <span className="text-lg font-bold leading-none">{result.awayGoals}</span>
+              </div>
+              {result.penaltyWinner && (
+                <p className="w-20 text-xs text-slate-500 mt-1 text-center truncate">
+                  Pen: {result.penaltyWinner === 'home' ? homeName : awayName}
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="shrink-0 w-20 flex flex-col items-center">
+              <div className="w-20 h-9 flex items-center justify-center">
+                <span className="text-slate-500 font-bold text-sm leading-none">vs</span>
+              </div>
+              <div className="w-20 text-xs text-slate-400 text-center truncate">{match.displayTime}</div>
+            </div>
+          )}
+
+          <div className="flex-1 flex justify-end items-center gap-1.5 min-w-0">
+            <span className="font-semibold text-slate-800 text-sm text-right">{awayName}</span>
+            <FlagImg flag={match.away.flag} size={22} />
+          </div>
+        </div>
+
+        <p className="text-xs text-slate-400 mt-2 truncate">📍 {match.venue} · {match.city}</p>
+
+        {/* Toggle */}
+        <div className="mt-3 pt-3 border-t border-slate-100">
+          <button
+            onClick={togglePicks}
+            className={`w-full flex items-center justify-center gap-2 text-sm font-semibold py-1.5 rounded-lg transition-colors ${
+              isFinished ? 'text-green-700 hover:bg-green-50' : 'text-blue-700 hover:bg-blue-50'
+            }`}
+          >
+            {expanded ? '▲ Ocultar pronósticos' : isFinished
+              ? `🏆 Ver puntos (${totalParticipants} participantes)`
+              : `👁 Ver pronósticos (${totalParticipants} participantes)`}
+          </button>
+        </div>
+      </div>
+
+      {/* Picks panel */}
+      {expanded && (
+        <div className="border-t border-slate-100 px-4 pb-4">
+          {loading ? (
+            <p className="text-center text-slate-400 text-sm py-4">Cargando pronósticos…</p>
+          ) : !picks || picks.length === 0 ? (
+            <p className="text-center text-slate-400 text-sm py-4">Sin pronósticos verificados</p>
+          ) : (
+            <div className="space-y-1.5 mt-3 max-h-80 overflow-y-auto pr-1">
+              {picks.map((pk, i) => {
+                const badge = pk.hasPick ? ptsBadge(pk.points) : null
+                return (
+                  <div key={pk.participationCode}
+                    className={`rounded-xl px-3 py-2 flex items-center justify-between gap-2 ${pk.hasPick ? pickBgClass(pk.points) : 'bg-slate-50 border border-slate-100 opacity-60'}`}>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-slate-400 text-xs font-mono w-5 text-right shrink-0">{i + 1}</span>
+                      <p className="font-semibold text-slate-800 text-sm truncate">{formatPublicName(pk.fullName)}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {pk.hasPick ? (
+                        <div className="bg-slate-700 text-white text-sm font-bold rounded-lg px-2.5 py-1 tabular-nums">
+                          {pk.homeGoals}–{pk.awayGoals}
+                          {pk.penaltyWinner && (
+                            <span className="text-slate-300 font-normal text-xs ml-1">
+                              (Pen {pk.penaltyWinner === 'home' ? '←' : '→'})
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-400 italic">Sin pronóstico</span>
+                      )}
+                      {badge && (
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${badge.cls}`}>{badge.txt}</span>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+          {!isFinished && (
+            <p className="text-xs text-slate-400 text-center mt-2">
+              Puntos pendientes hasta que finalice el partido.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Main Page ────────────────────────────────────────────────────────────────
+
+export default function KORankingPage() {
+  const [ranking,      setRanking]      = useState<KOEntry[]>([])
+  const [results,      setResults]      = useState<Record<string, KOResult>>({})
+  const [selectedDate, setSelectedDate] = useState('')
+  const [loadingRank,  setLoadingRank]  = useState(true)
+  const [myCode,       setMyCode]       = useState<string | null>(null)
+  const [now,          setNow]          = useState(() => new Date())
+  const [activePhase,  setActivePhase]  = useState<string>('R32')
+
+  const scrollRef      = useRef<HTMLDivElement>(null)
+  const activeDateRef  = useRef<HTMLButtonElement>(null)
+  const today          = toVetDateStr(now)
+
   useEffect(() => {
-    // Leer session local
+    // Leer código propio del participante
     try {
       const s = localStorage.getItem('ko_participant_session')
       if (s) setMyCode(JSON.parse(s).participationCode ?? null)
     } catch { /* ignore */ }
 
+    setSelectedDate(toVetDateStr(new Date()))
+
     async function load() {
-      const [rankRes, resultsRes, gruposRes] = await Promise.allSettled([
-        fetch('/api/ko/ranking').then(r => r.json()),
-        fetch('/api/ko/results').then(r => r.json()),
-        fetch('/api/ranking').then(r => r.json()),
+      const [rankRes, resultsRes, phaseRes] = await Promise.allSettled([
+        fetch(`/api/ko/ranking?_=${Date.now()}`, { cache: 'no-store' }).then(r => r.json()),
+        fetch(`/api/ko/results?_=${Date.now()}`, { cache: 'no-store' }).then(r => r.json()),
+        fetch('/api/ko/active-phase', { cache: 'no-store' }).then(r => r.json()),
       ])
 
-      if (rankRes.status === 'fulfilled')
+      if (rankRes.status === 'fulfilled') {
         setRanking(rankRes.value.ranking ?? [])
+        setLoadingRank(false)
+      }
+      if (phaseRes.status === 'fulfilled') {
+        setActivePhase(phaseRes.value.phase ?? 'R32')
+      }
 
       if (resultsRes.status === 'fulfilled') {
-        const map: Record<string, MatchResult> = {}
+        const map: Record<string, KOResult> = {}
         for (const m of (resultsRes.value.matches ?? [])) {
           if (m.result) map[m.id] = m.result
         }
         setResults(map)
       }
-
-      if (gruposRes.status === 'fulfilled') {
-        const raw = gruposRes.value.ranking ?? []
-        setGrupos(raw.slice(0, 30).map((e: {name:string;pts:number;exact:number;correct:number;move:number}, i: number) => ({
-          pos: i + 1, name: e.name, pts: e.pts, exact: e.exact, correct: e.correct, move: e.move ?? 0,
-        })))
-      }
-
-      setLoading(false)
     }
 
     load()
-
-    // Auto-refresh cada 60 s para actualizaciones en vivo
-    const iv = setInterval(load, 60_000)
+    const iv = setInterval(() => { load(); setNow(new Date()) }, 60_000)
     return () => clearInterval(iv)
   }, [])
 
+  // Scroll active date into view — instant on first render, smooth on user navigation
+  const isFirstScroll = useRef(true)
+  useEffect(() => {
+    if (!activeDateRef.current) return
+    const behavior = isFirstScroll.current ? 'instant' : 'smooth'
+    isFirstScroll.current = false
+    activeDateRef.current.scrollIntoView({ behavior: behavior as ScrollBehavior, inline: 'center', block: 'nearest' })
+  }, [selectedDate])
+
   // Derived
-  const top3 = ranking.slice(0, 3)
-  const podiumOrder = [top3[1] ?? null, top3[0] ?? null, top3[2] ?? null]
+  const allDates   = [...new Set(KNOCKOUT_MATCHES.map(m => m.date))].sort()
+  const activeDate = allDates.includes(selectedDate) ? selectedDate : (allDates[0] ?? selectedDate)
+  const dayMatches = KNOCKOUT_MATCHES.filter(m => m.date === activeDate).sort((a, b) => a.timeVet.localeCompare(b.timeVet))
 
-  const allDates = [...new Set(KNOCKOUT_MATCHES.map(m => m.date))].sort()
-  const activeDay = allDates.includes(rankDay) ? rankDay : (allDates[0] ?? rankDay)
-
-  const dayMatches = KNOCKOUT_MATCHES
-    .filter(m => m.date === activeDay)
-    .sort((a, b) => a.timeVet.localeCompare(b.timeVet))
-    .map(m => {
-      const res = results[m.id]
-      const status = res?.status ?? 'SCHEDULED'
-      return { ...m, result: res ?? null, liveStatus: status }
-    })
-
-  const totalPlayed = Object.values(results).filter(r => r.status === 'FINISHED').length
+  const top3         = ranking.slice(0, 3)
+  const podiumOrder  = [top3[1] ?? null, top3[0] ?? null, top3[2] ?? null]
+  const totalPlayed  = Object.values(results).filter(r => r.status === 'FINISHED').length
+  const finishedMatches = dayMatches.filter(m => results[m.id]?.status === 'FINISHED').length
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-16">
+    <div className="min-h-screen bg-slate-50 pb-10">
 
       {/* Header */}
       <header className="bg-gradient-to-r from-green-700 to-blue-700 text-white shadow-lg">
-        <div className="max-w-3xl mx-auto px-4 pt-5 pb-4">
-          <div className="flex items-center justify-between mb-1">
-            <h1 className="font-bold text-2xl">🏆 Ranking</h1>
-            <Link href="/eliminatorias" className="text-white/70 text-sm hover:text-white">← Inicio</Link>
-          </div>
-          <p className="text-green-200 text-sm">Quiniela Mundial 2026 · Cada quiniela es independiente</p>
-
-          {/* Tabs */}
-          <div className="flex gap-1 mt-4 overflow-x-auto scrollbar-none">
-            {([
-              { key: 'grupos',        label: 'Fase de Grupos' },
-              { key: 'dieciseisavos', label: 'Dieciseisavos'  },
-              { key: 'octavos',       label: 'Octavos a Final' },
-            ] as const).map(t => (
-              <button key={t.key} onClick={() => setTab(t.key)}
-                className={`shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-all border ${
-                  tab === t.key
-                    ? 'bg-white text-green-800 border-white shadow'
-                    : 'bg-white/10 text-white/75 border-white/20 hover:bg-white/20'
-                }`}>
-                {t.label}
-              </button>
-            ))}
-          </div>
-          <p className="text-green-300/80 text-[11px] mt-2">
-            {tab === 'dieciseisavos' && 'Ranking en vivo de la quiniela Dieciseisavos.'}
-            {tab === 'grupos'        && 'Ranking histórico de la quiniela de Fase de Grupos.'}
-            {tab === 'octavos'       && 'Próxima quiniela: Octavos hasta la Final.'}
-          </p>
+        <div className="max-w-3xl mx-auto px-4 py-5">
+          <h1 className="font-bold text-2xl">
+            🏆 Ranking — {activePhase === 'knockout_round_16_to_final' ? 'Octavos a Final' : 'Dieciseisavos'}
+          </h1>
+          <p className="text-green-200 text-sm">Quiniela Mundial 2026 · {ranking.length} participante{ranking.length !== 1 ? 's' : ''}</p>
         </div>
       </header>
 
       <div className="max-w-3xl mx-auto px-4 mt-5 space-y-5">
 
-        {/* ── FASE DE GRUPOS HISTÓRICO ── */}
-        {tab === 'grupos' && (
-          <div className="space-y-4">
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2">
-              <span className="text-amber-500 text-sm mt-0.5">📜</span>
-              <div>
-                <p className="text-amber-800 font-bold text-xs">Ranking histórico — Fase de Grupos 2026</p>
-                <p className="text-amber-700 text-[10px] mt-0.5">Puntos del torneo anterior. <strong>No se mezclan</strong> con el ranking de Dieciseisavos.</p>
-              </div>
-            </div>
+        {/* ── SECCIÓN PARTIDOS DEL DÍA ── */}
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-sm font-bold text-slate-600 uppercase tracking-wide">📅 Partidos del día</span>
+          </div>
 
-            {grupos.length >= 3 && (
-              <div className="flex items-end justify-center gap-3 pt-2">
-                {[grupos[1], grupos[0], grupos[2]].map((e, i) => e ? (
-                  <div key={e.pos} className="flex flex-col items-center">
-                    <div className="text-2xl mb-1">{['🥈','🥇','🥉'][i]}</div>
-                    <div className="text-center mb-2">
-                      <p className="font-bold text-slate-800 text-sm leading-tight">{formatPublicName(e.name)}</p>
-                      <p className="text-xs text-slate-500 mt-0.5">{e.pts} pts</p>
-                    </div>
-                    <div className={`${['h-20','h-28','h-16'][i]} w-24 ${['bg-slate-300','bg-yellow-400','bg-amber-300'][i]} rounded-t-xl flex items-center justify-center font-bold text-lg text-white`}>
-                      {i === 1 ? 1 : i === 0 ? 2 : 3}
-                    </div>
-                  </div>
-                ) : <div key={i} className="w-24" />)}
+          {/* Date selector */}
+          <div ref={scrollRef} className="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-hide">
+            {allDates.map(d => (
+              <button
+                key={d}
+                ref={d === activeDate ? activeDateRef : null}
+                onClick={() => setSelectedDate(d)}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+                  d === activeDate
+                    ? 'bg-green-600 text-white border-green-600'
+                    : d === today
+                    ? 'bg-white text-green-700 border-green-300 hover:bg-green-50'
+                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                {shortDateLabel(d, today)}
+              </button>
+            ))}
+          </div>
+
+          {/* Day stats */}
+          <div className="bg-white rounded-xl border border-slate-100 p-3 mb-3">
+            <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm">
+              <span className="text-slate-600">
+                <span className="font-bold text-slate-800">{dayMatches.length}</span> partido{dayMatches.length !== 1 ? 's' : ''}
+              </span>
+              {finishedMatches > 0 && (
+                <span className="text-green-700">
+                  ✅ <span className="font-bold">{finishedMatches}</span> finalizado{finishedMatches !== 1 ? 's' : ''}
+                </span>
+              )}
+              {dayMatches.length - finishedMatches > 0 && (
+                <span className="text-slate-400">
+                  🕐 <span className="font-bold">{dayMatches.length - finishedMatches}</span> por jugar
+                </span>
+              )}
+              {totalPlayed > 0 && ranking.length > 0 && (
+                <span className="text-yellow-700 font-medium">
+                  🏆 Líder: <span className="font-bold">{formatPublicName(ranking[0].fullName)}</span> ({ranking[0].totalPoints} pts)
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Legend */}
+          <div className="bg-white rounded-xl border border-slate-100 px-3 py-2 mb-3 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-slate-500">
+            <span>🏆 <strong>+2</strong> clasif. correcto</span>
+            <span>🎯 <strong>+2</strong> marcador exacto</span>
+            <span>⭐ <strong>+1</strong> bono penales</span>
+            <span className="text-slate-400">· Máx. <strong className="text-slate-600">5 pts</strong> por partido</span>
+          </div>
+
+          {/* Match cards */}
+          <div className="space-y-2">
+            {dayMatches.map(m => (
+              <KOMatchCard
+                key={m.id}
+                match={m}
+                result={results[m.id] ?? null}
+                now={now}
+                totalParticipants={ranking.length}
+              />
+            ))}
+            {dayMatches.length === 0 && (
+              <div className="bg-white rounded-xl border border-slate-100 p-6 text-center text-slate-400">
+                <div className="text-3xl mb-2">📅</div>
+                <p className="text-sm">No hay partidos para esta fecha.</p>
               </div>
             )}
-
-            <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-              <div className="bg-slate-50 border-b border-slate-100 px-3 py-2 grid grid-cols-12 text-xs font-medium text-slate-400">
-                <div className="col-span-1 text-center">#</div>
-                <div className="col-span-5">Participante</div>
-                <div className="col-span-2 text-center">Pts</div>
-                <div className="col-span-2 text-center">🎯 Exac.</div>
-                <div className="col-span-2 text-center">✅ Clas.</div>
-              </div>
-              {grupos.map(e => (
-                <div key={e.pos}
-                  className={`px-3 py-2.5 grid grid-cols-12 items-center border-b border-slate-50 last:border-0 ${e.pos <= 3 ? 'bg-yellow-50/40' : 'hover:bg-slate-50'}`}>
-                  <div className="col-span-1 text-center flex flex-col items-center">
-                    <span className="font-bold text-slate-700 text-sm">
-                      {e.pos <= 3 ? ['🥇','🥈','🥉'][e.pos - 1] : e.pos}
-                    </span>
-                    {e.move > 0 ? <span className="text-green-600 text-[10px] font-bold">↑{e.move}</span>
-                      : e.move < 0 ? <span className="text-red-500 text-[10px] font-bold">↓{Math.abs(e.move)}</span>
-                      : <span className="text-slate-300 text-[10px]">—</span>}
-                  </div>
-                  <div className="col-span-5">
-                    <p className="font-semibold text-slate-800 text-sm leading-tight">{formatPublicName(e.name)}</p>
-                  </div>
-                  <div className="col-span-2 text-center"><span className="font-bold text-slate-700 text-base">{e.pts}</span></div>
-                  <div className="col-span-2 text-center"><span className="text-sm text-slate-600">{e.exact}</span></div>
-                  <div className="col-span-2 text-center"><span className="text-sm font-semibold text-slate-700">{e.correct}</span></div>
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-slate-400 text-center">Ranking final · Fase de Grupos 2026 · {grupos.length} participantes</p>
-            <button onClick={() => setTab('dieciseisavos')}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl text-sm transition-all">
-              Ver Ranking Dieciseisavos →
-            </button>
           </div>
-        )}
+        </section>
 
-        {/* ── OCTAVOS (próxima) ── */}
-        {tab === 'octavos' && (
-          <div className="bg-slate-100 border border-slate-200 rounded-2xl p-8 text-center">
-            <div className="text-5xl mb-4">⏳</div>
-            <p className="text-slate-700 font-extrabold text-lg mb-2">Quiniela Octavos a Final</p>
-            <p className="text-slate-500 text-sm max-w-xs mx-auto">
-              Se activará cuando finalicen los Dieciseisavos y estén definidos los 16 clasificados.
-            </p>
-            <div className="mt-6 grid grid-cols-2 gap-2 max-w-xs mx-auto text-xs text-slate-500">
-              {['Octavos · R16', 'Cuartos · QF', 'Semifinales · SF', 'Final + 3er lugar'].map(s => (
-                <div key={s} className="bg-white border border-slate-200 rounded-lg px-3 py-2 flex items-center gap-1.5">
-                  🔒 {s}
-                </div>
-              ))}
-            </div>
-            <button onClick={() => setTab('dieciseisavos')}
-              className="mt-6 inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-all">
-              Ver Ranking Dieciseisavos →
-            </button>
-          </div>
-        )}
+        {/* ── RANKING GENERAL ── */}
+        <section>
+          <h2 className="text-sm font-bold text-slate-600 uppercase tracking-wide mb-3 flex items-center gap-2">
+            🏆 Ranking general
+          </h2>
 
-        {/* ── DIECISEISAVOS (activo) ── */}
-        {tab === 'dieciseisavos' && (
-          <>
-            {/* Partidos del día */}
-            <section>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-1 h-5 bg-green-500 rounded-full shrink-0" />
-                <h2 className="font-extrabold text-slate-800 text-base">Partidos del día</h2>
-              </div>
-
-              {/* Selector de fecha */}
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-                {allDates.map(d => (
-                  <button key={d} onClick={() => setRankDay(d)}
-                    className={`shrink-0 px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
-                      d === activeDay
-                        ? 'bg-green-600 text-white border-green-600 shadow-sm'
-                        : d === todayStr()
-                        ? 'bg-white text-green-700 border-green-300 hover:bg-green-50'
-                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                    }`}>
-                    {shortDateLabel(d)}
-                  </button>
-                ))}
-              </div>
-
-              {/* Cards de partidos */}
-              <div className="mt-2 space-y-2">
-                {dayMatches.map(m => {
-                  const isFinished = m.liveStatus === 'FINISHED'
-                  const isLive     = m.liveStatus === 'LIVE'
-                  const stageLabel = ({ R32:'Dieciseisavos', R16:'Octavos', QF:'Cuartos', SF:'Semis', FINAL:'Final' } as Record<string,string>)[m.stage]
-
-                  return (
-                    <div key={m.id} className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-                      <div className={`px-3 py-1.5 flex items-center justify-between text-xs ${
-                        isLive ? 'bg-blue-600 text-white' :
-                        isFinished ? 'bg-slate-700 text-white' :
-                        'bg-slate-100 text-slate-500'
-                      }`}>
-                        <span className="font-bold">{stageLabel} · #{m.fifaMatchNumber}</span>
-                        <span className="font-semibold">
-                          {isLive ? '🔴 En juego' : isFinished ? '✅ Finalizado' : (m.displayTime + ' VET')}
-                        </span>
-                      </div>
-                      <div className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1">
-                            <span className="font-bold text-slate-800 text-sm">{m.home.flag} {m.home.name ?? m.home.placeholder}</span>
+          {loadingRank ? (
+            <div className="text-center py-8 text-slate-400 text-sm">Cargando ranking…</div>
+          ) : (
+            <>
+              {/* Podium — solo cuando hay resultados */}
+              {top3.length >= 2 && totalPlayed > 0 && (
+                <div className="mb-5">
+                  <div className="flex items-end justify-center gap-3">
+                    {podiumOrder.map((entry, i) => {
+                      if (!entry) return <div key={i} className="w-24" />
+                      const isMe = entry.participationCode === myCode
+                      return (
+                        <div key={entry.participationCode} className="flex flex-col items-center">
+                          <div className="text-2xl mb-1">{['🥈','🥇','🥉'][i]}</div>
+                          <div className="text-center mb-2">
+                            <p className="font-bold text-slate-800 text-sm leading-tight">{formatPublicName(entry.fullName)}</p>
+                            {isMe && <span className="inline-block text-[10px] bg-yellow-400 text-slate-900 font-extrabold px-1.5 py-0.5 rounded-full mt-0.5">Tú</span>}
+                            <p className="text-xs text-slate-500">{entry.totalPoints} pts</p>
+                            <p className="text-xs text-green-600">🏆 {entry.classifiedCorrect} · 🎯 {entry.exactScores}</p>
                           </div>
-                          <div className="shrink-0 text-center w-20">
-                            {isFinished && m.result ? (
-                              <span className="font-extrabold text-lg text-slate-800">
-                                {m.result.homeGoals} — {m.result.awayGoals}
-                                {m.result.penaltyWinner && <span className="text-xs font-normal text-slate-500 block">Pen: {m.result.penaltyWinner === 'home' ? (m.home.name ?? m.home.placeholder) : (m.away.name ?? m.away.placeholder)}</span>}
-                              </span>
-                            ) : (
-                              <span className="text-xs text-slate-300 font-bold">vs</span>
-                            )}
-                          </div>
-                          <div className="flex-1 flex justify-end">
-                            <span className="font-bold text-slate-800 text-sm">{m.away.name ?? m.away.placeholder} {m.away.flag}</span>
+                          <div className={`${['h-20','h-28','h-16'][i]} w-24 rounded-t-xl flex items-center justify-center text-white font-bold text-lg ${
+                            i === 1 ? 'bg-yellow-500' : i === 0 ? 'bg-slate-400' : 'bg-orange-400'
+                          }`}>
+                            {i === 1 ? 1 : i === 0 ? 2 : 3}
                           </div>
                         </div>
-                        <p className="text-xs text-slate-400 mt-1.5 truncate">📍 {m.venue} · {m.city}</p>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Scoring legend */}
+              <div className="bg-white rounded-xl border border-slate-100 p-3 mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+                <span>🏆 Clasif. = <strong>2 pts</strong></span>
+                <span>🎯 Exacto = <strong>+2 pts</strong></span>
+                <span>⭐ Penales = <strong>+1 pt</strong></span>
+                <span>❌ Fallo = <strong>0 pts</strong></span>
+              </div>
+
+              {/* Ranking table — ALL 18 participants, even at 0 */}
+              <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                <div className="bg-slate-50 border-b border-slate-100 px-3 py-2 grid grid-cols-12 text-xs font-medium text-slate-400">
+                  <div className="col-span-2 text-center"># Mov.</div>
+                  <div className="col-span-4">Participante</div>
+                  <div className="col-span-2 text-center">Pts</div>
+                  <div className="col-span-2 text-center" title="Clasificados correctos">🏆 Clas.</div>
+                  <div className="col-span-1 text-center" title="Marcador exacto">🎯</div>
+                  <div className="col-span-1 text-center" title="Bono penales">⭐</div>
+                </div>
+
+                {ranking.map(entry => {
+                  const isMe = entry.participationCode === myCode
+                  return (
+                    <div key={entry.participationCode}
+                      className={`px-3 py-3 grid grid-cols-12 items-center border-b border-slate-50 last:border-0 ${
+                        isMe           ? 'bg-yellow-50 border-l-4 border-l-yellow-400' :
+                        entry.position <= 3 && totalPlayed > 0 ? 'bg-yellow-50/50' :
+                        'hover:bg-slate-50'
+                      }`}>
+                      <div className="col-span-2 text-center flex flex-col items-center leading-none gap-0.5">
+                        <span className="font-bold text-slate-700 text-sm">
+                          {(entry.position <= 3 && totalPlayed > 0) ? ['🥇','🥈','🥉'][entry.position - 1] : entry.position}
+                        </span>
+                        {entry.previousPosition != null && entry.movement !== 0 ? (
+                          entry.movement > 0
+                            ? <span className="text-green-600 text-xs font-medium">↑{entry.movement}</span>
+                            : <span className="text-red-500 text-xs font-medium">↓{Math.abs(entry.movement)}</span>
+                        ) : <span className="text-slate-300 text-xs">—</span>}
+                      </div>
+
+                      <div className="col-span-4 min-w-0">
+                        <p className="font-semibold text-slate-800 text-sm leading-tight whitespace-nowrap overflow-hidden text-ellipsis">{formatPublicName(entry.fullName)}</p>
+                        {isMe && <span className="text-[10px] bg-yellow-400 text-slate-900 font-extrabold px-1.5 py-0.5 rounded-full leading-none">Tú</span>}
+                      </div>
+
+                      <div className="col-span-2 text-center">
+                        <span className={`font-bold text-base ${entry.totalPoints > 0 ? 'text-green-600' : 'text-slate-400'}`}>
+                          {entry.totalPoints}
+                        </span>
+                      </div>
+                      <div className="col-span-2 text-center">
+                        <span className="text-sm font-semibold text-slate-700">{entry.classifiedCorrect}</span>
+                      </div>
+                      <div className="col-span-1 text-center">
+                        <span className="text-sm text-slate-600">{entry.exactScores}</span>
+                      </div>
+                      <div className="col-span-1 text-center">
+                        <span className="text-sm text-amber-600 font-semibold">{entry.penaltyBonus}</span>
                       </div>
                     </div>
                   )
                 })}
-                {dayMatches.length === 0 && (
-                  <div className="bg-white rounded-xl border border-slate-100 p-6 text-center text-slate-400 text-sm">
-                    No hay partidos para esta fecha.
+
+                {ranking.length === 0 && !loadingRank && activePhase === 'knockout_round_16_to_final' && (
+                  <div className="px-4 py-10 text-center">
+                    <div className="text-4xl mb-3">🏟️</div>
+                    <p className="font-bold text-slate-700 mb-1">Octavos a Final — Inscripciones abiertas</p>
+                    <p className="text-slate-500 text-sm mb-4">Todavía no hay participantes inscritos para esta fase.</p>
+                    <a href="/octavos/registro"
+                      className="inline-block bg-blue-600 text-white font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-blue-700 transition-colors">
+                      🚀 Inscribirme en Octavos a Final
+                    </a>
+                  </div>
+                )}
+                {ranking.length === 0 && (loadingRank || activePhase === 'R32') && (
+                  <div className="px-4 py-8 text-center text-slate-400 text-sm">
+                    {loadingRank ? 'Cargando participantes…' : 'Sin participantes verificados aún.'}
                   </div>
                 )}
               </div>
-            </section>
 
-            {/* Stats bar */}
-            <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 grid grid-cols-3 gap-3 text-center">
-              <div>
-                <p className="text-2xl font-extrabold text-green-600">{ranking.length}</p>
-                <p className="text-xs text-slate-500 mt-0.5">Participantes</p>
+              {/* Tiebreakers */}
+              <div className="mt-3 bg-slate-100 rounded-xl p-3">
+                <p className="text-xs text-slate-600 font-semibold mb-1">Criterios de desempate en caso de empate:</p>
+                <ol className="text-xs text-slate-500 space-y-0.5 list-decimal list-inside">
+                  <li>Más clasificados correctos.</li>
+                  <li>Más marcadores exactos.</li>
+                  <li>Más bonos de penales.</li>
+                  <li>Menor diferencia acumulada de goles (pronóstico más cercano al marcador real).</li>
+                  <li>Quien se registró primero.</li>
+                </ol>
               </div>
-              <div>
-                <p className="text-2xl font-extrabold text-slate-700">{totalPlayed}</p>
-                <p className="text-xs text-slate-500 mt-0.5">Partidos jugados</p>
+
+              <p className="text-xs text-slate-400 text-center mt-3">
+                {ranking.length} participante{ranking.length !== 1 ? 's' : ''} · Se actualiza automáticamente con cada resultado
+              </p>
+
+              <div className="mt-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                <p className="text-xs text-slate-500">¿Ves tu posición? Busca tu quiniela para resaltarla.</p>
+                <Link href="/eliminatorias/mi-quiniela" className="shrink-0 text-xs font-bold text-green-700 hover:text-green-800">
+                  Ver la mía →
+                </Link>
               </div>
-              <div>
-                <p className="text-sm font-extrabold text-yellow-600 truncate">{top3[0] ? formatPublicName(top3[0].fullName) : '—'}</p>
-                <p className="text-xs text-slate-500 mt-0.5">Líder actual</p>
-              </div>
-            </div>
-
-            {/* Podium */}
-            {top3.length >= 2 && (
-              <div className="flex items-end justify-center gap-3 pt-2">
-                {podiumOrder.map((entry, i) => {
-                  if (!entry) return <div key={i} className="w-24" />
-                  const isMe = entry.participationCode === myCode
-                  return (
-                    <div key={entry.participationCode} className="flex flex-col items-center">
-                      <div className="text-2xl mb-1">{['🥈','🥇','🥉'][i]}</div>
-                      <div className="text-center mb-2">
-                        <p className="font-bold text-slate-800 text-sm leading-tight">{formatPublicName(entry.fullName)}</p>
-                        {isMe && <span className="inline-block text-[10px] bg-yellow-400 text-slate-900 font-extrabold px-2 py-0.5 rounded-full mt-0.5">Tú</span>}
-                        <p className="text-xs text-slate-500 mt-0.5">{entry.totalPoints} pts</p>
-                        <p className="text-xs text-green-600">🏆 {entry.classifiedCorrect} · 🎯 {entry.exactScores}</p>
-                      </div>
-                      <div className={`${['h-20','h-28','h-16'][i]} w-24 ${['bg-slate-300','bg-yellow-400','bg-amber-300'][i]} rounded-t-xl flex items-center justify-center font-bold text-lg text-white`}>
-                        {i === 1 ? 1 : i === 0 ? 2 : 3}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-
-            {/* Leyenda */}
-            <div className="bg-white rounded-xl border border-slate-100 px-3 py-2 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-slate-600 items-center">
-              <span>🏆 Clasif. <strong>2 pts</strong></span>
-              <span className="text-slate-200">·</span>
-              <span>🎯 Exacto <strong>+2</strong></span>
-              <span className="text-slate-200">·</span>
-              <span>⭐ Penales <strong>+1</strong></span>
-              <span className="text-slate-200">·</span>
-              <span className="text-slate-400">Máx. <strong className="text-slate-600">5 pts</strong></span>
-              <span className="w-full text-[10px] text-slate-400 mt-0.5">El marcador no incluye penales en el conteo de goles.</span>
-            </div>
-
-            {/* Tabla de ranking */}
-            {loading ? (
-              <div className="text-center py-8 text-slate-400">Cargando ranking…</div>
-            ) : ranking.length === 0 ? (
-              <div className="text-center py-10 text-slate-400">
-                <div className="text-4xl mb-2">🏆</div>
-                <p className="text-sm">El ranking se actualizará cuando haya partidos terminados.</p>
-              </div>
-            ) : (
-              <section>
-                <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                  <div className="bg-slate-50 border-b border-slate-100 px-3 py-2 grid grid-cols-12 text-xs font-medium text-slate-400">
-                    <div className="col-span-1 text-center">#</div>
-                    <div className="col-span-4">Participante</div>
-                    <div className="col-span-2 text-center">Pts</div>
-                    <div className="col-span-2 text-center" title="Clasificados correctos">🏆 Clas.</div>
-                    <div className="col-span-1 text-center" title="Marcador exacto">🎯</div>
-                    <div className="col-span-2 text-center" title="Penales correctos">⭐ Pen.</div>
-                  </div>
-
-                  {ranking.map(entry => {
-                    const isMe = entry.participationCode === myCode
-                    return (
-                      <div key={entry.participationCode}
-                        className={`px-3 py-3 grid grid-cols-12 items-center border-b border-slate-50 last:border-0 ${
-                          isMe ? 'bg-yellow-50 border-l-4 border-l-yellow-400' :
-                          entry.position <= 3 ? 'bg-yellow-50/50' : 'hover:bg-slate-50'
-                        }`}>
-                        <div className="col-span-1 text-center flex flex-col items-center">
-                          <span className="font-bold text-slate-700 text-sm">
-                            {entry.position <= 3 ? ['🥇','🥈','🥉'][entry.position - 1] : entry.position}
-                          </span>
-                          {entry.movement > 0
-                            ? <span className="text-green-600 text-[10px] font-bold leading-none mt-0.5">↑{entry.movement}</span>
-                            : entry.movement < 0
-                            ? <span className="text-red-500 text-[10px] font-bold leading-none mt-0.5">↓{Math.abs(entry.movement)}</span>
-                            : <span className="text-slate-300 text-[10px] leading-none mt-0.5">—</span>}
-                        </div>
-                        <div className="col-span-4">
-                          <p className="font-semibold text-slate-800 text-sm leading-tight">{formatPublicName(entry.fullName)}</p>
-                          {isMe && <span className="text-[10px] bg-yellow-400 text-slate-900 font-extrabold px-1.5 py-0.5 rounded-full leading-none">Tú</span>}
-                        </div>
-                        <div className="col-span-2 text-center">
-                          <span className="font-bold text-green-600 text-base">{entry.totalPoints}</span>
-                        </div>
-                        <div className="col-span-2 text-center">
-                          <span className="text-sm font-semibold text-slate-700">{entry.classifiedCorrect}</span>
-                        </div>
-                        <div className="col-span-1 text-center">
-                          <span className="text-sm text-slate-600">{entry.exactScores}</span>
-                        </div>
-                        <div className="col-span-2 text-center">
-                          <span className="text-sm text-amber-600 font-semibold">{entry.penaltyBonus}</span>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-
-                {/* Criterios de desempate */}
-                <div className="mt-3 bg-slate-100 rounded-xl p-3">
-                  <p className="text-xs text-slate-600 font-semibold mb-1">Criterios de desempate:</p>
-                  <ol className="text-xs text-slate-500 space-y-0.5 list-decimal list-inside">
-                    <li>Más puntos totales.</li>
-                    <li>Más clasificados correctos.</li>
-                    <li>Más marcadores exactos.</li>
-                    <li>Más penales correctos.</li>
-                    <li>Registro más temprano.</li>
-                  </ol>
-                </div>
-
-                <p className="text-xs text-slate-400 text-center mt-3">
-                  {ranking.length} participante{ranking.length !== 1 ? 's' : ''} · Se actualiza automáticamente con cada resultado
-                </p>
-
-                <div className="mt-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
-                  <p className="text-xs text-slate-500">¿Ves tu posición? Busca tu quiniela para resaltarla.</p>
-                  <Link href="/eliminatorias/mi-quiniela" className="shrink-0 text-xs font-bold text-green-700 hover:text-green-800">
-                    Ver la mía →
-                  </Link>
-                </div>
-              </section>
-            )}
-
-            {/* Nav entre quinielas */}
-            <div className="flex gap-2">
-              <button onClick={() => setTab('grupos')}
-                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-4 py-3 rounded-xl transition-colors text-left">
-                <span className="block text-slate-500 text-[10px]">← Anterior</span>
-                Fase de Grupos
-              </button>
-              <button onClick={() => setTab('octavos')}
-                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-4 py-3 rounded-xl transition-colors text-right">
-                <span className="block text-slate-500 text-[10px]">Siguiente →</span>
-                Octavos a Final
-              </button>
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </section>
       </div>
     </div>
   )

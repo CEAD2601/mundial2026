@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { PaymentActions } from './PaymentActions'
+import PhaseTransitionPanel from './PhaseTransitionPanel'
+import { isRoundOf32Complete, getActiveKOPhase } from '@/lib/ko/phaseTransition'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,9 +43,15 @@ const STATUS_COLOR: Record<string, string> = {
 export default async function AdminEliminatoriasPage() {
   const nowUtc = new Date()
 
-  // Un solo query trae todo
+  const [activePhase, r32Status] = await Promise.all([
+    getActiveKOPhase(),
+    isRoundOf32Complete(),
+  ])
+  const isR16Active = activePhase === 'knockout_round_16_to_final'
+
+  // Un solo query trae todo (fase activa)
   const allParticipants = await prisma.kOParticipant.findMany({
-    where: { phase: 'R32' },
+    where: { phase: 'R32' },  // siempre R32 en este dashboard; R16 tiene su propio dashboard
     include: {
       payment: true,
       picks:   { select: { matchId: true } },
@@ -90,6 +98,9 @@ export default async function AdminEliminatoriasPage() {
           🔄 Actualizar
         </Link>
       </div>
+
+      {/* Panel de transición de fase */}
+      <PhaseTransitionPanel r32Status={r32Status} activePhase={activePhase} />
 
       {/* Stats */}
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
@@ -258,9 +269,12 @@ export default async function AdminEliminatoriasPage() {
       <div className="grid grid-cols-2 gap-3">
         {[
           { href: '/admin/eliminatorias/pagos',         label: '💳 Gestión de pagos',   desc: `${inReviewKO} en revisión` },
-          { href: '/admin/eliminatorias/participantes', label: '👥 Todos los inscritos', desc: `${totalKO} total`          },
+          { href: '/admin/eliminatorias/participantes', label: '👥 Todos los inscritos', desc: `${totalKO} total · R32`    },
           { href: '/admin/eliminatorias/resultados',    label: '⚽ Resultados',          desc: 'Ingresar resultados KO'    },
           { href: '/admin/eliminatorias/ranking',       label: '🏆 Ranking KO',         desc: `${verifiedKO} verificados` },
+          ...(isR16Active ? [
+            { href: '/admin/eliminatorias/octavos', label: '🔵 Octavos a Final', desc: 'Participantes · pagos · ranking' },
+          ] : []),
         ].map(({ href, label, desc }) => (
           <Link key={href} href={href}
             className="bg-white border border-slate-200 rounded-2xl px-4 py-3 hover:shadow-md transition-shadow">

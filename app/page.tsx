@@ -83,11 +83,17 @@ export default function Home() {
     return () => { clearTimeout(timer); io?.disconnect() }
   }, [])
 
-  // Datos reales — participantes verificados KO
+  const [activePhase, setActivePhase] = useState<string>('R32')
+
+  // Datos reales — participantes verificados KO + fase activa
   useEffect(() => {
     fetch('/api/ko/ranking')
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.ranking) setVerified(d.ranking.length) })
+      .catch(() => {})
+    fetch('/api/ko/active-phase')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.phase) setActivePhase(d.phase) })
       .catch(() => {})
   }, [])
 
@@ -312,40 +318,72 @@ export default function Home() {
               </div>
             </div>
 
-            {/* QUINIELA OCTAVOS A FINAL — PRÓXIMAMENTE */}
-            <div className="rounded-2xl border-2 border-slate-200 bg-slate-50 overflow-hidden opacity-80">
-              <div className="bg-slate-600 text-white px-4 py-2 flex items-center justify-between">
-                <span className="text-xs font-extrabold uppercase tracking-widest">⏳ Próxima quiniela</span>
-                <span className="text-xs font-semibold text-slate-300">Se abre en julio</span>
-              </div>
-              <div className="p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <h3 className="text-xl font-extrabold text-slate-700 leading-tight">Quiniela Octavos a Final</h3>
-                    <p className="text-sm text-slate-500 mt-1">Octavos · Cuartos · Semifinales · Final · 4 – 19 jul</p>
-                    <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-                      Se abrirá cuando estén definidos los 16 clasificados de Dieciseisavos.
-                      Tendrá <strong className="text-slate-500">nueva inscripción</strong>, nuevo llenado y
-                      <strong className="text-slate-500"> ranking separado</strong>. No se mezcla con esta quiniela.
-                    </p>
-                  </div>
-                  <div className="shrink-0">
-                    <span className="text-xs font-bold text-slate-400 bg-slate-200 px-3 py-1.5 rounded-full">Por definir</span>
-                  </div>
+            {/* QUINIELA OCTAVOS A FINAL */}
+            {activePhase === 'knockout_round_16_to_final' ? (
+              /* FASE ACTIVA */
+              <div className="rounded-2xl border-2 border-blue-400 bg-gradient-to-br from-blue-600 to-indigo-700 overflow-hidden shadow-xl">
+                <div className="px-4 py-2 flex items-center justify-between">
+                  <span className="text-xs font-extrabold uppercase tracking-widest text-blue-200">🔵 Fase activa</span>
+                  <span className="text-xs font-semibold text-blue-200">$20 USD · 14.600 Bs</span>
                 </div>
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  {(['Octavos (R16)','Cuartos (QF)','Semifinales','Final'] as const).map(s => (
-                    <div key={s} className="rounded-lg border border-slate-200 bg-white/60 px-3 py-2 flex items-center gap-2">
-                      <span className="text-base">🔒</span>
-                      <p className="text-xs font-semibold text-slate-600">{s}</p>
+                <div className="p-5">
+                  <h3 className="text-xl font-extrabold text-white leading-tight">Quiniela Octavos a Final</h3>
+                  <p className="text-sm text-blue-200 mt-1">Octavos · Cuartos · Semifinales · Final</p>
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    {(['Octavos (R16)','Cuartos (QF)','Semifinales','Final'] as const).map(s => (
+                      <div key={s} className="rounded-lg border border-blue-400/40 bg-white/10 px-3 py-2 flex items-center gap-2">
+                        <span className="text-base">⚽</span>
+                        <p className="text-xs font-semibold text-white">{s}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <Link href="/octavos/registro"
+                    className="mt-4 w-full py-3 rounded-xl text-sm font-extrabold bg-white text-blue-700 hover:bg-blue-50 transition-colors block text-center">
+                    🚀 Inscribirme en Octavos a Final
+                  </Link>
+                  <Link href="/eliminatorias/ranking"
+                    className="mt-2 w-full py-2.5 rounded-xl text-xs font-bold border border-blue-400/40 text-blue-200 hover:bg-white/10 transition-colors block text-center">
+                    Ver ranking →
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              /* PRÓXIMAMENTE */
+              <div className="rounded-2xl border-2 border-slate-200 bg-slate-50 overflow-hidden opacity-80">
+                <div className="bg-slate-600 text-white px-4 py-2 flex items-center justify-between">
+                  <span className="text-xs font-extrabold uppercase tracking-widest">⏳ Próxima quiniela</span>
+                  <span className="text-xs font-semibold text-slate-300">Se abre en julio</span>
+                </div>
+                <div className="p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <h3 className="text-xl font-extrabold text-slate-700 leading-tight">Quiniela Octavos a Final</h3>
+                      <p className="text-sm text-slate-500 mt-1">Octavos · Cuartos · Semifinales · Final · 4 – 19 jul</p>
+                      <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                        Se abrirá cuando estén definidos los 16 clasificados de Dieciseisavos.
+                        Tendrá <strong className="text-slate-500">nueva inscripción</strong>, nuevo llenado y
+                        <strong className="text-slate-500"> ranking separado</strong>. No se mezcla con esta quiniela.
+                      </p>
                     </div>
-                  ))}
+                    <div className="shrink-0">
+                      <span className="text-xs font-bold text-slate-400 bg-slate-200 px-3 py-1.5 rounded-full">Por definir</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    {(['Octavos (R16)','Cuartos (QF)','Semifinales','Final'] as const).map(s => (
+                      <div key={s} className="rounded-lg border border-slate-200 bg-white/60 px-3 py-2 flex items-center gap-2">
+                        <span className="text-base">🔒</span>
+                        <p className="text-xs font-semibold text-slate-600">{s}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <button disabled
+                    className="mt-4 w-full py-2.5 rounded-xl text-sm font-bold bg-slate-200 text-slate-400 cursor-not-allowed">
+                    Próximamente — nueva inscripción
+                  </button>
                 </div>
-                <button disabled
-                  className="mt-4 w-full py-2.5 rounded-xl text-sm font-bold bg-slate-200 text-slate-400 cursor-not-allowed">
-                  Próximamente — nueva inscripción
-                </button>
               </div>
+            )}
             </div>
           </div>
         </section>
