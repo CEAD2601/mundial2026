@@ -3,6 +3,9 @@ import { prisma } from '@/lib/prisma'
 import { KNOCKOUT_MATCHES } from '@/lib/prototype/knockout-data'
 import { z } from 'zod'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 const pickSchema = z.object({
   matchId:       z.string(),
   homeGoals:     z.number().int().min(0).max(20),
@@ -79,18 +82,30 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // Confirmación: verificar que todos los partidos abiertos tienen pick
-    // Un partido está abierto si no ha comenzado (hora VET) y no está en lockedIds (DB)
+    // Confirmación: verificar que todos los partidos requeridos tienen pick
     if (data.confirm) {
-      const now = Date.now()
-      const openMatchIds = KNOCKOUT_MATCHES
-        .filter(m => {
-          if (m.stage !== 'R32') return false
-          if (lockedIds.has(m.id)) return false
-          const matchStart = new Date(`${m.date}T${m.timeVet}:00-04:00`)
-          return now < matchStart.getTime()
-        })
-        .map(m => m.id)
+      const R16_FINAL_MATCH_IDS = [
+        'r16-89','r16-90','r16-91','r16-92','r16-93','r16-94','r16-95','r16-96',
+        'qf-97','qf-98','qf-99','qf-100',
+        'sf-101','sf-102',
+        'final-103','final-104',
+      ]
+      const isR16FinalPhase = participant.phase === 'knockout_round_16_to_final'
+
+      let requiredMatchIds: string[]
+      if (isR16FinalPhase) {
+        requiredMatchIds = R16_FINAL_MATCH_IDS
+      } else {
+        const now = Date.now()
+        requiredMatchIds = KNOCKOUT_MATCHES
+          .filter(m => {
+            if (m.stage !== 'R32') return false
+            if (lockedIds.has(m.id)) return false
+            const matchStart = new Date(`${m.date}T${m.timeVet}:00-04:00`)
+            return now < matchStart.getTime()
+          })
+          .map(m => m.id)
+      }
 
       const savedPicks = await prisma.kOPick.findMany({
         where: { participantId: participant.id },
@@ -98,7 +113,7 @@ export async function POST(req: NextRequest) {
       })
       const savedIds = new Set(savedPicks.map(p => p.matchId))
 
-      const missing = openMatchIds.filter(id => !savedIds.has(id))
+      const missing = requiredMatchIds.filter(id => !savedIds.has(id))
       if (missing.length > 0) {
         return NextResponse.json({
           error: `Faltan ${missing.length} partido(s) por pronosticar`,
@@ -149,6 +164,7 @@ export async function GET(req: NextRequest) {
       isComplete:        participant.isComplete,
       submittedAt:       participant.submittedAt,
       phase:             participant.phase,
+      lateRegistration:  participant.lateRegistration,
       payment:           participant.payment,
       ranking:           participant.ranking,
     },

@@ -50,7 +50,7 @@ export default function OctavosLlenadoPage() {
         return
       }
 
-      router.push(`/eliminatorias/mi-quiniela/${code}`)
+      router.push(`/octavos/llenado/${code}`)
     } catch {
       setError('Error de conexión. Intenta de nuevo.')
       setLoading(false)

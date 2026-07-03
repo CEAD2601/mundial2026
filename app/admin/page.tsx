@@ -410,7 +410,7 @@ async function DashboardOctavos() {
           { val: inReviewKO, label: 'En revisión',         color: 'text-orange-500',  icon: '⏳' },
           { val: pendingKO,  label: 'Sin pago',            color: 'text-slate-500',   icon: '❌' },
           { val: rejectedKO, label: 'Rechazados',          color: 'text-red-500',     icon: '🚫' },
-          { val: 15,         label: 'Partidos totales',    color: 'text-purple-600',  icon: '⚽' },
+          { val: 16,         label: 'Partidos totales',    color: 'text-purple-600',  icon: '⚽' },
           { val: completeKO, label: 'Quinielas completas', color: 'text-blue-500',    icon: '🔒' },
         ].map(({ val, label, color, icon }) => (
           <div key={label} className="bg-white rounded-xl shadow-sm p-3 sm:p-4 border border-slate-100">

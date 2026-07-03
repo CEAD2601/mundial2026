@@ -67,7 +67,7 @@ export default function OctavosRegistroPage() {
         setLookupLoading(false)
         setStep('already-r16')
         // Redirect to fill page
-        setTimeout(() => router.push(`/eliminatorias/llenar/${r16Data.participationCode}`), 1500)
+        setTimeout(() => router.push(`/octavos/llenado/${r16Data.participationCode}`), 1500)
         return
       }
 
@@ -127,13 +127,13 @@ export default function OctavosRegistroPage() {
       const data = await res.json()
       if (!res.ok) {
         if (res.status === 409) {
-          router.push(`/eliminatorias/llenar/${data.code}`)
+          router.push(`/octavos/llenado/${data.code}`)
           return
         }
         setSubmitError(data.error ?? 'Error al inscribir')
         return
       }
-      router.push(`/eliminatorias/llenar/${data.participant.participationCode}`)
+      router.push(`/octavos/llenado/${data.participant.participationCode}`)
     } catch {
       setSubmitError('Error de conexión')
     } finally {
