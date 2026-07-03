@@ -115,26 +115,31 @@ function shortDateLabel(dateStr: string, today: string): string {
 
 function ptsBadge(points: number | null): { txt: string; cls: string } | null {
   if (points === null) return null
+  // 5 pts = clasificado + marcador exacto + penales (empate exacto + penales correctos)
   if (points === 5) return { txt: '+5 ⭐',  cls: 'bg-yellow-500 text-white' }
+  // 4 pts = clasificado + marcador exacto
   if (points === 4) return { txt: '+4 🎯',  cls: 'bg-green-600 text-white' }
-  if (points === 3) return { txt: '+1 ⭐',  cls: 'bg-yellow-100 text-yellow-800' }
+  // 3 pts = clasificado + bonus penales (empate no exacto + penales correctos)
+  if (points === 3) return { txt: '+3 ⭐',  cls: 'bg-amber-400 text-white' }
+  // 2 pts = solo clasificado correcto
   if (points === 2) return { txt: '+2 🏆',  cls: 'bg-emerald-100 text-emerald-800' }
   if (points === 0) return { txt: '0 ❌',   cls: 'bg-red-100 text-red-700' }
   return null
 }
 
-// Prioridad VISUAL de orden (no el puntaje interno crudo): +4/+5 🎯 > +2 🏆 > +1 ⭐ (bono penales, 3 pts reales) > 0 ❌
+// Prioridad VISUAL de orden: 5⭐ > 4🎯 > 3⭐ > 2🏆 > 0❌
 function visualScoreRank(points: number | null): number {
-  if (points === 4 || points === 5) return 4
-  if (points === 2)                 return 3
-  if (points === 3)                 return 2 // bono de penales, se muestra como "+1 ⭐"
+  if (points === 5)                return 5
+  if (points === 4)                return 4
+  if (points === 3)                return 3
+  if (points === 2)                return 2
   return 1                                    // 0 pts u otro
 }
 
 function pickBgClass(points: number | null): string {
   if (points === 5) return 'bg-yellow-50 border border-yellow-200'
   if (points === 4) return 'bg-green-50 border border-green-200'
-  if (points === 3) return 'bg-yellow-50 border border-yellow-100'
+  if (points === 3) return 'bg-amber-50 border border-amber-200'
   if (points === 2) return 'bg-emerald-50 border border-emerald-100'
   if (points === 0) return 'bg-red-50 border border-red-100'
   return 'bg-white border border-slate-100'
