@@ -21,7 +21,10 @@ async function DashboardGrupos() {
     prisma.payment.count({ where: { paymentStatus: 'IN_REVIEW' } }),
     prisma.payment.count({ where: { paymentStatus: 'REJECTED' } }),
     prisma.payment.count({ where: { paymentStatus: 'PENDING' } }),
-    prisma.setting.findFirst(),
+    prisma.setting.findFirst({ select: {
+      id: true, entryPriceUsd: true, fixedExchangeRate: true,
+      firstPrizePercent: true, secondPrizePercent: true, organizationPercent: true,
+    } }),
     prisma.payment.findMany({
       where: { paymentStatus: 'IN_REVIEW' },
       include: { participant: true },
