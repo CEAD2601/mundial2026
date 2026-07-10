@@ -18,15 +18,21 @@ export type KOPointsBreakdown = {
 }
 
 // Sistema de puntos eliminatorias (idéntico al prototipo, 5 tests pasados)
-// +2 clasificado correcto · +2 marcador exacto (requiere clasificado) · +1 bono penales
-export function calcKOPoints(pick: KOPickInput, result: KOResultInput): KOPointsBreakdown {
+// +2 clasificado correcto · +2 marcador exacto (requiere clasificado + ambos equipos coinciden) · +1 bono penales
+// opts.teamsMatch: undefined = legacy/R32 (always true); false = exact score suppressed
+export function calcKOPoints(
+  pick: KOPickInput,
+  result: KOResultInput,
+  opts?: { teamsMatch?: boolean }
+): KOPointsBreakdown {
   const realIsDraw = result.home === result.away
   const pickIsDraw = pick.home === pick.away
   const realWinner = realIsDraw ? result.penaltyWinner : (result.home > result.away ? 'home' : 'away')
   const pickWinner = pickIsDraw ? pick.penaltyWinner   : (pick.home  > pick.away  ? 'home' : 'away')
-  const classified = realWinner === pickWinner ? 2 : 0
-  const exact      = (classified > 0 && pick.home === result.home && pick.away === result.away) ? 2 : 0
-  const penalty    = (classified > 0 && realIsDraw && pickIsDraw) ? 1 : 0
+  const classified    = realWinner === pickWinner ? 2 : 0
+  const teamsOk       = opts?.teamsMatch !== false
+  const exact         = (classified > 0 && teamsOk && pick.home === result.home && pick.away === result.away) ? 2 : 0
+  const penalty       = (classified > 0 && realIsDraw && pickIsDraw) ? 1 : 0
   return { classified, exact, penalty, total: classified + exact + penalty }
 }
 

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { calcKOPoints } from '@/lib/ko/utils'
+import { checkTeamsMatch } from '@/lib/ko/resolvePickTeams'
+import { KNOCKOUT_MATCHES } from '@/lib/prototype/knockout-data'
 
 function isAdmin(req: NextRequest): boolean {
   return req.cookies.get('admin_session')?.value === 'authenticated'
@@ -16,17 +18,43 @@ export async function POST(req: NextRequest) {
     where: { status: 'FINISHED' },
   })
 
+  // Build result map for team resolution
+  const resultMap = new Map(
+    finishedResults
+      .filter(r => r.homeGoals != null)
+      .map(r => [r.id, r as { id: string; homeGoals: number | null; awayGoals: number | null; penaltyWinner: string | null }])
+  )
+
+  // Load ALL picks once for batch team resolution
+  const allPicks = await prisma.kOPick.findMany()
+  const picksByParticipant = new Map<string, typeof allPicks>()
+  for (const p of allPicks) {
+    const arr = picksByParticipant.get(p.participantId) ?? []
+    arr.push(p)
+    picksByParticipant.set(p.participantId, arr)
+  }
+
   let totalPicks   = 0
   let totalChanged = 0
   const details: string[] = []
 
   for (const result of finishedResults) {
-    const picks = await prisma.kOPick.findMany({ where: { matchId: result.id } })
+    const picks = allPicks.filter(p => p.matchId === result.id)
+    const koMatch = KNOCKOUT_MATCHES.find(m => m.id === result.id)
+
     for (const pick of picks) {
       totalPicks++
+      let teamsMatch: boolean | undefined
+      if (koMatch && koMatch.stage !== 'R32') {
+        const participantPickMap = new Map(
+          (picksByParticipant.get(pick.participantId) ?? []).map(p => [p.matchId, p])
+        )
+        teamsMatch = checkTeamsMatch(koMatch, participantPickMap, resultMap)
+      }
       const { total } = calcKOPoints(
         { home: pick.homeGoals, away: pick.awayGoals, penaltyWinner: pick.penaltyWinner as 'home' | 'away' | null | undefined },
         { home: result.homeGoals!, away: result.awayGoals!, penaltyWinner: result.penaltyWinner as 'home' | 'away' | null | undefined },
+        { teamsMatch },
       )
       if (pick.points !== total) {
         await prisma.kOPick.update({ where: { id: pick.id }, data: { points: total } })
