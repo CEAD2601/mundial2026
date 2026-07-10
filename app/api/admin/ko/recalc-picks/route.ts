@@ -87,6 +87,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     success: true,
+    _v:                  3,
     matchesChecked:      finishedResults.length,
     totalPicksChecked:   totalPicks,
     picksRecalculated:   totalChanged,
