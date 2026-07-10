@@ -62,7 +62,7 @@ export async function closeRoundOf32AndOpenR16Final(): Promise<{
 
   // Idempotencia: si ya está en la fase correcta, no hacer nada
   const settings = await prisma.setting.findFirst()
-  if (settings?.activeKOPhase === ACTIVE_PHASE_R16_FINAL) {
+  if ((settings as any)?.activeKOPhase === ACTIVE_PHASE_R16_FINAL) {
     return { success: true, alreadyDone: true, message: 'La transición ya fue realizada anteriormente.' }
   }
 
@@ -112,10 +112,10 @@ export async function closeRoundOf32AndOpenR16Final(): Promise<{
   if (settings) {
     await prisma.setting.update({
       where: { id: settings.id },
-      data:  { activeKOPhase: ACTIVE_PHASE_R16_FINAL },
+      data:  { activeKOPhase: ACTIVE_PHASE_R16_FINAL } as any,
     })
   } else {
-    await prisma.setting.create({ data: { activeKOPhase: ACTIVE_PHASE_R16_FINAL } })
+    await prisma.setting.create({ data: { activeKOPhase: ACTIVE_PHASE_R16_FINAL } as any })
   }
 
   return {
